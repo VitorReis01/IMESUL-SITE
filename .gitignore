@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+dist/
+.env*
+*.log
+.vscode/
+claude-proxy.ps1
+index.html
+.codex-dev-check/

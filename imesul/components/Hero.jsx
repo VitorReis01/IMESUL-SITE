@@ -1,0 +1,122 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+export default function Hero() {
+  const heroRef = useRef(null);
+  const visualRef = useRef(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      gsap.to(visualRef.current, {
+        yPercent: 8,
+        scale: 1.04,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="inicio" ref={heroRef} className="relative min-h-screen overflow-hidden bg-[#050b14]">
+      <div ref={visualRef} className="absolute inset-x-0 top-[-6%] h-[112%] w-full">
+        <video
+          className="h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
+        </video>
+      </div>
+
+      <div className="absolute inset-0 bg-[#020812]/35" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,8,18,0.98)_0%,rgba(2,8,18,0.94)_28%,rgba(2,8,18,0.76)_48%,rgba(2,8,18,0.48)_70%,rgba(2,8,18,0.3)_100%)]" />
+      <div className="absolute inset-0 bg-[#020812]/26 lg:bg-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_45%,rgba(212,43,43,0.14),transparent_34%),radial-gradient(circle_at_86%_14%,rgba(66,132,202,0.14),transparent_30%),radial-gradient(circle_at_18%_54%,rgba(2,8,18,0.62),transparent_34%)]" />
+      <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-imesul-blue via-imesul-blue/72 to-transparent" />
+
+      <div className="relative z-10 mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 items-center gap-10 px-6 pb-20 pt-28 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-16 lg:pt-24">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.25 } } }}
+          className="max-w-[820px]"
+        >
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            className="mb-7 flex items-center gap-4"
+          >
+            <span className="font-mono text-[10px] tracking-[0.42em] text-imesul-red uppercase">
+              SOLUÇÕES EM AÇO
+            </span>
+            <span className="h-px w-16 bg-imesul-red" />
+          </motion.div>
+
+          <motion.h1
+            variants={{
+              hidden: { opacity: 0, y: 54 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } },
+            }}
+            className="font-display leading-[0.92] text-white [font-size:clamp(2.35rem,7.4vw,4.6rem)] sm:[font-size:clamp(2rem,6.4vw,7.8rem)]"
+          >
+            AÇO QUE
+            <br />
+            <span className="text-imesul-red text-glow-red">TRANSFORMA</span>
+            <br />
+            PROJETOS EM
+            <br />
+            REALIDADE.
+          </motion.h1>
+
+          <motion.p
+            variants={{ hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8 } } }}
+            className="mt-8 max-w-[560px] text-lg font-light leading-relaxed text-imesul-steel-light/82 lg:text-xl"
+          >
+            Soluções completas em aço para construção, indústria e serralheria.
+            <br />
+            Campo Grande e Dourados — MS.
+          </motion.p>
+
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8 } } }}
+            className="mt-10 flex flex-wrap items-center gap-4"
+          >
+            <a
+              href="#produtos"
+              className="group relative flex items-center gap-3 overflow-hidden rounded-[10px] bg-imesul-red px-8 py-3.5 transition-all duration-300 hover:bg-imesul-red-dark hover:shadow-[0_10px_46px_rgba(212,43,43,0.42)] sm:py-4"
+            >
+              <span className="relative z-10 font-condensed text-sm font-bold tracking-[0.2em] text-white">
+                VER NOSSOS PRODUTOS
+              </span>
+              <span className="relative z-10 text-white transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/12 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+            </a>
+            <span className="font-mono text-[10px] tracking-[0.3em] text-imesul-steel/45">
+              ESTOQUE | CORTE | ENTREGA
+            </span>
+          </motion.div>
+        </motion.div>
+
+        <div className="hidden lg:block" aria-hidden="true" />
+      </div>
+    </section>
+  );
+}
