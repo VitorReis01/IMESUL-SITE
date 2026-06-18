@@ -1,0 +1,68 @@
+import {
+  Building2,
+  CircleHelp,
+  DoorOpen,
+  House,
+  Tractor,
+  Warehouse,
+  Wrench,
+} from "lucide-react";
+
+export const projects = [
+  {
+    id: "portao",
+    name: "Portão",
+    description: "Estrutura, fechamento e ferragens para seu projeto.",
+    icon: DoorOpen,
+    materialIds: ["tubos-metalicos", "chapas", "cantoneiras"],
+    complementaryMaterials: ["Fechadura", "Rodana"],
+  },
+  {
+    id: "cobertura",
+    name: "Cobertura",
+    description: "Materiais para coberturas leves, resistentes e duráveis.",
+    icon: House,
+    materialIds: ["telhas-metalicas", "perfis-estruturais", "tubos-metalicos"],
+    complementaryMaterials: ["Parafusos"],
+  },
+  {
+    id: "galpao",
+    name: "Galpão",
+    description: "Estrutura e fechamento para projetos de maior escala.",
+    icon: Warehouse,
+    materialIds: ["perfis-estruturais", "telhas-metalicas", "cantoneiras", "chapas"],
+    complementaryMaterials: [],
+  },
+  {
+    id: "estrutura-metalica",
+    name: "Estrutura Metálica",
+    description: "Componentes para suportes, reforços e estruturas.",
+    icon: Building2,
+    materialIds: ["perfis-estruturais", "tubos-metalicos", "chapas", "cantoneiras"],
+    complementaryMaterials: [],
+  },
+  {
+    id: "serralheria",
+    name: "Serralheria",
+    description: "Linha versátil para fabricação, montagem e acabamento.",
+    icon: Wrench,
+    materialIds: ["tubos-metalicos", "chapas", "cantoneiras", "solventes-acessorios"],
+    complementaryMaterials: ["Metalon"],
+  },
+  {
+    id: "rural",
+    name: "Rural",
+    description: "Materiais para estruturas, cercamentos e manutenção.",
+    icon: Tractor,
+    materialIds: ["tubos-metalicos", "telhas-metalicas", "cantoneiras", "barras"],
+    complementaryMaterials: [],
+  },
+  {
+    id: "outro-projeto",
+    name: "Outro Projeto",
+    description: "Encontre um ponto de partida com apoio da IMESUL.",
+    icon: CircleHelp,
+    materialIds: [],
+    complementaryMaterials: ["Catálogo Completo", "Orientação de Materiais", "Atendimento Especializado"],
+  },
+];
