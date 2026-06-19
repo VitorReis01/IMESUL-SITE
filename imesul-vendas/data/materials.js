@@ -47,8 +47,8 @@ export const materials = [
     icon: Minus,
   },
   {
-    id: "bobininhas",
-    name: "Bobininhas",
+    id: "bobinas",
+    name: "Bobinas",
     description: "Rolos metálicos para arremates e aplicações diversas.",
     icon: Box,
   },

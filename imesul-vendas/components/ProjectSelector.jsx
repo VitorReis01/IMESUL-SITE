@@ -4,19 +4,37 @@ import { useState } from "react";
 import Image from "next/image";
 import { ArrowRight, Check } from "lucide-react";
 import { projects } from "../data/projects";
-import { getMaterialsByIds, materials } from "../data/materials";
+import { materials } from "../data/materials";
+import { MaterialQuoteFlow, ProjectQuoteFlow } from "./QuoteBuilder";
 
 export default function ProjectSelector() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
-  const recommendedMaterials = selectedProject
-    ? getMaterialsByIds(selectedProject.materialIds)
-    : [];
-  const recommendationNames = [
-    ...recommendedMaterials.map((material) => material.name),
-    ...(selectedProject?.complementaryMaterials || []),
-  ];
+  const selectedMaterial = materials.find(
+    (material) => material.id === selectedMaterialId
+  );
+
+  const scrollToFlow = (id) => {
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 80);
+  };
+
+  const selectProject = (projectId) => {
+    setSelectedProjectId(projectId);
+    setSelectedMaterialId(null);
+    scrollToFlow("project-quote-flow");
+  };
+
+  const selectMaterial = (materialId) => {
+    setSelectedMaterialId(materialId);
+    setSelectedProjectId(null);
+    scrollToFlow("material-quote-flow");
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-imesul-blue">
@@ -75,7 +93,7 @@ export default function ProjectSelector() {
                 type="button"
                 data-testid={`project-${project.id}`}
                 aria-pressed={isSelected}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => selectProject(project.id)}
                 className={`group relative min-h-[196px] overflow-hidden rounded-[6px] border p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                   isSelected
                     ? "border-imesul-red bg-imesul-red/[0.09] shadow-[0_20px_60px_rgba(212,43,43,0.15)]"
@@ -107,6 +125,12 @@ export default function ProjectSelector() {
           })}
         </div>
 
+        {selectedProject && (
+          <div className="mt-10">
+            <ProjectQuoteFlow key={selectedProject.id} project={selectedProject} />
+          </div>
+        )}
+
         <section className="mt-24 border-t border-white/[0.08] pt-20 sm:mt-28 sm:pt-24">
           <div className="max-w-4xl">
             <div className="flex items-center gap-4">
@@ -135,7 +159,7 @@ export default function ProjectSelector() {
                   type="button"
                   data-testid={`material-${material.id}`}
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedMaterialId(material.id)}
+                  onClick={() => selectMaterial(material.id)}
                   className={`group relative flex min-h-[218px] flex-col overflow-hidden rounded-[6px] border p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
                       ? "border-imesul-red/80 bg-imesul-red/[0.08] shadow-[0_18px_50px_rgba(212,43,43,0.12)]"
@@ -185,47 +209,16 @@ export default function ProjectSelector() {
               );
             })}
           </div>
+
+          {selectedMaterial && (
+            <div className="mt-10">
+              <MaterialQuoteFlow
+                key={selectedMaterial.id}
+                material={selectedMaterial}
+              />
+            </div>
+          )}
         </section>
-
-        <div
-          aria-live="polite"
-          className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-500 ${
-            selectedProject ? "mt-16 grid-rows-[1fr] opacity-100 sm:mt-20" : "mt-0 grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <div className="min-h-0">
-            {selectedProject && (
-              <div className="relative overflow-hidden rounded-[6px] border border-imesul-red/30 bg-[#0B192B]/95 px-6 py-8 sm:px-8 lg:flex lg:items-center lg:justify-between lg:gap-12 lg:px-10">
-                <div className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
-                <div className="max-w-md">
-                  <p className="font-mono text-[10px] tracking-[0.3em] text-imesul-red">
-                    MATERIAIS RECOMENDADOS
-                  </p>
-                  <h2 className="mt-3 font-display text-5xl leading-none text-white">
-                    {selectedProject.name}
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-imesul-steel/75">
-                    Uma seleção inicial para orientar seu projeto. Você poderá revisar essas escolhas nas próximas etapas.
-                  </p>
-                </div>
-
-                <ul className="mt-7 grid flex-1 gap-2 sm:grid-cols-2 lg:mt-0 lg:max-w-2xl">
-                  {recommendationNames.map((material) => (
-                    <li
-                      key={material}
-                      className="flex min-h-12 items-center gap-3 border-b border-white/[0.08] py-3 text-sm font-medium text-imesul-steel-light"
-                    >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-imesul-red/15 text-imesul-red">
-                        <Check size={13} strokeWidth={2.4} aria-hidden="true" />
-                      </span>
-                      {material}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
       </section>
     </main>
   );
