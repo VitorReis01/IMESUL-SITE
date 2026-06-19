@@ -1,4 +1,4 @@
-const fallbackPhone = "5567999999999";
+const fallbackPhone = "556733125600";
 
 function valueOrFallback(value) {
   return value?.trim() || "Não informado";

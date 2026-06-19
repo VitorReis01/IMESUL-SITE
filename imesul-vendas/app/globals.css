@@ -19,6 +19,7 @@
 
 html {
   background: #07101d;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -33,6 +34,11 @@ body {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  font: inherit;
 }
 
 ::selection {
