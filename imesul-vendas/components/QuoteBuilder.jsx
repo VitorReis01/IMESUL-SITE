@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
 import {
-  buildMaterialMessage,
   buildProjectMessage,
   createWhatsAppUrl,
 } from "../lib/whatsapp";
+import { catalogSpecifications } from "../data/catalogSpecifications";
 
 const projectInitialForm = {
   width: "",
@@ -27,6 +27,8 @@ const projectInitialForm = {
 const materialInitialForm = {
   model: "",
   measure: "",
+  thickness: "",
+  length: "",
   quantity: "",
   city: "",
   notes: "",
@@ -37,6 +39,187 @@ const inputClassName =
 
 const textareaClassName =
   "min-h-32 w-full resize-y rounded-[8px] border border-white/[0.12] bg-white/[0.035] px-4 py-4 text-[15px] leading-relaxed text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-white/[0.05] focus:ring-4 focus:ring-imesul-red/[0.08]";
+
+const selectClassName = `${inputClassName} appearance-none cursor-pointer`;
+
+const materialSpecificationMap = {
+  "tubos-metalicos": [
+    {
+      value: "retangular",
+      label: "Tubo retangular",
+      specifications: catalogSpecifications.tubosMetalicos.retangular,
+    },
+    {
+      value: "quadrado",
+      label: "Tubo quadrado",
+      specifications: catalogSpecifications.tubosMetalicos.quadrado,
+    },
+    {
+      value: "redondo",
+      label: "Tubo redondo",
+      specifications: catalogSpecifications.tubosMetalicos.redondo,
+    },
+  ],
+  "perfis-estruturais": [
+    {
+      value: "u-enrijecido",
+      label: "Perfil U enrijecido",
+      specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
+    },
+    {
+      value: "u-simples",
+      label: "Perfil U simples",
+      specifications: catalogSpecifications.perfisEstruturais.uSimples,
+    },
+  ],
+  "telhas-metalicas": [
+    {
+      value: "trapezoidal-40",
+      label: "Telha trapezoidal 40",
+      specifications: catalogSpecifications.telhasMetalicas.trapezoidal40,
+    },
+    {
+      value: "trapezoidal-25",
+      label: "Telha trapezoidal 25",
+      specifications: catalogSpecifications.telhasMetalicas.trapezoidal25,
+    },
+    {
+      value: "ondulada",
+      label: "Telha ondulada",
+      specifications: catalogSpecifications.telhasMetalicas.ondulada,
+    },
+    {
+      value: "cumeeiras",
+      label: "Cumeeiras",
+      specifications: catalogSpecifications.telhasMetalicas.cumeeiras,
+    },
+  ],
+  laminados: [
+    {
+      value: "cantoneiras-abas-iguais",
+      label: "Cantoneiras de abas iguais",
+      specifications: catalogSpecifications.laminados.cantoneirasAbasIguais,
+    },
+    {
+      value: "barras-chatas",
+      label: "Barras chatas",
+      specifications: catalogSpecifications.laminados.barrasChatas,
+    },
+    {
+      value: "barras-quadradas",
+      label: "Barras quadradas",
+      specifications: catalogSpecifications.laminados.barrasQuadradas,
+    },
+    {
+      value: "barras-redondas",
+      label: "Barras redondas",
+      specifications: catalogSpecifications.laminados.barrasRedondas,
+    },
+  ],
+  "chapas-planas": [
+    {
+      value: "fina-frio",
+      label: "Chapa fina a frio (FF)",
+      specifications: catalogSpecifications.chapas.planas.finaFrio,
+    },
+    {
+      value: "fina-quente",
+      label: "Chapa fina a quente (FQ)",
+      specifications: catalogSpecifications.chapas.planas.finaQuente,
+    },
+    {
+      value: "grossa",
+      label: "Chapa grossa (CG)",
+      specifications: catalogSpecifications.chapas.planas.grossa,
+    },
+    {
+      value: "piso",
+      label: "Chapa de piso (CP)",
+      specifications: catalogSpecifications.chapas.planas.piso,
+    },
+  ],
+  "chapas-frisadas-lambris": [
+    {
+      value: "frisada-u",
+      label: "Chapa frisada em U",
+      specifications: catalogSpecifications.chapas.frisadasELambris.frisadaU,
+    },
+    {
+      value: "meia-cana-1090",
+      label: "Chapa meia cana de 1090 mm",
+      specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana1090,
+    },
+    {
+      value: "meia-cana-545",
+      label: "Chapa meia cana de 545 mm",
+      specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana545,
+    },
+  ],
+};
+
+function formatCatalogValue(value, suffix = "") {
+  const formatted =
+    typeof value === "number"
+      ? new Intl.NumberFormat("pt-BR", {
+          maximumFractionDigits: 2,
+        }).format(value)
+      : value;
+
+  return suffix ? `${formatted} ${suffix}` : String(formatted);
+}
+
+function valueOrFallback(value) {
+  return value?.trim() || "Não informado";
+}
+
+function buildDetailedMaterialMessage({ material, form }) {
+  return `Olá, vim pelo site da IMESUL.
+
+Material:
+${material.name}
+
+Tipo/Modelo:
+${valueOrFallback(form.model)}
+
+Medida:
+${valueOrFallback(form.measure)}
+
+Espessura:
+${valueOrFallback(form.thickness)}
+
+Comprimento:
+${valueOrFallback(form.length)}
+
+Quantidade:
+${valueOrFallback(form.quantity)}
+
+Cidade:
+${valueOrFallback(form.city)}
+
+Observações:
+${valueOrFallback(form.notes)}
+
+Gostaria de solicitar uma cotação.`;
+}
+
+function SelectField({ value, onChange, placeholder, options }) {
+  return (
+    <select value={value} onChange={onChange} className={selectClassName}>
+      <option value="" className="bg-imesul-blue text-white">
+        {placeholder}
+      </option>
+      {options.map((option) => (
+        <option
+          key={`${option.value}-${option.label}`}
+          value={option.value}
+          className="bg-imesul-blue text-white"
+        >
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 function Field({ label, children }) {
   return (
@@ -309,12 +492,91 @@ export function ProjectQuoteFlow({ project }) {
 
 export function MaterialQuoteFlow({ material }) {
   const [form, setForm] = useState(materialInitialForm);
+  const modelOptions = materialSpecificationMap[material.id] || [];
+  const hasCatalogSpecifications = modelOptions.length > 0;
+  const selectedModel = modelOptions.find(
+    (option) => option.label === form.model
+  );
+  const selectedSpecifications = selectedModel?.specifications;
+
+  const measureOptions = useMemo(
+    () =>
+      (selectedSpecifications?.medidas || []).map((measure) => ({
+        value: formatCatalogValue(measure),
+        label: formatCatalogValue(measure),
+      })),
+    [selectedSpecifications]
+  );
+
+  const thicknessOptions = useMemo(() => {
+    if (!selectedSpecifications) return [];
+
+    const relatedThicknesses =
+      form.measure && selectedSpecifications.variacoes?.length
+        ? selectedSpecifications.variacoes
+            .filter(
+              (variation) =>
+                variation.medida === form.measure &&
+                variation.espessura !== undefined
+            )
+            .map((variation) => variation.espessura)
+        : [];
+    const thicknesses = relatedThicknesses.length
+      ? relatedThicknesses
+      : selectedSpecifications.espessuras || [];
+
+    return [...new Set(thicknesses)].map((thickness) => {
+      const value = formatCatalogValue(
+        thickness,
+        typeof thickness === "number" ? "mm" : ""
+      );
+      return { value, label: value };
+    });
+  }, [form.measure, selectedSpecifications]);
+
+  const lengthOptions = useMemo(
+    () =>
+      (selectedSpecifications?.comprimentos || []).map((length) => {
+        const value = formatCatalogValue(
+          length,
+          typeof length === "number" ? "mm" : ""
+        );
+        return { value, label: value };
+      }),
+    [selectedSpecifications]
+  );
+
+  useEffect(() => {
+    setForm(materialInitialForm);
+  }, [material.id]);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const message = buildMaterialMessage({ material, form });
+  const selectModel = (event) => {
+    const option = modelOptions.find(
+      (modelOption) => modelOption.value === event.target.value
+    );
+
+    setForm((current) => ({
+      ...current,
+      model: option?.label || "",
+      measure: "",
+      thickness: "",
+      length: "",
+    }));
+  };
+
+  const selectMeasure = (event) => {
+    setForm((current) => ({
+      ...current,
+      measure: event.target.value,
+      thickness: "",
+    }));
+  };
+
+  const message = buildDetailedMaterialMessage({ material, form });
 
   return (
     <section
@@ -338,25 +600,79 @@ export function MaterialQuoteFlow({ material }) {
             </h3>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-            Os campos são opcionais e serão confirmados pela equipe comercial.
+            {hasCatalogSpecifications
+              ? "Selecione as opções disponíveis no catálogo. Os campos continuam opcionais."
+              : "Informe as características desejadas"}
           </p>
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             <Field label="Tipo/Modelo">
-              <input
-                value={form.model}
-                onChange={updateField("model")}
-                placeholder="Ex.: Tubo retangular"
-                className={inputClassName}
-              />
+              {hasCatalogSpecifications ? (
+                <SelectField
+                  value={selectedModel?.value || ""}
+                  onChange={selectModel}
+                  placeholder="Selecione o tipo/modelo"
+                  options={modelOptions}
+                />
+              ) : (
+                <input
+                  value={form.model}
+                  onChange={updateField("model")}
+                  placeholder="Informe o tipo/modelo"
+                  className={inputClassName}
+                />
+              )}
             </Field>
             <Field label="Medida">
-              <input
-                value={form.measure}
-                onChange={updateField("measure")}
-                placeholder="Ex.: 30 x 50 mm"
-                className={inputClassName}
-              />
+              {measureOptions.length ? (
+                <SelectField
+                  value={form.measure}
+                  onChange={selectMeasure}
+                  placeholder="Selecione a medida"
+                  options={measureOptions}
+                />
+              ) : (
+                <input
+                  value={form.measure}
+                  onChange={updateField("measure")}
+                  placeholder="Informe a medida desejada"
+                  className={inputClassName}
+                />
+              )}
+            </Field>
+            <Field label="Espessura">
+              {thicknessOptions.length ? (
+                <SelectField
+                  value={form.thickness}
+                  onChange={updateField("thickness")}
+                  placeholder="Selecione a espessura"
+                  options={thicknessOptions}
+                />
+              ) : (
+                <input
+                  value={form.thickness}
+                  onChange={updateField("thickness")}
+                  placeholder="Informe a espessura"
+                  className={inputClassName}
+                />
+              )}
+            </Field>
+            <Field label="Comprimento">
+              {lengthOptions.length ? (
+                <SelectField
+                  value={form.length}
+                  onChange={updateField("length")}
+                  placeholder="Selecione o comprimento"
+                  options={lengthOptions}
+                />
+              ) : (
+                <input
+                  value={form.length}
+                  onChange={updateField("length")}
+                  placeholder="Informe o comprimento"
+                  className={inputClassName}
+                />
+              )}
             </Field>
             <Field label="Quantidade">
               <input
@@ -403,6 +719,8 @@ export function MaterialQuoteFlow({ material }) {
               value={[
                 form.model && `Tipo/Modelo: ${form.model}`,
                 form.measure && `Medida: ${form.measure}`,
+                form.thickness && `Espessura: ${form.thickness}`,
+                form.length && `Comprimento: ${form.length}`,
               ]
                 .filter(Boolean)
                 .join(" | ")}
