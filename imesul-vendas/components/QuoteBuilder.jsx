@@ -1,19 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  ClipboardList,
-  MessageCircle,
-  Ruler,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
-import {
-  buildProjectMessage,
-  createWhatsAppUrl,
-} from "../lib/whatsapp";
-import { catalogSpecifications } from "../data/catalogSpecifications";
+import { getCatalogCategory } from "../data/catalogCategories";
+import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../lib/whatsapp";
+import ProductOptionSelector, { findSelectedVariation } from "./ProductOptionSelector";
+import ProductSummary from "./ProductSummary";
 
 const projectInitialForm = {
   width: "",
@@ -25,10 +18,10 @@ const projectInitialForm = {
 };
 
 const materialInitialForm = {
-  model: "",
   measure: "",
   thickness: "",
   length: "",
+  details: "",
   quantity: "",
   city: "",
   notes: "",
@@ -39,187 +32,6 @@ const inputClassName =
 
 const textareaClassName =
   "min-h-32 w-full resize-y rounded-[8px] border border-white/[0.12] bg-white/[0.035] px-4 py-4 text-[15px] leading-relaxed text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-white/[0.05] focus:ring-4 focus:ring-imesul-red/[0.08]";
-
-const selectClassName = `${inputClassName} appearance-none cursor-pointer`;
-
-const materialSpecificationMap = {
-  "tubos-metalicos": [
-    {
-      value: "retangular",
-      label: "Tubo retangular",
-      specifications: catalogSpecifications.tubosMetalicos.retangular,
-    },
-    {
-      value: "quadrado",
-      label: "Tubo quadrado",
-      specifications: catalogSpecifications.tubosMetalicos.quadrado,
-    },
-    {
-      value: "redondo",
-      label: "Tubo redondo",
-      specifications: catalogSpecifications.tubosMetalicos.redondo,
-    },
-  ],
-  "perfis-estruturais": [
-    {
-      value: "u-enrijecido",
-      label: "Perfil U enrijecido",
-      specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
-    },
-    {
-      value: "u-simples",
-      label: "Perfil U simples",
-      specifications: catalogSpecifications.perfisEstruturais.uSimples,
-    },
-  ],
-  "telhas-metalicas": [
-    {
-      value: "trapezoidal-40",
-      label: "Telha trapezoidal 40",
-      specifications: catalogSpecifications.telhasMetalicas.trapezoidal40,
-    },
-    {
-      value: "trapezoidal-25",
-      label: "Telha trapezoidal 25",
-      specifications: catalogSpecifications.telhasMetalicas.trapezoidal25,
-    },
-    {
-      value: "ondulada",
-      label: "Telha ondulada",
-      specifications: catalogSpecifications.telhasMetalicas.ondulada,
-    },
-    {
-      value: "cumeeiras",
-      label: "Cumeeiras",
-      specifications: catalogSpecifications.telhasMetalicas.cumeeiras,
-    },
-  ],
-  laminados: [
-    {
-      value: "cantoneiras-abas-iguais",
-      label: "Cantoneiras de abas iguais",
-      specifications: catalogSpecifications.laminados.cantoneirasAbasIguais,
-    },
-    {
-      value: "barras-chatas",
-      label: "Barras chatas",
-      specifications: catalogSpecifications.laminados.barrasChatas,
-    },
-    {
-      value: "barras-quadradas",
-      label: "Barras quadradas",
-      specifications: catalogSpecifications.laminados.barrasQuadradas,
-    },
-    {
-      value: "barras-redondas",
-      label: "Barras redondas",
-      specifications: catalogSpecifications.laminados.barrasRedondas,
-    },
-  ],
-  "chapas-planas": [
-    {
-      value: "fina-frio",
-      label: "Chapa fina a frio (FF)",
-      specifications: catalogSpecifications.chapas.planas.finaFrio,
-    },
-    {
-      value: "fina-quente",
-      label: "Chapa fina a quente (FQ)",
-      specifications: catalogSpecifications.chapas.planas.finaQuente,
-    },
-    {
-      value: "grossa",
-      label: "Chapa grossa (CG)",
-      specifications: catalogSpecifications.chapas.planas.grossa,
-    },
-    {
-      value: "piso",
-      label: "Chapa de piso (CP)",
-      specifications: catalogSpecifications.chapas.planas.piso,
-    },
-  ],
-  "chapas-frisadas-lambris": [
-    {
-      value: "frisada-u",
-      label: "Chapa frisada em U",
-      specifications: catalogSpecifications.chapas.frisadasELambris.frisadaU,
-    },
-    {
-      value: "meia-cana-1090",
-      label: "Chapa meia cana de 1090 mm",
-      specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana1090,
-    },
-    {
-      value: "meia-cana-545",
-      label: "Chapa meia cana de 545 mm",
-      specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana545,
-    },
-  ],
-};
-
-function formatCatalogValue(value, suffix = "") {
-  const formatted =
-    typeof value === "number"
-      ? new Intl.NumberFormat("pt-BR", {
-          maximumFractionDigits: 2,
-        }).format(value)
-      : value;
-
-  return suffix ? `${formatted} ${suffix}` : String(formatted);
-}
-
-function valueOrFallback(value) {
-  return value?.trim() || "Não informado";
-}
-
-function buildDetailedMaterialMessage({ material, form }) {
-  return `Olá, vim pelo site da IMESUL.
-
-Material:
-${material.name}
-
-Tipo/Modelo:
-${valueOrFallback(form.model)}
-
-Medida:
-${valueOrFallback(form.measure)}
-
-Espessura:
-${valueOrFallback(form.thickness)}
-
-Comprimento:
-${valueOrFallback(form.length)}
-
-Quantidade:
-${valueOrFallback(form.quantity)}
-
-Cidade:
-${valueOrFallback(form.city)}
-
-Observações:
-${valueOrFallback(form.notes)}
-
-Gostaria de solicitar uma cotação.`;
-}
-
-function SelectField({ value, onChange, placeholder, options }) {
-  return (
-    <select value={value} onChange={onChange} className={selectClassName}>
-      <option value="" className="bg-imesul-blue text-white">
-        {placeholder}
-      </option>
-      {options.map((option) => (
-        <option
-          key={`${option.value}-${option.label}`}
-          value={option.value}
-          className="bg-imesul-blue text-white"
-        >
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
-}
 
 function Field({ label, children }) {
   return (
@@ -236,12 +48,10 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
   return (
     <header className="max-w-5xl">
       <div className="flex items-center gap-4">
-        <span className="font-mono text-[10px] tracking-[0.36em] text-imesul-red">
-          {eyebrow}
-        </span>
+        <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">{eyebrow}</span>
         <span className="h-px w-14 bg-imesul-red" />
       </div>
-      <h2 className="mt-5 font-display text-[clamp(3rem,5vw,5.4rem)] leading-[0.92] text-white">
+      <h2 className="mt-5 font-display text-5xl leading-[0.94] text-white sm:text-6xl lg:text-7xl">
         {title}
       </h2>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-imesul-steel-light/75">
@@ -255,9 +65,7 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
             <li
               key={step}
               className={`flex min-h-12 items-center gap-3 border-b-2 px-1 py-2 font-condensed text-xs font-semibold uppercase tracking-[0.12em] ${
-                isActive
-                  ? "border-imesul-red text-white"
-                  : "border-white/[0.08] text-imesul-steel/45"
+                isActive ? "border-imesul-red text-white" : "border-white/[0.08] text-imesul-steel/45"
               }`}
             >
               <span className={isActive ? "text-imesul-red" : "text-imesul-steel/35"}>
@@ -273,22 +81,12 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
 }
 
 function SummaryRow({ label, value }) {
-  const hasValue = Boolean(value);
-
   return (
-    <div
-      className={`border-b py-3.5 transition-colors ${
-        hasValue ? "border-white/[0.1]" : "border-white/[0.06]"
-      }`}
-    >
+    <div className="border-b border-white/[0.09] py-3.5">
       <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.15em] text-imesul-steel/65">
         {label}
       </dt>
-      <dd
-        className={`mt-1.5 text-[15px] leading-relaxed ${
-          hasValue ? "font-medium text-white" : "text-imesul-steel/48"
-        }`}
-      >
+      <dd className={`mt-1.5 text-[15px] leading-relaxed ${value ? "font-medium text-white" : "text-imesul-steel/48"}`}>
         {value || "Não informado"}
       </dd>
     </div>
@@ -301,17 +99,13 @@ function WhatsAppButton({ message }) {
       href={createWhatsAppUrl(message)}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative mt-8 flex min-h-[62px] w-full items-center justify-center gap-3 overflow-hidden rounded-[10px] border border-white/[0.12] bg-[#25D366] px-6 py-4 text-center shadow-[0_16px_48px_rgba(37,211,102,0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe5d] hover:shadow-[0_20px_62px_rgba(37,211,102,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25"
+      className="group relative mt-8 flex min-h-[62px] w-full items-center justify-center gap-3 overflow-hidden rounded-[10px] border border-white/[0.12] bg-[#25D366] px-5 py-4 text-center shadow-[0_16px_48px_rgba(37,211,102,0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe5d] hover:shadow-[0_20px_62px_rgba(37,211,102,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 sm:px-6"
     >
       <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
-      <span className="relative z-10 font-condensed text-sm font-bold uppercase tracking-[0.12em] text-white">
+      <span className="relative z-10 font-condensed text-sm font-bold uppercase tracking-[0.1em] text-white">
         Solicitar Cotação no WhatsApp
       </span>
-      <ArrowRight
-        size={17}
-        className="transition-transform duration-300 group-hover:translate-x-1"
-        aria-hidden="true"
-      />
+      <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
     </a>
   );
@@ -322,9 +116,7 @@ export function ProjectQuoteFlow({ project }) {
   const [form, setForm] = useState(projectInitialForm);
 
   const recommendationNames = useMemo(() => {
-    const catalogMaterials = getMaterialsByIds(project.materialIds).map(
-      (material) => material.name
-    );
+    const catalogMaterials = getMaterialsByIds(project.materialIds).map((material) => material.name);
     return [...catalogMaterials, ...project.complementaryMaterials];
   }, [project]);
 
@@ -333,12 +125,7 @@ export function ProjectQuoteFlow({ project }) {
   };
 
   const message = subtype
-    ? buildProjectMessage({
-        project,
-        subtype,
-        materials: recommendationNames,
-        form,
-      })
+    ? buildProjectMessage({ project, subtype, materials: recommendationNames, form })
     : "";
 
   return (
@@ -395,60 +182,12 @@ export function ProjectQuoteFlow({ project }) {
             </p>
 
             <div className="mt-7 grid gap-5 sm:grid-cols-2">
-              <Field label="Largura">
-                <input
-                  value={form.width}
-                  onChange={updateField("width")}
-                  inputMode="decimal"
-                  placeholder="Ex.: 3,00 m"
-                  className={inputClassName}
-                />
-              </Field>
-              <Field label="Altura">
-                <input
-                  value={form.height}
-                  onChange={updateField("height")}
-                  inputMode="decimal"
-                  placeholder="Ex.: 2,20 m"
-                  className={inputClassName}
-                />
-              </Field>
-              <Field label="Comprimento">
-                <input
-                  value={form.length}
-                  onChange={updateField("length")}
-                  inputMode="decimal"
-                  placeholder="Ex.: 6,00 m"
-                  className={inputClassName}
-                />
-              </Field>
-              <Field label="Quantidade">
-                <input
-                  value={form.quantity}
-                  onChange={updateField("quantity")}
-                  inputMode="numeric"
-                  placeholder="Ex.: 2 unidades"
-                  className={inputClassName}
-                />
-              </Field>
-              <Field label="Cidade">
-                <input
-                  value={form.city}
-                  onChange={updateField("city")}
-                  placeholder="Ex.: Campo Grande"
-                  className={inputClassName}
-                />
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label="Observações">
-                  <textarea
-                    value={form.notes}
-                    onChange={updateField("notes")}
-                    placeholder="Conte detalhes importantes do projeto."
-                    className={textareaClassName}
-                  />
-                </Field>
-              </div>
+              <Field label="Largura"><input value={form.width} onChange={updateField("width")} inputMode="decimal" maxLength={32} placeholder="Ex.: 3,00 m" className={inputClassName} /></Field>
+              <Field label="Altura"><input value={form.height} onChange={updateField("height")} inputMode="decimal" maxLength={32} placeholder="Ex.: 2,20 m" className={inputClassName} /></Field>
+              <Field label="Comprimento"><input value={form.length} onChange={updateField("length")} inputMode="decimal" maxLength={32} placeholder="Ex.: 6,00 m" className={inputClassName} /></Field>
+              <Field label="Quantidade"><input value={form.quantity} onChange={updateField("quantity")} inputMode="numeric" maxLength={64} placeholder="Ex.: 2 unidades" className={inputClassName} /></Field>
+              <Field label="Cidade"><input value={form.city} onChange={updateField("city")} maxLength={100} placeholder="Ex.: Campo Grande" className={inputClassName} /></Field>
+              <div className="sm:col-span-2"><Field label="Observações"><textarea value={form.notes} onChange={updateField("notes")} maxLength={600} placeholder="Conte detalhes importantes do projeto." className={textareaClassName} /></Field></div>
             </div>
           </div>
 
@@ -458,30 +197,16 @@ export function ProjectQuoteFlow({ project }) {
               <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
               <h3 className="font-display text-4xl leading-none text-white">Resumo da Solicitação</h3>
             </div>
-
             <dl className="mt-6">
               <SummaryRow label="Tipo" value="Projeto" />
               <SummaryRow label="Projeto selecionado" value={project.name} />
               <SummaryRow label="Subtipo selecionado" value={subtype} />
-              <SummaryRow
-                label="Materiais recomendados"
-                value={recommendationNames.join(", ")}
-              />
-              <SummaryRow
-                label="Medidas informadas"
-                value={[
-                  form.width && `Largura: ${form.width}`,
-                  form.height && `Altura: ${form.height}`,
-                  form.length && `Comprimento: ${form.length}`,
-                ]
-                  .filter(Boolean)
-                  .join(" | ")}
-              />
+              <SummaryRow label="Materiais recomendados" value={recommendationNames.join(", ")} />
+              <SummaryRow label="Medidas informadas" value={[form.width && `Largura: ${form.width}`, form.height && `Altura: ${form.height}`, form.length && `Comprimento: ${form.length}`].filter(Boolean).join(" | ")} />
               <SummaryRow label="Quantidade" value={form.quantity} />
               <SummaryRow label="Cidade" value={form.city} />
               <SummaryRow label="Observações" value={form.notes} />
             </dl>
-
             <WhatsAppButton message={message} />
           </aside>
         </div>
@@ -490,105 +215,38 @@ export function ProjectQuoteFlow({ project }) {
   );
 }
 
-export function MaterialQuoteFlow({ material }) {
+export function MaterialQuoteFlow({ product }) {
   const [form, setForm] = useState(materialInitialForm);
-  const modelOptions = materialSpecificationMap[material.id] || [];
-  const hasCatalogSpecifications = modelOptions.length > 0;
-  const selectedModel = modelOptions.find(
-    (option) => option.label === form.model
+  const category = getCatalogCategory(product.categoryId);
+  const selectedVariation = useMemo(
+    () => findSelectedVariation(product, form),
+    [product, form]
   );
-  const selectedSpecifications = selectedModel?.specifications;
-
-  const measureOptions = useMemo(
-    () =>
-      (selectedSpecifications?.medidas || []).map((measure) => ({
-        value: formatCatalogValue(measure),
-        label: formatCatalogValue(measure),
-      })),
-    [selectedSpecifications]
-  );
-
-  const thicknessOptions = useMemo(() => {
-    if (!selectedSpecifications) return [];
-
-    const relatedThicknesses =
-      form.measure && selectedSpecifications.variacoes?.length
-        ? selectedSpecifications.variacoes
-            .filter(
-              (variation) =>
-                variation.medida === form.measure &&
-                variation.espessura !== undefined
-            )
-            .map((variation) => variation.espessura)
-        : [];
-    const thicknesses = relatedThicknesses.length
-      ? relatedThicknesses
-      : selectedSpecifications.espessuras || [];
-
-    return [...new Set(thicknesses)].map((thickness) => {
-      const value = formatCatalogValue(
-        thickness,
-        typeof thickness === "number" ? "mm" : ""
-      );
-      return { value, label: value };
-    });
-  }, [form.measure, selectedSpecifications]);
-
-  const lengthOptions = useMemo(
-    () =>
-      (selectedSpecifications?.comprimentos || []).map((length) => {
-        const value = formatCatalogValue(
-          length,
-          typeof length === "number" ? "mm" : ""
-        );
-        return { value, label: value };
-      }),
-    [selectedSpecifications]
-  );
-
-  useEffect(() => {
-    setForm(materialInitialForm);
-  }, [material.id]);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const selectModel = (event) => {
-    const option = modelOptions.find(
-      (modelOption) => modelOption.value === event.target.value
-    );
-
-    setForm((current) => ({
-      ...current,
-      model: option?.label || "",
-      measure: "",
-      thickness: "",
-      length: "",
-    }));
-  };
-
-  const selectMeasure = (event) => {
-    setForm((current) => ({
-      ...current,
-      measure: event.target.value,
-      thickness: "",
-    }));
-  };
-
-  const message = buildDetailedMaterialMessage({ material, form });
+  const message = buildProductMessage({
+    category,
+    product,
+    form,
+    selectedVariation,
+  });
 
   return (
     <section
       id="material-quote-flow"
-      className="scroll-mt-6 overflow-hidden rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.96),rgba(6,16,29,0.98))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
+      className="scroll-mt-6 overflow-visible rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(6,16,29,0.99))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
     >
       <StepHeader
-        eyebrow="PRÉ-ORÇAMENTO DIRETO"
-        title={`Detalhes de ${material.name}`}
-        description="Informe o modelo, medida e quantidade que procura. Você pode continuar mesmo sem preencher tudo."
-        steps={["Material", "Informações", "Resumo"]}
-        activeStep={2}
+        eyebrow="SELEÇÃO TÉCNICA"
+        title={product.name}
+        description={product.hasStructuredOptions
+          ? "Escolha somente combinações publicadas no catálogo oficial da IMESUL."
+          : "Este item não possui tabela técnica completa no catálogo. Informe as características desejadas."}
+        steps={["Categoria", "Produto", "Opções", "Resumo"]}
+        activeStep={3}
       />
 
       <div className="mt-12 grid gap-8 border-t border-white/[0.08] pt-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
@@ -596,142 +254,42 @@ export function MaterialQuoteFlow({ material }) {
           <div className="flex items-center gap-3">
             <Ruler size={18} className="text-imesul-red" aria-hidden="true" />
             <h3 className="font-condensed text-lg font-semibold uppercase tracking-[0.1em] text-white">
-              Informações do material
+              Opções do catálogo
             </h3>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-            {hasCatalogSpecifications
-              ? "Selecione as opções disponíveis no catálogo. Os campos continuam opcionais."
-              : "Informe as características desejadas"}
+            {product.hasStructuredOptions
+              ? `Dados extraídos da página ${product.specifications.paginaFonte} do catálogo 2024.`
+              : "Informe as características desejadas."}
           </p>
 
-          <div className="mt-7 grid gap-5 sm:grid-cols-2">
-            <Field label="Tipo/Modelo">
-              {hasCatalogSpecifications ? (
-                <SelectField
-                  value={selectedModel?.value || ""}
-                  onChange={selectModel}
-                  placeholder="Selecione o tipo/modelo"
-                  options={modelOptions}
-                />
-              ) : (
-                <input
-                  value={form.model}
-                  onChange={updateField("model")}
-                  placeholder="Informe o tipo/modelo"
-                  className={inputClassName}
-                />
-              )}
-            </Field>
-            <Field label="Medida">
-              {measureOptions.length ? (
-                <SelectField
-                  value={form.measure}
-                  onChange={selectMeasure}
-                  placeholder="Selecione a medida"
-                  options={measureOptions}
-                />
-              ) : (
-                <input
-                  value={form.measure}
-                  onChange={updateField("measure")}
-                  placeholder="Informe a medida desejada"
-                  className={inputClassName}
-                />
-              )}
-            </Field>
-            <Field label="Espessura">
-              {thicknessOptions.length ? (
-                <SelectField
-                  value={form.thickness}
-                  onChange={updateField("thickness")}
-                  placeholder="Selecione a espessura"
-                  options={thicknessOptions}
-                />
-              ) : (
-                <input
-                  value={form.thickness}
-                  onChange={updateField("thickness")}
-                  placeholder="Informe a espessura"
-                  className={inputClassName}
-                />
-              )}
-            </Field>
-            <Field label="Comprimento">
-              {lengthOptions.length ? (
-                <SelectField
-                  value={form.length}
-                  onChange={updateField("length")}
-                  placeholder="Selecione o comprimento"
-                  options={lengthOptions}
-                />
-              ) : (
-                <input
-                  value={form.length}
-                  onChange={updateField("length")}
-                  placeholder="Informe o comprimento"
-                  className={inputClassName}
-                />
-              )}
-            </Field>
+          <div className="mt-8">
+            <ProductOptionSelector product={product} form={form} setForm={setForm} />
+          </div>
+
+          <div className="mt-9 grid gap-5 border-t border-white/[0.08] pt-8 sm:grid-cols-2">
             <Field label="Quantidade">
-              <input
-                value={form.quantity}
-                onChange={updateField("quantity")}
-                inputMode="numeric"
-                placeholder="Ex.: 10 barras"
-                className={inputClassName}
-              />
+              <input value={form.quantity} onChange={updateField("quantity")} inputMode="numeric" maxLength={64} placeholder="Ex.: 10 barras" className={inputClassName} />
             </Field>
             <Field label="Cidade">
-              <input
-                value={form.city}
-                onChange={updateField("city")}
-                placeholder="Ex.: Dourados"
-                className={inputClassName}
-              />
+              <input value={form.city} onChange={updateField("city")} maxLength={100} placeholder="Ex.: Campo Grande" className={inputClassName} />
             </Field>
             <div className="sm:col-span-2">
               <Field label="Observações">
-                <textarea
-                  value={form.notes}
-                  onChange={updateField("notes")}
-                  placeholder="Inclua acabamento, aplicação ou outras informações."
-                  className={textareaClassName}
-                />
+                <textarea value={form.notes} onChange={updateField("notes")} maxLength={600} placeholder="Inclua aplicação, acabamento ou outras informações." className={textareaClassName} />
               </Field>
             </div>
           </div>
         </div>
 
-        <aside className="relative overflow-hidden rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(155deg,rgba(212,43,43,0.08),rgba(11,25,43,0.94)_34%)] px-6 py-7 shadow-[0_22px_60px_rgba(0,0,0,0.2)] sm:px-8 sm:py-8">
-          <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
-          <div className="flex items-center gap-3">
-            <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
-            <h3 className="font-display text-4xl leading-none text-white">Resumo da Solicitação</h3>
-          </div>
-
-          <dl className="mt-6">
-            <SummaryRow label="Tipo" value="Material" />
-            <SummaryRow label="Material escolhido" value={material.name} />
-            <SummaryRow
-              label="Especificações"
-              value={[
-                form.model && `Tipo/Modelo: ${form.model}`,
-                form.measure && `Medida: ${form.measure}`,
-                form.thickness && `Espessura: ${form.thickness}`,
-                form.length && `Comprimento: ${form.length}`,
-              ]
-                .filter(Boolean)
-                .join(" | ")}
-            />
-            <SummaryRow label="Quantidade" value={form.quantity} />
-            <SummaryRow label="Cidade" value={form.city} />
-            <SummaryRow label="Observações" value={form.notes} />
-          </dl>
-
+        <ProductSummary
+          category={category}
+          product={product}
+          form={form}
+          selectedVariation={selectedVariation}
+        >
           <WhatsAppButton message={message} />
-        </aside>
+        </ProductSummary>
       </div>
     </section>
   );

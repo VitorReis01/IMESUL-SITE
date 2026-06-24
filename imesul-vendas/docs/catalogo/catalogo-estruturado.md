@@ -2,10 +2,10 @@
 
 ## Fonte analisada
 
-- Arquivo: `catalogo-imesul-2024.pdf`
+- Arquivo-fonte: catálogo PDF original mantido em armazenamento privado, fora do frontend
 - Total de páginas: 15
 - Formato: catálogo diagramado em imagens, sem camada de texto pesquisável
-- Escopo deste documento: organizar categorias, subcategorias e exemplos comerciais; as tabelas completas de medidas, espessuras e pesos permanecem no PDF
+- Escopo deste documento: organizar categorias, subcategorias e exemplos comerciais; as tabelas completas de medidas, espessuras e pesos permanecem na fonte privada
 
 ## Visão geral das categorias
 

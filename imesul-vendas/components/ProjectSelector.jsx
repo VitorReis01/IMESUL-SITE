@@ -10,16 +10,16 @@ import {
   PackageSearch,
 } from "lucide-react";
 import { projects } from "../data/projects";
-import { materials } from "../data/materials";
+import { getCatalogProduct } from "../data/catalogProducts";
 import { MaterialQuoteFlow, ProjectQuoteFlow } from "./QuoteBuilder";
+import ProductCatalog from "./ProductCatalog";
 
 export default function ProjectSelector() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [selectedMaterialId, setSelectedMaterialId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
-  const selectedMaterial = materials.find(
-    (material) => material.id === selectedMaterialId
-  );
+  const selectedProduct = getCatalogProduct(selectedProductId);
 
   const scrollToFlow = (id) => {
     window.setTimeout(() => {
@@ -32,12 +32,20 @@ export default function ProjectSelector() {
 
   const selectProject = (projectId) => {
     setSelectedProjectId(projectId);
-    setSelectedMaterialId(null);
+    setSelectedCategoryId(null);
+    setSelectedProductId(null);
     scrollToFlow("project-quote-flow");
   };
 
-  const selectMaterial = (materialId) => {
-    setSelectedMaterialId(materialId);
+  const selectCategory = (categoryId) => {
+    setSelectedCategoryId(categoryId);
+    setSelectedProductId(null);
+    setSelectedProjectId(null);
+    scrollToFlow("catalog-products");
+  };
+
+  const selectProduct = (productId) => {
+    setSelectedProductId(productId);
     setSelectedProjectId(null);
     scrollToFlow("material-quote-flow");
   };
@@ -59,6 +67,8 @@ export default function ProjectSelector() {
           />
           <a
             href={process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "http://localhost:3000"}
+            target="_blank"
+            rel="noopener noreferrer"
             className="group flex items-center gap-2 font-condensed text-xs font-semibold uppercase tracking-[0.15em] text-imesul-steel transition-colors hover:text-white"
           >
             <span className="hidden sm:inline">Site institucional</span>
@@ -259,78 +269,23 @@ export default function ProjectSelector() {
                 <span className="text-imesul-red">material procura?</span>
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-imesul-steel-light/75 sm:text-lg">
-                Veja os principais materiais disponíveis na IMESUL.
+                Navegue pelas categorias e selecione um produto real do catálogo IMESUL.
               </p>
             </div>
           </header>
 
-          <div className="mt-12 grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">
-            {materials.map((material) => {
-              const Icon = material.icon;
-              const isSelected = material.id === selectedMaterialId;
+          <ProductCatalog
+            selectedCategoryId={selectedCategoryId}
+            selectedProductId={selectedProductId}
+            onSelectCategory={selectCategory}
+            onSelectProduct={selectProduct}
+          />
 
-              return (
-                <button
-                  key={material.id}
-                  type="button"
-                  data-testid={`material-${material.id}`}
-                  aria-pressed={isSelected}
-                  onClick={() => selectMaterial(material.id)}
-                  className={`group relative flex min-h-[238px] h-full flex-col overflow-hidden rounded-[8px] border p-6 text-left shadow-[0_16px_45px_rgba(0,0,0,0.12)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
-                    isSelected
-                      ? "border-imesul-red/90 bg-[linear-gradient(145deg,rgba(212,43,43,0.14),rgba(11,25,43,0.94))] shadow-[0_22px_58px_rgba(212,43,43,0.13)]"
-                      : "border-white/[0.1] bg-[#0b192b]/78 hover:-translate-y-1 hover:border-imesul-steel/40 hover:bg-[#102039]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <span
-                      className={`flex h-12 w-12 items-center justify-center rounded-[6px] border transition-all duration-300 ${
-                        isSelected
-                          ? "border-imesul-red bg-imesul-red text-white shadow-[0_8px_28px_rgba(212,43,43,0.25)]"
-                          : "border-white/10 bg-white/[0.045] text-imesul-steel-light group-hover:border-imesul-steel/40 group-hover:text-white"
-                      }`}
-                    >
-                      <Icon size={23} strokeWidth={1.7} aria-hidden="true" />
-                    </span>
-                    {isSelected && (
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-imesul-red text-white">
-                        <Check size={15} strokeWidth={2.5} aria-hidden="true" />
-                      </span>
-                    )}
-                  </div>
-                  <span className="mt-7 block font-condensed text-[1.35rem] font-semibold leading-tight text-white">
-                    {material.name}
-                  </span>
-                  <span className="mt-3 block text-sm leading-6 text-imesul-steel-light/68">
-                    {material.description}
-                  </span>
-                  <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.15em] text-imesul-steel-light/70 transition-colors group-hover:text-white">
-                    {isSelected ? "Material selecionado" : "Selecionar material"}
-                    {isSelected ? (
-                      <Check size={14} strokeWidth={2.2} aria-hidden="true" />
-                    ) : (
-                      <ArrowRight
-                        size={14}
-                        className="transition-transform duration-300 group-hover:translate-x-1"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </span>
-                  <span
-                    className={`absolute bottom-0 left-0 h-0.5 bg-imesul-red transition-all duration-300 ${
-                      isSelected ? "w-full" : "w-0 group-hover:w-full"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedMaterial && (
+          {selectedProduct && (
             <div className="mt-10">
               <MaterialQuoteFlow
-                key={selectedMaterial.id}
-                material={selectedMaterial}
+                key={selectedProduct.id}
+                product={selectedProduct}
               />
             </div>
           )}

@@ -2,7 +2,7 @@
 
 ## Fonte e método
 
-- Fonte: `docs/catalogo/catalogo-imesul-2024.pdf`
+- Fonte: catálogo PDF original mantido em armazenamento privado, fora do frontend
 - Arquivo de dados: `data/catalogSpecifications.js`
 - O PDF é composto por imagens e não possui camada de texto pesquisável.
 - As páginas técnicas foram revisadas visualmente em resolução original.
