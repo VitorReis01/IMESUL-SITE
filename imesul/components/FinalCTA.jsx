@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { linksUrl, whatsapp } from "../data/products";
+import { salesSiteUrl, whatsapp } from "../data/products";
 
 export default function FinalCTA() {
   const sectionRef = useRef(null);
@@ -90,13 +90,13 @@ export default function FinalCTA() {
           </a>
 
           <a
-            href={linksUrl}
+            href={salesSiteUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >
             <span className="font-condensed text-sm font-bold tracking-[0.22em] text-imesul-steel-light">
-              VER TODOS OS LINKS
+              VER SITE DE VENDAS
             </span>
           </a>
         </motion.div>

@@ -1,15 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,300;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'Barlow', sans-serif;
-  --font-condensed: 'Barlow Condensed', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
   --red: #D42B2B;
   --red-dark: #A81E1E;
   --red-light: #FF3B3B;
@@ -35,7 +28,7 @@ html {
 body {
   background-color: var(--blue);
   color: var(--white);
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   font-weight: 400;
   line-height: 1.6;
   overflow-x: clip;
@@ -57,16 +50,16 @@ body {
 
 /* Typography utilities */
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   letter-spacing: 0.05em;
 }
 
 .font-condensed {
-  font-family: var(--font-condensed);
+  font-family: var(--font-condensed), sans-serif;
 }
 
 .font-mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
 }
 
 /* Noise texture overlay */
@@ -328,7 +321,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.58rem;
   letter-spacing: 0.28em;
-  color: rgba(200, 216, 232, 0.5);
+  color: rgba(200, 216, 232, 0.72);
 }
 
 .company-story__topline-rule {
@@ -644,6 +637,7 @@ body {
 }
 
 .story-panel--video {
+  --story-video-progress: 0;
   display: flex;
   align-items: flex-end;
   padding-bottom: clamp(5rem, 10vh, 8rem);
@@ -652,14 +646,28 @@ body {
 
 .story-panel--video::before {
   z-index: 2;
+  opacity: calc(1 - (var(--story-video-progress) * 0.3));
   background:
     linear-gradient(90deg, rgba(3, 10, 19, 0.96) 0%, rgba(3, 10, 19, 0.72) 42%, rgba(3, 10, 19, 0.16) 78%),
     linear-gradient(0deg, rgba(3, 10, 19, 0.9) 0%, transparent 58%);
 }
 
-.story-video {
+.story-video__frame {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border: 1px solid rgba(200, 216, 232, calc(0.12 - (var(--story-video-progress) * 0.12)));
+  border-radius: calc((1 - var(--story-video-progress)) * 18px);
+  opacity: calc(0.76 + (var(--story-video-progress) * 0.24));
+  transform: scale(calc(0.76 + (var(--story-video-progress) * 0.24)));
+  box-shadow:
+    0 36px 110px rgba(0, 0, 0, calc(0.5 - (var(--story-video-progress) * 0.22))),
+    0 0 70px rgba(212, 43, 43, calc(0.12 - (var(--story-video-progress) * 0.08)));
+  will-change: transform, opacity, border-radius;
+}
+
+.story-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -676,6 +684,9 @@ body {
   position: relative;
   z-index: 4;
   max-width: 900px;
+  opacity: calc(0.72 + (var(--story-video-progress) * 0.28));
+  transform: translateY(calc((1 - var(--story-video-progress)) * 24px));
+  will-change: transform, opacity;
 }
 
 .story-panel--video h2 {
@@ -691,6 +702,7 @@ body {
   .story-panel h2 {
     font-size: clamp(3.9rem, 7.4vw, 6.4rem);
   }
+
 }
 
 @media (max-width: 767px) {
@@ -774,10 +786,19 @@ body {
   }
 
   .story-panel--video {
+    --story-video-progress: 1 !important;
     position: relative;
     min-height: 78svh;
     justify-content: flex-end;
     padding-top: 12rem;
+  }
+
+  .story-video__frame {
+    border: 0;
+    border-radius: 0;
+    opacity: 1;
+    transform: none;
+    box-shadow: none;
   }
 
   .story-panel--video::before {
@@ -788,6 +809,10 @@ body {
   .company-story__progress {
     display: none;
   }
+}
+
+#cta-final p.font-mono {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

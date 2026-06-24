@@ -3,8 +3,18 @@ node_modules/
 out/
 dist/
 .env*
+!.env.example
+!*/.env.example
 *.log
 .vscode/
 claude-proxy.ps1
 index.html
 .codex-dev-check/
+
+# Materiais internos de referência não devem ser versionados com o frontend.
+**/docs/**/*.pdf
+**/docs/**/*.xlsx
+**/docs/**/*.xls
+**/docs/**/*.doc
+**/docs/**/*.docx
+**/docs/**/*.zip

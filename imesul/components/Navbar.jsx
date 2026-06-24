@@ -46,7 +46,7 @@ export default function Navbar() {
               aria-label="IMESUL Distribuicao"
             >
               <Image
-                src="/logo/imesul-logo-completa.png?v=1"
+                src="/logo/imesul-logo-completa.webp?v=1"
                 alt="IMESUL Distribuição"
                 width={707}
                 height={353}
@@ -54,7 +54,7 @@ export default function Navbar() {
                 className="block h-auto w-[150px] object-contain transition-transform duration-300 ease-out group-hover:-translate-y-px sm:w-[185px] lg:w-[195px] xl:w-[190px]"
                 style={{
                   filter:
-                    "brightness(1.15) contrast(1.1) drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 12px rgba(255,255,255,.12))",
+                    "brightness(1.28) contrast(1.2) saturate(1.06) drop-shadow(0 0 5px rgba(255,255,255,.18)) drop-shadow(0 0 10px rgba(255,255,255,.08))",
                 }}
               />
             </a>
@@ -68,7 +68,7 @@ export default function Navbar() {
                   rel={link.external ? "noopener noreferrer" : undefined}
                   className="group relative px-3 py-2"
                 >
-                  <span className="font-condensed text-[11px] font-semibold tracking-[0.2em] text-imesul-steel transition-colors duration-300 group-hover:text-white">
+                  <span className="font-condensed text-[12px] font-bold tracking-[0.18em] text-white/80 transition-colors duration-300 group-hover:text-white">
                     {link.label}
                   </span>
                   <span className="absolute bottom-1 left-3 right-3 h-px origin-left scale-x-0 bg-imesul-red transition-transform duration-300 group-hover:scale-x-100" />
@@ -77,16 +77,6 @@ export default function Navbar() {
             </nav>
 
             <div className="flex items-center gap-3">
-              <a
-                href="#cta-final"
-                className="hidden items-center gap-3 rounded-[10px] bg-[#25D366] px-5 py-2.5 shadow-[0_0_30px_rgba(37,211,102,0.2)] transition-all duration-300 hover:bg-[#1ebe5d] hover:shadow-[0_0_44px_rgba(37,211,102,0.36)] lg:flex"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                <span className="font-condensed text-[11px] font-bold tracking-[0.18em] text-white">
-                  FALE NO WHATSAPP
-                </span>
-              </a>
-
               <button
                 onClick={() => setMenuOpen((open) => !open)}
                 className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 border border-white/10 xl:hidden"
@@ -118,20 +108,11 @@ export default function Navbar() {
                 className="flex items-center gap-3 border-b border-white/8 py-3"
               >
                 <span className="h-px w-5 bg-imesul-red" />
-                <span className="font-condensed text-sm font-semibold tracking-[0.2em] text-imesul-steel">
+                <span className="font-condensed text-[15px] font-bold tracking-[0.18em] text-white/80">
                   {link.label}
                 </span>
               </a>
             ))}
-            <a
-              href="#cta-final"
-              onClick={closeMenu}
-              className="mt-3 flex items-center justify-center rounded-[10px] bg-[#25D366] px-5 py-3 transition-colors duration-300 hover:bg-[#1ebe5d]"
-            >
-              <span className="font-condensed text-xs font-bold tracking-[0.2em] text-white">
-                FALE NO WHATSAPP
-              </span>
-            </a>
           </div>
         </motion.div>
       </motion.header>

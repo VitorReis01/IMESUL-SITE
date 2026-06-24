@@ -1,371 +1,332 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { products } from "../data/products";
+import { products, salesSiteUrl } from "../data/products";
 
-const productImageAssets = {
-  tubos: {
-    src: "/products/tubos-removebg-preview.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  chapas: {
-    src: "/products/chapas.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  telhas: {
-    src: "/products/telhas.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  perfis: {
-    src: "/products/perfis.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  cantoneiras: {
-    src: "/products/cantoneiras.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  metalon: {
-    src: "/products/metalon.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  bobininhas: {
-    src: "/products/bobinas.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-  "solventes-acessorios": {
-    src: "/products/solventes-acessorios.png",
-    alt: "",
-    width: 1536,
-    height: 1024,
-  },
-};
+function ProductImage({ product, compact = false }) {
+  const isAccessoryShowroom = product.id === "acessorios-serralheria";
 
-function ProductImageAsset({ asset }) {
   return (
-    <div className="relative flex h-[118%] w-[118%] translate-x-[5%] items-center justify-center" aria-hidden="true">
+    <div
+      className={`relative flex items-center justify-center ${
+        compact ? "h-56 w-full sm:h-64" : "h-full w-full translate-x-[2%]"
+      }`}
+    >
       <Image
-        src={asset.src}
-        alt={asset.alt}
-        width={asset.width}
-        height={asset.height}
-        priority
-        className="h-full max-h-[740px] w-full max-w-[1160px] object-contain"
+        src={product.image}
+        alt={`${product.name} da linha IMESUL`}
+        width={1536}
+        height={1024}
+        sizes={compact ? "(max-width: 767px) 92vw, 46vw" : "56vw"}
+        className={`object-contain ${
+          compact
+            ? isAccessoryShowroom
+              ? "h-[78%] w-[78%]"
+              : "h-full w-full p-5 sm:p-6"
+            : isAccessoryShowroom
+              ? "h-[84%] max-h-[580px] w-[84%] max-w-[880px]"
+              : "h-[108%] max-h-[740px] w-[108%] max-w-[1120px]"
+        }`}
         draggable="false"
         style={{
           filter:
-            "drop-shadow(0 34px 54px rgba(0,0,0,0.42)) drop-shadow(0 0 18px rgba(238,246,255,0.22)) drop-shadow(0 0 34px rgba(180,205,225,0.12))",
+            "drop-shadow(0 34px 52px rgba(0,0,0,0.52)) drop-shadow(0 0 18px rgba(226,238,249,0.16))",
         }}
       />
     </div>
   );
 }
 
-function SteelProduct({ id }) {
-  const imageAsset = productImageAssets[id];
+function SalesLink({ compact = false }) {
+  return (
+    <a
+      href={salesSiteUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group/link inline-flex min-h-12 items-center justify-between gap-5 border border-imesul-red bg-imesul-red font-condensed font-bold text-white uppercase transition duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_16px_34px_rgba(212,43,43,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red ${
+        compact
+          ? "mt-auto w-full px-5 py-3 text-xs tracking-[0.12em]"
+          : "mt-7 w-fit min-w-[310px] px-6 py-3 text-sm tracking-[0.14em]"
+      }`}
+    >
+      <span>Ver opções na Área de Vendas</span>
+      <span
+        aria-hidden="true"
+        className="text-lg leading-none transition-transform duration-300 group-hover/link:translate-x-1"
+      >
+        →
+      </span>
+    </a>
+  );
+}
 
-  if (imageAsset) return <ProductImageAsset asset={imageAsset} />;
-
-  const common = {
-    fill: "url(#steel)",
-    stroke: "rgba(255,255,255,0.28)",
-    strokeWidth: 2,
-  };
+function ProductInformation({ product, compact = false }) {
+  const longTitle = product.name.length > 22;
 
   return (
-    <svg viewBox="0 0 720 560" className="h-full w-full overflow-visible" aria-hidden="true">
-      <defs>
-        <linearGradient id="steel" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="18%" stopColor="#7c91a3" />
-          <stop offset="46%" stopColor="#d7e4ee" />
-          <stop offset="72%" stopColor="#34465b" />
-          <stop offset="100%" stopColor="#f8fdff" />
-        </linearGradient>
-        <linearGradient id="redEdge" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#D42B2B" />
-          <stop offset="100%" stopColor="#FF5C5C" />
-        </linearGradient>
-        <filter id="metalGlow">
-          <feGaussianBlur stdDeviation="10" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[10px] tracking-[0.3em] text-imesul-red">
+          {product.number}
+        </span>
+        <span className="h-px w-8 bg-imesul-red/80" />
+        <span className="font-mono text-[9px] tracking-[0.26em] text-imesul-steel/55">
+          {product.tag}
+        </span>
+      </div>
 
-      <ellipse cx="374" cy="430" rx="250" ry="54" fill="rgba(0,0,0,0.42)" />
-      <ellipse cx="390" cy="298" rx="270" ry="160" fill="rgba(212,43,43,0.13)" filter="url(#metalGlow)" />
+      <h3
+        className={`mt-4 max-w-[620px] font-display leading-[0.92] text-white ${
+          compact
+            ? longTitle
+              ? "text-3xl sm:text-[2.65rem]"
+              : "text-[2.65rem] sm:text-5xl"
+            : longTitle
+              ? "text-[3.4rem] xl:text-[4rem]"
+              : "text-[4.25rem] xl:text-[5rem]"
+        }`}
+      >
+        {product.name}
+      </h3>
 
-      {id === "tubos" && (
-        <g transform="translate(82 90) rotate(-10 300 220)">
-          {[0, 54, 108, 162].map((y, i) => (
-            <g key={y} transform={`translate(${i * 34} ${y})`}>
-              <rect x="76" y="74" width="470" height="66" rx="33" {...common} />
-              <ellipse cx="77" cy="107" rx="34" ry="33" fill="#dce9f1" stroke="rgba(255,255,255,0.35)" />
-              <ellipse cx="77" cy="107" rx="20" ry="19" fill="#07101f" />
-              <path d="M118 86h390" stroke="white" strokeOpacity="0.38" strokeWidth="4" />
-            </g>
-          ))}
-        </g>
-      )}
+      <p className="mt-3 font-condensed text-xs font-semibold tracking-[0.17em] text-imesul-red uppercase sm:text-sm">
+        {product.subtitle}
+      </p>
+      <p className="mt-4 max-w-[560px] text-sm leading-6 text-imesul-steel-light/75 sm:text-[15px] sm:leading-7">
+        {product.description}
+      </p>
 
-      {id === "chapas" && (
-        <g transform="translate(138 128) rotate(-14 260 190)">
-          {[0, 28, 56, 84].map((o) => (
-            <path key={o} d={`M${o} 0h386l72 72v210H72L${o} 210z`} {...common} opacity={0.5 + o / 130} />
-          ))}
-          <path d="M86 44h310M118 92h290M145 140h240" stroke="#fff" strokeOpacity="0.24" strokeWidth="3" />
-        </g>
-      )}
+      <dl className={`mt-6 grid gap-5 border-t border-white/10 pt-5 ${compact ? "mb-7" : "max-w-[570px] sm:grid-cols-[1.08fr_0.92fr]"}`}>
+        <div>
+          <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-steel/55">
+            PRINCIPAIS VARIAÇÕES
+          </dt>
+          <dd className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            {product.variations.map((variation) => (
+              <span
+                key={variation}
+                className="relative pl-3 font-condensed text-sm font-medium text-imesul-steel before:absolute before:left-0 before:top-[0.58em] before:h-1 before:w-1 before:bg-imesul-red"
+              >
+                {variation}
+              </span>
+            ))}
+          </dd>
+        </div>
 
-      {id === "telhas" && (
-        <g transform="translate(86 145) rotate(-8 300 180)">
-          <path d="M40 142C78 70 118 70 156 142s78 72 116 0 78-72 116 0 78 72 116 0 78-72 116 0v160H40z" {...common} />
-          <path d="M40 142C78 70 118 70 156 142s78 72 116 0 78-72 116 0 78 72 116 0 78-72 116 0" fill="none" stroke="#fff" strokeOpacity="0.45" strokeWidth="5" />
-          <path d="M40 244h580" stroke="#07101f" strokeOpacity="0.42" strokeWidth="6" />
-        </g>
-      )}
+        <div className={compact ? "border-t border-white/10 pt-5" : "border-l border-white/10 pl-5"}>
+          <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-red">
+            USO PRINCIPAL
+          </dt>
+          <dd className="mt-3 text-sm leading-6 text-white/80">{product.principalUse}</dd>
+        </div>
+      </dl>
 
-      {id === "perfis" && (
-        <g transform="translate(150 86) rotate(12 250 240)">
-          <path d="M40 70h450v82H314v250h176v82H40v-82h176V152H40z" {...common} />
-          <path d="M72 98h386M226 170v214M74 430h384" stroke="#fff" strokeOpacity="0.34" strokeWidth="5" />
-        </g>
-      )}
-
-      {id === "cantoneiras" && (
-        <g transform="translate(150 92) rotate(-18 270 240)">
-          <path d="M92 52h128v300h310v126H92z" {...common} />
-          <path d="M134 94v340h352" fill="none" stroke="#07101f" strokeOpacity="0.34" strokeWidth="18" />
-          <path d="M111 70h86M113 454h374" stroke="#fff" strokeOpacity="0.35" strokeWidth="4" />
-        </g>
-      )}
-
-      {id === "metalon" && (
-        <g transform="translate(118 105) rotate(-10 280 220)">
-          {[0, 74, 148].map((y, i) => (
-            <g key={y} transform={`translate(${i * 44} ${y})`}>
-              <rect x="70" y="52" width="430" height="64" rx="8" {...common} />
-              <rect x="88" y="68" width="42" height="32" fill="#07101f" opacity="0.82" />
-              <path d="M148 66h315" stroke="white" strokeOpacity="0.36" strokeWidth="4" />
-            </g>
-          ))}
-        </g>
-      )}
-
-      {id === "bobininhas" && (
-        <g transform="translate(126 74) rotate(-7 280 250)">
-          <ellipse cx="308" cy="260" rx="210" ry="170" {...common} />
-          <ellipse cx="308" cy="260" rx="124" ry="102" fill="#9fb0bf" stroke="rgba(255,255,255,0.42)" strokeWidth="2" />
-          <ellipse cx="308" cy="260" rx="62" ry="50" fill="#07101f" />
-          <path d="M190 124c142 38 236 128 245 274" fill="none" stroke="#fff" strokeOpacity="0.25" strokeWidth="10" />
-          <path d="M166 414h306" stroke="url(#redEdge)" strokeWidth="5" />
-        </g>
-      )}
-
-      {id === "solventes-acessorios" && (
-        <g transform="translate(150 90) rotate(-8 260 230)">
-          <rect x="150" y="80" width="176" height="300" rx="18" {...common} />
-          <rect x="174" y="128" width="128" height="90" fill="url(#redEdge)" opacity="0.9" />
-          <rect x="184" y="44" width="108" height="48" rx="8" fill="#cbd9e3" />
-          <path d="M372 154h92l42 58v178H372z" {...common} opacity="0.82" />
-          <path d="M186 256h104M392 228h76" stroke="#07101f" strokeOpacity="0.35" strokeWidth="10" />
-        </g>
-      )}
-
-      <path d="M96 500h500" stroke="url(#redEdge)" strokeWidth="2" strokeDasharray="28 18" opacity="0.78" />
-    </svg>
+      <SalesLink compact={compact} />
+    </div>
   );
 }
 
 export default function ProductScrollExperience() {
   const sectionRef = useRef(null);
-  const textRefs = useRef([]);
   const visualRefs = useRef([]);
   const progressRef = useRef(null);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
+    const media = gsap.matchMedia();
 
-    const ctx = gsap.context(() => {
-      gsap.set(textRefs.current, { autoAlpha: 0, y: 42 });
-      gsap.set(visualRefs.current, {
-        autoAlpha: 0,
-        scale: 0.78,
-        y: 50,
-        rotation: -8,
-        filter: "blur(18px)",
-      });
+    media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+      const context = gsap.context(() => {
+        const visualItems = visualRefs.current.filter(Boolean);
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: `+=${products.length * 760}`,
-          pin: true,
-          scrub: 0.8,
-          onUpdate: (self) => {
-            const next = Math.min(products.length - 1, Math.floor(self.progress * products.length));
-            setActive(next);
-            gsap.set(progressRef.current, { scaleY: self.progress });
+        gsap.set(visualItems, {
+          autoAlpha: 0,
+          scale: 0.9,
+          y: 36,
+          filter: "blur(14px)",
+        });
+        gsap.set(visualItems[0], {
+          autoAlpha: 1,
+          scale: 1,
+          y: 0,
+          filter: "blur(0px)",
+        });
+
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top top",
+            end: `+=${products.length * 680}`,
+            pin: true,
+            scrub: 0.75,
+            invalidateOnRefresh: true,
+            onUpdate: ({ progress }) => {
+              const next = Math.min(products.length - 1, Math.floor(progress * products.length));
+              setActive(next);
+              gsap.set(progressRef.current, { scaleY: progress });
+            },
           },
-        },
-      });
+        });
 
-      products.forEach((product, index) => {
-        const at = index * 1.15;
-        const direction = index % 2 === 0 ? -1 : 1;
+        products.forEach((product, index) => {
+          const at = index * 1.1;
 
-        tl.to(textRefs.current[index], { autoAlpha: 1, y: 0, duration: 0.34, ease: "power2.out" }, at)
-          .to(
-            visualRefs.current[index],
-            {
-              autoAlpha: 1,
-              scale: 1,
-              y: 0,
-              rotation: direction * 1.8,
-              filter: "blur(0px)",
-              duration: 0.45,
-              ease: "power2.out",
-            },
-            at
-          )
-          .to(
-            visualRefs.current[index],
-            {
-              scale: 1.08,
-              y: -28,
-              rotation: direction * -3,
-              duration: 0.7,
-              ease: "none",
-            },
-            at + 0.35
-          );
-
-        if (index < products.length - 1) {
-          tl.to(textRefs.current[index], { autoAlpha: 0, y: -34, duration: 0.28 }, at + 0.88)
+          timeline
             .to(
               visualRefs.current[index],
               {
-                autoAlpha: 0,
-                scale: 1.18,
-                y: -70,
-                rotation: direction * 7,
-                filter: "blur(18px)",
-                duration: 0.32,
+                autoAlpha: 1,
+                scale: 1,
+                y: 0,
+                filter: "blur(0px)",
+                duration: 0.42,
+                ease: "power2.out",
               },
-              at + 0.88
+              at
+            )
+            .to(
+              visualRefs.current[index],
+              { scale: 1.045, y: -18, duration: 0.62, ease: "none" },
+              at + 0.34
             );
-        }
-      });
-    }, sectionRef);
 
-    return () => ctx.revert();
+          if (index < products.length - 1) {
+            timeline.to(
+              visualRefs.current[index],
+              {
+                autoAlpha: 0,
+                scale: 1.1,
+                y: -46,
+                filter: "blur(14px)",
+                duration: 0.3,
+              },
+              at + 0.84
+            );
+          }
+        });
+      }, sectionRef);
+
+      return () => context.revert();
+    });
+
+    return () => media.revert();
   }, []);
 
   const activeProduct = products[active];
 
   return (
-    <section id="produtos" ref={sectionRef} className="relative h-screen overflow-hidden bg-[#050b14]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_45%,rgba(212,43,43,0.16),transparent_30%),radial-gradient(circle_at_52%_70%,rgba(48,107,180,0.16),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
-      <div className="absolute inset-0 opacity-[0.1] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
+    <section id="produtos" ref={sectionRef} className="relative overflow-hidden bg-[#050b14]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.12),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.13),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
+      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
 
-      <div className="relative z-10 mx-auto grid h-screen max-w-[1600px] grid-cols-1 items-center gap-8 px-6 py-24 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:px-16">
-        <div className="relative z-20 min-h-[360px] lg:min-h-[520px]">
-          <div className="mb-8 flex items-center gap-4">
-            <span className="font-mono text-[10px] tracking-[0.42em] text-imesul-red">
-              PRODUTOS
+      <div className="relative z-10 px-5 pb-20 pt-28 sm:px-8 sm:pb-24 sm:pt-32 lg:hidden">
+        <header className="mx-auto max-w-5xl">
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
+              SHOWROOM IMESUL
             </span>
             <span className="h-px w-14 bg-imesul-red" />
-            <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-steel/50">
-              {activeProduct.number}/08
-            </span>
           </div>
+          <div className="mt-6 grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+            <h2 className="max-w-3xl font-display text-5xl leading-[0.94] text-white sm:text-6xl">
+              SOLUÇÕES PARA QUEM CONSTRÓI E TRANSFORMA
+            </h2>
+            <p className="max-w-xl text-sm leading-7 text-imesul-steel-light/70 sm:text-base">
+              Conheça as principais linhas da IMESUL e encontre o material adequado para sua obra,
+              indústria ou serralheria.
+            </p>
+          </div>
+        </header>
 
+        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 md:grid-cols-2">
           {products.map((product, index) => (
             <article
               key={product.id}
-              ref={(el) => (textRefs.current[index] = el)}
-              className="absolute left-0 top-16 max-w-[560px]"
+              className="group flex min-h-full flex-col overflow-hidden border border-white/10 bg-[#091524]/92 shadow-[0_22px_60px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-imesul-red/45 hover:shadow-[0_28px_72px_rgba(0,0,0,0.34)]"
             >
-              <p className="font-mono text-[10px] tracking-[0.4em] text-imesul-red">
-                {product.number} / {product.tag}
-              </p>
-              <h2
-                className="mt-5 font-display leading-[0.9] text-white"
-                style={{ fontSize: "clamp(4rem, 10vw, 9.2rem)" }}
-              >
-                {product.name}
-              </h2>
-              <p className="mt-4 font-condensed text-sm font-semibold tracking-[0.3em] text-imesul-red uppercase">
-                {product.subtitle}
-              </p>
-              <p className="mt-8 max-w-[500px] text-base leading-relaxed text-imesul-steel-light/74 lg:text-lg">
-                {product.description}
-              </p>
-              <div className="mt-8 grid grid-cols-2 gap-2">
-                {product.specs.map((spec) => (
-                  <span
-                    key={spec}
-                    className="border border-white/10 bg-white/[0.025] px-3 py-2 font-condensed text-xs font-medium tracking-[0.14em] text-imesul-steel"
-                  >
-                    {spec}
-                  </span>
-                ))}
+              <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_62%_48%,rgba(212,43,43,0.12),transparent_38%),linear-gradient(145deg,#101f31,#07101c)]">
+                <span className="absolute left-5 top-5 z-10 font-mono text-[9px] tracking-[0.2em] text-white/35">
+                  LINHA {product.number}
+                </span>
+                <ProductImage product={product} compact />
+              </div>
+              <div className="flex flex-1 flex-col p-6 sm:p-7">
+                <ProductInformation product={product} compact />
               </div>
             </article>
           ))}
         </div>
-
-        <div className="relative h-[46vh] min-h-[300px] lg:h-[78vh]">
-          <div className="absolute inset-0 rounded-full bg-imesul-red/6 blur-[80px]" />
-          {products.map((product, index) => (
-            <div
-              key={product.id}
-              ref={(el) => (visualRefs.current[index] = el)}
-              className="absolute inset-0 flex items-center justify-center will-change-transform"
-            >
-              <SteelProduct id={product.id} />
-            </div>
-          ))}
-        </div>
       </div>
 
-      <div className="absolute right-5 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-4 lg:flex">
-        <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-steel/45 [writing-mode:vertical-rl]">
-          {activeProduct.name}
-        </span>
-        <div className="relative h-56 w-px bg-white/10">
-          <div ref={progressRef} className="absolute left-0 top-0 h-full w-px origin-top scale-y-0 bg-imesul-red" />
+      <div className="relative z-10 hidden h-screen lg:block">
+        <div className="mx-auto grid h-full max-w-[1600px] grid-cols-[0.94fr_1.06fr] items-start gap-12 px-12 pb-8 pt-24 xl:px-16">
+          <div className="relative z-20 min-h-[640px] xl:min-h-[690px]">
+            <div className="mb-7 flex items-center gap-4">
+              <span className="font-mono text-[10px] tracking-[0.36em] text-imesul-red">
+                SHOWROOM IMESUL
+              </span>
+              <span className="h-px w-14 bg-imesul-red" />
+              <span className="font-mono text-[10px] tracking-[0.23em] text-imesul-steel/50">
+                {activeProduct.number}/{String(products.length).padStart(2, "0")}
+              </span>
+            </div>
+
+            {products.map((product, index) => (
+              <article
+                key={product.id}
+                aria-hidden={index !== active}
+                className={`absolute left-0 top-14 w-full max-w-[650px] border-l-2 border-imesul-red bg-[#07111f]/78 px-8 py-7 shadow-[0_30px_90px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-[opacity,transform] duration-500 ${
+                  index === active
+                    ? "pointer-events-auto translate-y-0 opacity-100"
+                    : "pointer-events-none translate-y-6 opacity-0"
+                }`}
+              >
+                <ProductInformation product={product} />
+              </article>
+            ))}
+          </div>
+
+          <div className="relative h-[78vh] min-h-[540px]">
+            <div className="absolute inset-[7%] rounded-full bg-imesul-red/[0.055] blur-[90px]" />
+            <div className="absolute inset-x-[5%] bottom-[9%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                ref={(element) => {
+                  visualRefs.current[index] = element;
+                }}
+                className="absolute inset-0 flex items-center justify-center will-change-transform"
+              >
+                <ProductImage product={product} />
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          {products.map((product, index) => (
-            <span
-              key={product.id}
-              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                index === active ? "scale-150 bg-imesul-red" : "bg-white/20"
-              }`}
+
+        <div className="absolute right-5 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-4 xl:flex">
+          <span className="max-h-44 overflow-hidden font-mono text-[9px] tracking-[0.2em] text-imesul-steel/45 [writing-mode:vertical-rl]">
+            {activeProduct.name}
+          </span>
+          <div className="relative h-52 w-px bg-white/10">
+            <div
+              ref={progressRef}
+              className="absolute left-0 top-0 h-full w-px origin-top scale-y-0 bg-imesul-red"
             />
-          ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {products.map((product, index) => (
+              <span
+                key={product.id}
+                className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                  index === active ? "scale-150 bg-imesul-red" : "bg-white/20"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

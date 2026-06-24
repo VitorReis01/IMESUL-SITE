@@ -41,6 +41,7 @@ export default function Hero() {
           preload="metadata"
           aria-hidden="true"
         >
+          <source src="/videos/fabrica-dourados-hero.webm" type="video/webm" />
           <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
         </video>
       </div>
@@ -69,6 +70,7 @@ export default function Hero() {
           </motion.div>
 
           <motion.h1
+            initial={false}
             variants={{
               hidden: { opacity: 0, y: 54 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } },
@@ -93,26 +95,6 @@ export default function Hero() {
             Campo Grande e Dourados — MS.
           </motion.p>
 
-          <motion.div
-            variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8 } } }}
-            className="mt-10 flex flex-wrap items-center gap-4"
-          >
-            <a
-              href="#produtos"
-              className="group relative flex items-center gap-3 overflow-hidden rounded-[10px] bg-imesul-red px-8 py-3.5 transition-all duration-300 hover:bg-imesul-red-dark hover:shadow-[0_10px_46px_rgba(212,43,43,0.42)] sm:py-4"
-            >
-              <span className="relative z-10 font-condensed text-sm font-bold tracking-[0.2em] text-white">
-                VER NOSSOS PRODUTOS
-              </span>
-              <span className="relative z-10 text-white transition-transform duration-300 group-hover:translate-x-1">
-                →
-              </span>
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/12 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-            </a>
-            <span className="font-mono text-[10px] tracking-[0.3em] text-imesul-steel/45">
-              ESTOQUE | CORTE | ENTREGA
-            </span>
-          </motion.div>
         </motion.div>
 
         <div className="hidden lg:block" aria-hidden="true" />

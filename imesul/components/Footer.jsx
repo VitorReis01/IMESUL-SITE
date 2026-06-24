@@ -3,6 +3,30 @@
 import Image from "next/image";
 import { navLinks } from "../data/products";
 
+const units = [
+  {
+    name: "Dourados — Matriz",
+    address: "Rua Pedro Rigotti, 258 – Jardim São Pedro, Dourados/MS",
+    phone: "(67) 3427-5700",
+    phoneHref: "tel:+556734275700",
+    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
+  },
+  {
+    name: "Dourados — Loja de Fábrica",
+    address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
+    phone: "(67) 3411-5700",
+    phoneHref: "tel:+556734115700",
+    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
+  },
+  {
+    name: "Campo Grande",
+    address: "Av. Cel. Antonino, 1692 – Vila Lucinda, Campo Grande/MS",
+    phone: "(67) 3312-5600",
+    phoneHref: "tel:+556733125600",
+    mapsHref: "https://maps.app.goo.gl/raaCtPNwUQMGVEQi6",
+  },
+];
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -11,12 +35,12 @@ export default function Footer() {
       <div className="h-px bg-gradient-to-r from-transparent via-imesul-red/50 to-transparent" />
 
       <div className="mx-auto max-w-[1600px] px-6 py-14 sm:px-8 lg:px-16">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr]">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1.15fr_0.65fr_1.45fr]">
           <div>
             <div className="mb-6 flex items-center">
               <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
                 <Image
-                  src="/logo/imesul-logo-completa.png?v=1"
+                  src="/logo/imesul-logo-completa.webp?v=1"
                   alt="IMESUL Distribuição"
                   width={707}
                   height={353}
@@ -34,17 +58,17 @@ export default function Footer() {
                 </span>
               </div>
             </div>
-            <p className="max-w-[380px] text-sm leading-relaxed text-imesul-steel/55">
+            <p className="max-w-[380px] text-sm leading-relaxed text-imesul-steel/80">
               Distribuidora de aço com grande estoque, atendimento técnico e soluções completas para construção,
               indústria e serralheria em Mato Grosso do Sul.
             </p>
           </div>
 
           <div>
-            <h4 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold tracking-[0.3em] text-white uppercase">
+            <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold tracking-[0.3em] text-white uppercase">
               <span className="h-px w-3 bg-imesul-red" />
               NAVEGAÇÃO
-            </h4>
+            </h2>
             <ul className="flex flex-col gap-3">
               {navLinks.map((link) => (
                 <li key={link.label}>
@@ -55,7 +79,7 @@ export default function Footer() {
                     className="group flex items-center gap-2"
                   >
                     <span className="h-px w-0 bg-imesul-red transition-all duration-300 group-hover:w-3" />
-                    <span className="font-condensed text-xs tracking-[0.15em] text-imesul-steel/55 transition-colors duration-300 group-hover:text-white">
+                    <span className="font-condensed text-xs tracking-[0.15em] text-imesul-steel/80 transition-colors duration-300 group-hover:text-white">
                       {link.label}
                     </span>
                   </a>
@@ -65,33 +89,41 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold tracking-[0.3em] text-white uppercase">
+            <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold tracking-[0.3em] text-white uppercase">
               <span className="h-px w-3 bg-imesul-red" />
               UNIDADES
-            </h4>
-            <div className="flex flex-col gap-6">
-              {[
-                { city: "Campo Grande", href: "https://grupoimesul.com.br/campogrande/" },
-                { city: "Dourados", href: "https://grupoimesul.com.br/dourados/" },
-              ].map((unit) => (
-                <a key={unit.city} href={unit.href} target="_blank" rel="noopener noreferrer" className="group">
-                  <p className="font-condensed text-sm font-semibold tracking-[0.15em] text-white transition-colors group-hover:text-imesul-red">
-                    {unit.city}
+            </h2>
+            <div className="flex flex-col gap-7">
+              {units.map((unit) => (
+                <div key={unit.name}>
+                  <p className="font-condensed text-sm font-semibold tracking-[0.15em] text-white">
+                    {unit.name}
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed text-imesul-steel/42">
-                    Mato Grosso do Sul
-                  </p>
-                </a>
+                  <a
+                    href={unit.mapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 block max-w-[390px] text-xs leading-relaxed text-imesul-steel/80 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color] duration-200 hover:text-imesul-red hover:decoration-imesul-red/60"
+                  >
+                    {unit.address}
+                  </a>
+                  <a
+                    href={unit.phoneHref}
+                    className="mt-1.5 inline-block font-mono text-[10px] tracking-[0.12em] text-imesul-steel/75 transition-colors duration-300 hover:text-imesul-red"
+                  >
+                    Telefone: {unit.phone}
+                  </a>
+                </div>
               ))}
             </div>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 sm:flex-row">
-          <span className="font-mono text-[10px] tracking-[0.25em] text-imesul-steel/28">
+          <span className="font-mono text-[10px] tracking-[0.25em] text-imesul-steel/80">
             © {year} IMESUL DISTRIBUIÇÃO. TODOS OS DIREITOS RESERVADOS.
           </span>
-          <span className="font-mono text-[10px] tracking-[0.25em] text-imesul-steel/28">
+          <span className="font-mono text-[10px] tracking-[0.25em] text-imesul-steel/80">
             CAMPO GRANDE & DOURADOS — MS
           </span>
         </div>

@@ -1,25 +1,26 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const chapters = [
   {
     number: "01",
-    eyebrow: "NOSSA HISTÓRIA",
+    eyebrow: "ARQUIVO HISTÓRICO IMESUL",
     title: "50 anos de história",
     text: "Há mais de 50 anos a IMESUL fornece aço e soluções para construção, indústria, serralheria e agronegócio em Mato Grosso do Sul.",
-    image: "/images/company/historia-imesul.jpg",
-    imageAlt: "Vista aérea da unidade da IMESUL em Dourados",
+    image: "/images/company/historia-imesul.webp",
+    imageAlt: "Registro histórico da unidade da IMESUL",
   },
   {
     number: "02",
     eyebrow: "ONDE TUDO COMEÇOU",
     title: "Matriz em Dourados",
     text: "A história da IMESUL começou em Dourados e cresceu acompanhando o desenvolvimento da região.",
-    image: "/images/company/matriz-dourados.jpg",
+    image: "/images/company/matriz-dourados.webp",
     imageAlt: "Matriz da IMESUL vista do alto em Dourados",
   },
   {
@@ -29,7 +30,7 @@ const chapters = [
     text: "Ao longo das décadas, milhares de profissionais, empresas, construtoras, serralheiros e produtores rurais confiaram na IMESUL.",
     metric: "+1M",
     metricLabel: "CLIENTES ATENDIDOS",
-    image: "/images/company/clientes-imesul.jpg",
+    image: "/images/company/clientes-imesul.webp",
     imageAlt: "Estrutura da IMESUL integrada à região de Dourados",
   },
   {
@@ -37,7 +38,7 @@ const chapters = [
     eyebrow: "PRONTA ENTREGA",
     title: "Estrutura e estoque",
     text: "Tubos, chapas, perfis, telhas, laminados e acessórios disponíveis para atender desde pequenas demandas até grandes projetos.",
-    image: "/images/company/estrutura-estoque.jpg",
+    image: "/images/company/estrutura-estoque.webp",
     imageAlt: "Vista aproximada da estrutura industrial da IMESUL",
   },
   {
@@ -101,6 +102,26 @@ export default function CompanyStory() {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const progressRef = useRef(null);
+  const videoPanelRef = useRef(null);
+  const [isStoryVideoReady, setIsStoryVideoReady] = useState(false);
+
+  useEffect(() => {
+    const panel = videoPanelRef.current;
+    if (!panel || isStoryVideoReady) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsStoryVideoReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "320px" }
+    );
+
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [isStoryVideoReady]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -108,11 +129,22 @@ export default function CompanyStory() {
     const updatePosition = (nextProgress) => {
       const nextX =
         window.innerWidth >= 768 ? -nextProgress * 5 * window.innerWidth : 0;
+      const videoProgress = Math.min(
+        Math.max((nextProgress - 0.8) / 0.2, 0),
+        1
+      );
+
       if (trackRef.current) {
         trackRef.current.style.transform = `translate3d(${nextX}px, 0, 0)`;
       }
       if (progressRef.current) {
         progressRef.current.style.transform = `scaleX(${nextProgress})`;
+      }
+      if (videoPanelRef.current) {
+        videoPanelRef.current.style.setProperty(
+          "--story-video-progress",
+          videoProgress
+        );
       }
     };
 
@@ -146,39 +178,62 @@ export default function CompanyStory() {
         >
           {chapters.map((chapter, index) => (
             <article className="story-panel" key={chapter.title}>
-              <div className="story-panel__content">
+              <motion.div
+                initial={{ opacity: 0, y: 26 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
+                className="story-panel__content"
+              >
                 <span className="story-panel__number">{chapter.number} / 06</span>
                 <p className="story-panel__eyebrow">{chapter.eyebrow}</p>
                 <h2>{chapter.title}</h2>
                 {chapter.text && (
                   <p className="story-panel__text">{chapter.text}</p>
                 )}
-              </div>
+              </motion.div>
               <StoryVisual chapter={chapter} index={index} />
             </article>
           ))}
 
-          <article className="story-panel story-panel--video">
-            <video
-              className="story-video"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-label="Estrutura da fábrica da IMESUL em Dourados"
-            >
-              <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
-            </video>
-            <div className="story-video__shade" />
+          <article
+            ref={videoPanelRef}
+            className="story-panel story-panel--video"
+          >
+            <div className="story-video__frame">
+              <video
+                className="story-video"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="none"
+                aria-label="Estrutura da fábrica da IMESUL em Dourados"
+              >
+                {isStoryVideoReady && (
+                  <>
+                    <source src="/videos/fabrica-dourados-hero.webm" type="video/webm" />
+                    <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
+                  </>
+                )}
+              </video>
+              <div className="story-video__shade" />
+            </div>
             <div className="story-video__content">
-              <span className="story-panel__number">06 / 06</span>
-              <p className="story-panel__eyebrow">POR DENTRO DA IMESUL</p>
-              <h2>Aço que movimenta projetos</h2>
-              <p className="story-panel__text">
-                Conheça de perto a estrutura da IMESUL e veja como o aço chega
-                até quem constrói.
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span className="story-panel__number">06 / 06</span>
+                <p className="story-panel__eyebrow">POR DENTRO DA IMESUL</p>
+                <h2>Aço que movimenta projetos</h2>
+                <p className="story-panel__text">
+                  Conheça de perto a estrutura da IMESUL e veja como o aço chega
+                  até quem constrói.
+                </p>
+              </motion.div>
             </div>
           </article>
         </div>

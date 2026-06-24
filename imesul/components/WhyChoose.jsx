@@ -97,7 +97,13 @@ export default function WhyChoose() {
 
       <div className="max-w-[1600px] mx-auto px-8 lg:px-16 relative z-10">
         {/* Header */}
-        <div className="flex flex-col items-center text-center mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col items-center text-center mb-20"
+        >
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-px bg-imesul-red" />
             <span
@@ -120,7 +126,7 @@ export default function WhyChoose() {
             <br />
             A <span style={{ color: "#D42B2B" }}>IMESUL</span>?
           </h2>
-        </div>
+        </motion.div>
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -188,10 +194,11 @@ export default function WhyChoose() {
             </span>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-6">
             {[
-              { city: "Campo Grande", label: "UNIDADE 01" },
-              { city: "Dourados", label: "UNIDADE 02" },
+              { city: "Dourados", label: "MATRIZ" },
+              { city: "Dourados", label: "LOJA DE FÁBRICA" },
+              { city: "Campo Grande", label: "UNIDADE 02" },
             ].map((unit, i) => (
               <div key={i} className="flex flex-col items-center gap-1">
                 <div className="w-2 h-2 bg-imesul-red mb-1" />
