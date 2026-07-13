@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 
 const eventsPath = path.join(process.cwd(), "Backend.js", "analytics-events.json");
@@ -10,6 +11,27 @@ const safeString = (value, fallback = "") =>
   typeof value === "string" ? value.slice(0, 500) : fallback;
 
 const safeBoolean = (value) => Boolean(value);
+
+const maskIp = (ip = "") => {
+  const value = safeString(ip, "não identificado").trim();
+  if (!value || value === "não identificado") return "não identificado";
+  if (value === "::1" || value === "127.0.0.1") return value;
+  if (value.includes(".")) {
+    const parts = value.split(".");
+    return parts.length === 4 ? `${parts[0]}.${parts[1]}.${parts[2]}.xxx` : "ip mascarado";
+  }
+  if (value.includes(":")) {
+    const parts = value.split(":").filter(Boolean);
+    return parts.length ? `${parts.slice(0, 2).join(":")}:xxxx:xxxx` : "ipv6 mascarado";
+  }
+  return "ip mascarado";
+};
+
+const hashIp = (ip = "") => {
+  const value = safeString(ip).trim();
+  if (!value || value === "não identificado") return "";
+  return createHash("sha256").update(value).digest("hex").slice(0, 16);
+};
 
 const safeUtm = (utm = {}) => ({
   source: safeString(utm.source),
@@ -53,6 +75,7 @@ const sanitizeEvent = (payload = {}) => {
   const userPhone = safeString(payload.userPhone || payload.client?.phone);
   const userEmail = safeString(payload.userEmail || payload.client?.email);
   const isLoggedIn = safeBoolean(payload.isLoggedIn);
+  const ipRaw = safeString(payload.ipRaw, "não identificado");
 
   return {
     id: `${now.getTime()}-${Math.random().toString(16).slice(2)}`,
@@ -64,7 +87,9 @@ const sanitizeEvent = (payload = {}) => {
     origin: safeString(payload.source || payload.origin, "Direto / não informado"),
     referrer: safeString(payload.referrer),
     utm: safeUtm(payload.utm),
-    ip: "não registrado",
+    ip: maskIp(ipRaw),
+    ipMasked: maskIp(ipRaw),
+    ipHash: hashIp(ipRaw),
     client: {
       name: userName,
       phone: userPhone,

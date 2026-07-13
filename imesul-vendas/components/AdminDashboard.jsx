@@ -51,7 +51,7 @@ const escapeHtml = (value) =>
     .replaceAll("'", "&#039;");
 
 const reportObservation =
-  "Relatório gerado com dados registrados pelo backend local deste ambiente. Para monitoramento real de todos os visitantes, é necessário backend/analytics de produção.";
+  "Os IPs são exibidos de forma mascarada para preservar a privacidade. Para uso em produção, mantenha política de privacidade e consentimento conforme LGPD.";
 
 const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -66,7 +66,7 @@ const getClientIdentity = (event) => {
 
   return {
     name: hasClientData ? client.name || "Cliente com login" : "Visitante sem login",
-    phone: hasClientData ? client.phone || "Não informado" : "Não informado",
+    phone: hasClientData ? client.phone || "Telefone não informado" : "Telefone não informado",
     email: hasClientData ? client.email || "Não informado" : "Não informado",
     status: hasClientData ? client.status || "Cliente com login" : "Visitante sem login",
   };
@@ -132,7 +132,7 @@ const groupVisitors = (events) => {
       searches: 0,
       lastActivity: event.timestamp,
       traffic: buildTrafficLabel(event),
-      ip: event.ip || "indisponível sem backend",
+      ipMasked: event.ipMasked || event.ip || "não identificado",
       status: getClientIdentity(event).status,
     };
 
@@ -148,6 +148,9 @@ const groupVisitors = (events) => {
     if (event.type === "search") current.searches += 1;
     if (new Date(event.timestamp) > new Date(current.lastActivity)) current.lastActivity = event.timestamp;
     if (current.traffic === "Direto / não informado") current.traffic = buildTrafficLabel(event);
+    if (current.ipMasked === "não identificado" && (event.ipMasked || event.ip)) {
+      current.ipMasked = event.ipMasked || event.ip;
+    }
 
     visitors.set(key, current);
   });
@@ -310,7 +313,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         <td>${escapeHtml(event.label || "-")}</td>
         <td>${escapeHtml(event.detail || "-")}</td>
         <td>${escapeHtml(event.origin || "-")}</td>
-        <td>${escapeHtml(event.ip || "indisponível sem backend")}</td>
+        <td>${escapeHtml(event.ipMasked || event.ip || "não identificado")}</td>
+        <td>${escapeHtml(event.visitorId || "-")}</td>
         <td>${escapeHtml(getClientIdentity(event).phone)}</td>
         <td>${event.isLoggedIn ? "Sim" : "Não"}</td>
       </tr>
@@ -349,7 +353,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         <body>
           <h1>Relatório do Site — IMESUL Vendas</h1>
           <p class="meta">Gerado em ${escapeHtml(formatDate(generatedAt.toISOString()))} às ${escapeHtml(formatTime(generatedAt.toISOString()))}</p>
-          <p class="notice">${escapeHtml(reportObservation)} Não são armazenados CPF, senha, token ou dados sensíveis neste painel.</p>
+          <p class="notice">${escapeHtml(reportObservation)} Não são armazenados CPF, senha ou tokens neste painel.</p>
           <section class="cards">
             <div class="card"><span>Visitantes únicos</span><strong>${metrics.uniqueVisitors}</strong><em>${escapeHtml(comparisons.uniqueVisitors.label)}</em></div>
             <div class="card"><span>Total de acessos</span><strong>${metrics.totalAccesses}</strong><em>Acessos repetidos: ${metrics.repeatedAccesses}</em></div>
@@ -363,16 +367,16 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             ${buttonRanking.map((item) => `<tr><td>${escapeHtml(item.label)}</td><td>${item.total}</td><td>${escapeHtml(item.visitor)}</td><td>${escapeHtml(formatDate(item.lastActivity))} ${escapeHtml(formatTime(item.lastActivity))}</td></tr>`).join("") || '<tr><td colspan="4">Sem cliques registrados.</td></tr>'}
           </tbody></table>
           <h2>Ranking por cliente/visitante</h2>
-          <table><thead><tr><th>Cliente/visitante</th><th>Telefone</th><th>Botão mais clicado</th><th>Total de cliques</th><th>WhatsApp</th><th>Última atividade</th></tr></thead><tbody>
-            ${visitorRanking.map((item) => `<tr><td>${escapeHtml(item.identity.name)}</td><td>${escapeHtml(item.identity.phone)}</td><td>${escapeHtml(item.topButton)}</td><td>${item.clicks}</td><td>${item.hasWhatsapp ? "Sim" : "Não"}</td><td>${escapeHtml(formatDate(item.lastActivity))} ${escapeHtml(formatTime(item.lastActivity))}</td></tr>`).join("") || '<tr><td colspan="6">Sem visitantes registrados.</td></tr>'}
+          <table><thead><tr><th>Cliente/visitante</th><th>Visitor ID</th><th>Telefone</th><th>Botão mais clicado</th><th>Total de cliques</th><th>WhatsApp</th><th>Última atividade</th></tr></thead><tbody>
+            ${visitorRanking.map((item) => `<tr><td>${escapeHtml(item.identity.name)}</td><td>${escapeHtml(item.id)}</td><td>${escapeHtml(item.identity.phone)}</td><td>${escapeHtml(item.topButton)}</td><td>${item.clicks}</td><td>${item.hasWhatsapp ? "Sim" : "Não"}</td><td>${escapeHtml(formatDate(item.lastActivity))} ${escapeHtml(formatTime(item.lastActivity))}</td></tr>`).join("") || '<tr><td colspan="7">Sem visitantes registrados.</td></tr>'}
           </tbody></table>
           <h2>Visitantes e clientes</h2>
-          <table><thead><tr><th>Identificação</th><th>Telefone</th><th>E-mail</th><th>Acessos</th><th>Cliques</th><th>WhatsApp</th><th>Pesquisas</th><th>Origem/UTM</th><th>IP</th><th>Status</th></tr></thead><tbody>
-            ${visitors.map((visitor) => `<tr><td>${escapeHtml(visitor.identity.name)}</td><td>${escapeHtml(visitor.identity.phone)}</td><td>${escapeHtml(visitor.identity.email)}</td><td>${visitor.accesses}</td><td>${visitor.clicks}</td><td>${visitor.whatsapp}</td><td>${visitor.searches}</td><td>${escapeHtml(visitor.traffic)}</td><td>${escapeHtml(visitor.ip)}</td><td>${escapeHtml(visitor.status)}</td></tr>`).join("") || '<tr><td colspan="10">Sem visitantes registrados.</td></tr>'}
+          <table><thead><tr><th>Identificação</th><th>Visitor ID</th><th>Telefone</th><th>E-mail</th><th>Acessos</th><th>Cliques</th><th>WhatsApp</th><th>Pesquisas</th><th>Origem/UTM</th><th>IP mascarado</th><th>Status</th></tr></thead><tbody>
+            ${visitors.map((visitor) => `<tr><td>${escapeHtml(visitor.identity.name)}</td><td>${escapeHtml(visitor.id)}</td><td>${escapeHtml(visitor.identity.phone)}</td><td>${escapeHtml(visitor.identity.email)}</td><td>${visitor.accesses}</td><td>${visitor.clicks}</td><td>${visitor.whatsapp}</td><td>${visitor.searches}</td><td>${escapeHtml(visitor.traffic)}</td><td>${escapeHtml(visitor.ipMasked)}</td><td>${escapeHtml(visitor.status)}</td></tr>`).join("") || '<tr><td colspan="11">Sem visitantes registrados.</td></tr>'}
           </tbody></table>
           <h2>Eventos</h2>
-          <table><thead><tr><th>Data</th><th>Hora</th><th>Tipo</th><th>Seção</th><th>Ação</th><th>Detalhe</th><th>Origem</th><th>IP</th><th>Telefone</th><th>Logado?</th></tr></thead><tbody>
-            ${buildTableRows(events.slice().reverse()) || '<tr><td colspan="10">Nenhum evento registrado.</td></tr>'}
+          <table><thead><tr><th>Data</th><th>Hora</th><th>Tipo</th><th>Seção</th><th>Ação</th><th>Detalhe</th><th>Origem</th><th>IP mascarado</th><th>Visitor ID</th><th>Telefone</th><th>Logado?</th></tr></thead><tbody>
+            ${buildTableRows(events.slice().reverse()) || '<tr><td colspan="11">Nenhum evento registrado.</td></tr>'}
           </tbody></table>
           <script>window.onload = () => window.print();</script>
         </body>
@@ -393,7 +397,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-imesul-red">Área restrita</p>
             <h2 className="mt-2 font-display text-4xl leading-none text-white sm:text-5xl">Painel Administrativo IMESUL</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-imesul-steel-light/68">
-              Dados registrados para análise de uso do site. Não são armazenados CPF, senha ou tokens. Para relatórios reais de todos os visitantes, é necessário backend/analytics de produção com política de privacidade e consentimento.
+              Este painel registra eventos para análise de uso do site. IPs são mascarados e não são armazenados CPF, senha ou tokens. Para produção, use política de privacidade e consentimento conforme LGPD.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -427,7 +431,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           </div>
 
           <div className="mt-5 rounded-[10px] border border-white/[0.1] bg-white/[0.035] p-4 text-sm leading-6 text-imesul-steel-light/72">
-            <strong className="text-white">IP:</strong> indisponível sem backend. Origem/referrer/UTM são registrados apenas quando o navegador informa esses dados.
+            <strong className="text-white">Privacidade:</strong> IPs são exibidos de forma mascarada. Origem/referrer/UTM são registrados apenas quando o navegador informa esses dados.
           </div>
 
           <div className="mt-6 grid gap-5 xl:grid-cols-2">
@@ -444,11 +448,11 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
             <MiniTable title="Ranking por cliente/visitante">
               <table className="min-w-[700px] w-full border-collapse text-left">
-                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Cliente/visitante</th><th className="px-4 py-3">Botão mais clicado</th><th className="px-4 py-3">Cliques</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Última atividade</th></tr></thead>
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Cliente/visitante</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Botão mais clicado</th><th className="px-4 py-3">Cliques</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Última atividade</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {visitorRanking.length ? visitorRanking.map((item) => (
-                    <tr key={item.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{item.identity.name}</td><td className="px-4 py-3">{item.topButton}</td><td className="px-4 py-3">{item.clicks}</td><td className="px-4 py-3">{item.hasWhatsapp ? "Sim" : "Não"}</td><td className="px-4 py-3">{formatDate(item.lastActivity)} {formatTime(item.lastActivity)}</td></tr>
-                  )) : <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem visitantes registrados.</td></tr>}
+                    <tr key={item.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{item.identity.name}</td><td className="px-4 py-3">{item.id}</td><td className="px-4 py-3">{item.topButton}</td><td className="px-4 py-3">{item.clicks}</td><td className="px-4 py-3">{item.hasWhatsapp ? "Sim" : "Não"}</td><td className="px-4 py-3">{formatDate(item.lastActivity)} {formatTime(item.lastActivity)}</td></tr>
+                  )) : <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem visitantes registrados.</td></tr>}
                 </tbody>
               </table>
             </MiniTable>
@@ -457,11 +461,11 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           <div className="mt-5">
             <MiniTable title="Visitantes e clientes">
               <table className="min-w-[1100px] w-full border-collapse text-left">
-                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Identificação</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">E-mail</th><th className="px-4 py-3">Acessos</th><th className="px-4 py-3">Cliques</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Pesquisas</th><th className="px-4 py-3">Última atividade</th><th className="px-4 py-3">Origem/referrer/UTM</th><th className="px-4 py-3">Status</th></tr></thead>
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Identificação</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">E-mail</th><th className="px-4 py-3">Acessos</th><th className="px-4 py-3">Cliques</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Pesquisas</th><th className="px-4 py-3">Última atividade</th><th className="px-4 py-3">Origem/referrer/UTM</th><th className="px-4 py-3">Status</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {visitors.length ? visitors.map((visitor) => (
-                    <tr key={visitor.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{visitor.identity.name}</td><td className="px-4 py-3">{visitor.identity.phone}</td><td className="px-4 py-3">{visitor.identity.email}</td><td className="px-4 py-3">{visitor.accesses}</td><td className="px-4 py-3">{visitor.clicks}</td><td className="px-4 py-3">{visitor.whatsapp}</td><td className="px-4 py-3">{visitor.searches}</td><td className="px-4 py-3">{formatDate(visitor.lastActivity)} {formatTime(visitor.lastActivity)}</td><td className="px-4 py-3">{visitor.traffic}</td><td className="px-4 py-3">{visitor.status}</td></tr>
-                  )) : <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem visitantes registrados.</td></tr>}
+                    <tr key={visitor.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{visitor.identity.name}</td><td className="px-4 py-3">{visitor.id}</td><td className="px-4 py-3">{visitor.ipMasked}</td><td className="px-4 py-3">{visitor.identity.phone}</td><td className="px-4 py-3">{visitor.identity.email}</td><td className="px-4 py-3">{visitor.accesses}</td><td className="px-4 py-3">{visitor.clicks}</td><td className="px-4 py-3">{visitor.whatsapp}</td><td className="px-4 py-3">{visitor.searches}</td><td className="px-4 py-3">{formatDate(visitor.lastActivity)} {formatTime(visitor.lastActivity)}</td><td className="px-4 py-3">{visitor.traffic}</td><td className="px-4 py-3">{visitor.status}</td></tr>
+                  )) : <tr><td colSpan={12} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem visitantes registrados.</td></tr>}
                 </tbody>
               </table>
             </MiniTable>
@@ -478,14 +482,14 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           <div className="mt-5 overflow-hidden rounded-[10px] border border-white/[0.1]">
             <div className="overflow-x-auto">
               <table className="min-w-[1200px] w-full border-collapse text-left">
-                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th></tr></thead>
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {filteredEvents.length ? filteredEvents.slice().reverse().map((event) => {
                     const identity = getClientIdentity(event);
                     return (
-                      <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ip || "indisponível sem backend"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td></tr>
+                      <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td></tr>
                     );
-                  }) : <tr><td colSpan={11} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Nenhum evento registrado para este filtro.</td></tr>}
+                  }) : <tr><td colSpan={12} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Nenhum evento registrado para este filtro.</td></tr>}
                 </tbody>
               </table>
             </div>
