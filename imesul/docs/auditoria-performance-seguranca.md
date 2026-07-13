@@ -1,6 +1,6 @@
 # Auditoria de Performance e Segurança
 
-Data: 24/06/2026
+Data: 24/06/2026 — revisado em 01/07/2026
 
 ## Escopo
 
@@ -24,7 +24,7 @@ Auditoria do site institucional IMESUL. O projeto `imesul-vendas` não foi alter
 
 - Imagens institucionais da história, clientes, estrutura e matriz agora usam WebP.
 - Imagens do showroom de acessórios e tintas agora usam WebP.
-- O ícone atual do WhatsApp foi convertido de PNG (82 KB) para WebP (18 KB), preservando transparência.
+- O ícone atual do WhatsApp foi convertido de PNG (82 KB) para WebP (aproximadamente 3 KB), preservando transparência.
 - O vídeo já estava corretamente configurado com WebM primeiro e MP4 como fallback.
 - O `next/image` voltou a usar a otimização nativa do Next, com negociação WebP/AVIF.
 
@@ -59,6 +59,19 @@ Auditoria do site institucional IMESUL. O projeto `imesul-vendas` não foi alter
 
 ## Segurança básica
 
+### Migração e revisão pré-publicação de 02/07/2026
+
+- Os dois projetos foram migrados de Next.js 14.2.35 para Next.js 16.2.10, mantendo React 18.3.1 para preservar compatibilidade com as dependências visuais atuais.
+- ESLint foi atualizado para a configuração flat compatível com Next.js 16; `next lint`, removido pelo framework, foi substituído por `eslint .`.
+- O Turbopack recebeu uma raiz explícita em cada `next.config.js`, eliminando a inferência incorreta causada por um `package-lock.json` externo aos projetos.
+- O PostCSS foi consolidado em 8.5.10 por `overrides`, pois a dependência transitiva do framework ainda apontava para uma versão afetada pelo alerta de segurança.
+- `npm audit --omit=dev`, `npm run lint` e `npm run build` foram concluídos nos dois projetos sem vulnerabilidades, erros ou warnings críticos.
+- Ambos os projetos usam `X-Frame-Options: DENY`, CSP com `frame-ancestors 'none'`, `X-Content-Type-Options`, `Referrer-Policy` e `Permissions-Policy`.
+- As referências de produção a `localhost:3000` e `localhost:3100` foram removidas do código, exemplos de ambiente e documentação operacional.
+- O número institucional do WhatsApp foi unificado em `556733125600`.
+- `npm audit fix --force` não foi utilizado; a atualização foi manual e controlada.
+- O override do PostCSS deve ser revisto em futuras atualizações do Next.js e removido quando a árvore oficial do framework já resolver a versão corrigida sem intervenção.
+
 ### Verificações realizadas
 
 - Nenhum arquivo `.env` real encontrado no projeto; existe somente `.env.example`.
@@ -72,10 +85,11 @@ Auditoria do site institucional IMESUL. O projeto `imesul-vendas` não foi alter
 
 ### Headers adicionados
 
-- `X-Frame-Options: SAMEORIGIN`
+- `X-Frame-Options: DENY`
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`
+- `Content-Security-Policy` com `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'` e restrições para scripts, estilos, imagens, mídia e conexões.
 
 ### Limites da blindagem no frontend
 
@@ -83,9 +97,9 @@ Não é possível impedir que visitantes usem DevTools, leiam o HTML/CSS/JavaScr
 
 ## Riscos e recomendações futuras
 
-1. Configurar `NEXT_PUBLIC_SALES_SITE_URL` com a URL pública real no ambiente de produção; o fallback atual é local.
+1. Configurar `NEXT_PUBLIC_SALES_SITE_URL` com a URL pública real da Área de Vendas no ambiente de produção; o fallback seguro aponta para o domínio institucional e não expõe localhost.
 2. Avaliar uma versão menor do vídeo para telas móveis ou imagem poster para conexões lentas.
 3. Monitorar Core Web Vitals e transferência real do vídeo após o deploy.
 4. Manter dependências atualizadas e executar `npm audit` periodicamente.
-5. Considerar CSP depois de mapear fontes, analytics e integrações externas do ambiente de produção.
+5. Revisar a CSP sempre que analytics, fontes ou novas integrações externas forem adicionadas.
 6. Se o site passar a receber formulários ou dados pessoais, validar tudo no backend e adicionar proteção contra abuso, CSRF conforme arquitetura e política de retenção.

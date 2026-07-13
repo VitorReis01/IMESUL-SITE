@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { benefits } from "../data/products";
 
+// Icones locais evitam uma dependencia externa para quatro desenhos simples.
 const icons = {
   warehouse: (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -35,14 +34,25 @@ const icons = {
   ),
 };
 
+// Apresenta os diferenciais, a cobertura regional e as tres unidades de atendimento.
 export default function WhyChoose() {
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
 
+  // Revela cada card quando a secao entra na tela e limpa os gatilhos ao desmontar.
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    let ctx;
+    let cancelled = false;
 
-    const ctx = gsap.context(() => {
+    const setup = async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      ctx = gsap.context(() => {
       cardsRef.current.forEach((card, i) => {
         if (!card) return;
         gsap.fromTo(
@@ -61,14 +71,19 @@ export default function WhyChoose() {
           }
         );
       });
-    }, sectionRef);
+      }, sectionRef);
+    };
 
-    return () => ctx.revert();
+    setup();
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
   }, []);
 
   return (
     <section id="diferenciais" ref={sectionRef} className="relative py-24 lg:py-36 bg-imesul-blue overflow-hidden">
-      {/* Background accent */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
@@ -82,7 +97,6 @@ export default function WhyChoose() {
         }}
       />
 
-      {/* Large background text */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-display text-white/[0.025] select-none pointer-events-none"
         style={{
@@ -96,7 +110,6 @@ export default function WhyChoose() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-8 lg:px-16 relative z-10">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -128,7 +141,6 @@ export default function WhyChoose() {
           </h2>
         </motion.div>
 
-        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {benefits.map((benefit, i) => (
             <div
@@ -136,7 +148,6 @@ export default function WhyChoose() {
               ref={(el) => (cardsRef.current[i] = el)}
               className="relative group p-8 border border-white/5 hover:border-imesul-red/30 transition-all duration-500 hover:bg-imesul-blue-light/30"
             >
-              {/* Number */}
               <div
                 className="absolute top-4 right-5 font-mono text-[11px] text-white/10"
                 style={{ fontFamily: "var(--font-mono)" }}
@@ -144,12 +155,10 @@ export default function WhyChoose() {
                 {benefit.number}
               </div>
 
-              {/* Icon */}
               <div className="w-14 h-14 border border-imesul-red/30 group-hover:border-imesul-red/70 flex items-center justify-center text-imesul-red mb-6 transition-colors duration-500">
                 {icons[benefit.icon]}
               </div>
 
-              {/* Title */}
               <h3
                 className="font-display text-white text-2xl mb-3 group-hover:text-imesul-steel-light transition-colors"
                 style={{ fontFamily: "var(--font-display)", letterSpacing: "0.06em" }}
@@ -157,7 +166,6 @@ export default function WhyChoose() {
                 {benefit.title}
               </h3>
 
-              {/* Description */}
               <p
                 className="font-body text-imesul-steel/60 text-sm leading-relaxed"
                 style={{ fontFamily: "var(--font-body)" }}
@@ -165,13 +173,11 @@ export default function WhyChoose() {
                 {benefit.description}
               </p>
 
-              {/* Bottom accent */}
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-imesul-red/0 via-imesul-red/40 to-imesul-red/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
           ))}
         </div>
 
-        {/* Trust bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

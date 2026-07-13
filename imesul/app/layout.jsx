@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Barlow, Barlow_Condensed, Bebas_Neue, JetBrains_Mono } from "next/font/google";
 
+// Carrega somente os pesos usados e publica cada familia como variavel CSS.
 const displayFont = Bebas_Neue({
   subsets: ["latin"],
   weight: "400",
@@ -10,14 +11,14 @@ const displayFont = Bebas_Neue({
 
 const bodyFont = Barlow({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "900"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-body",
   display: "swap",
 });
 
 const condensedFont = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-condensed",
   display: "swap",
   preload: false,
@@ -31,8 +32,10 @@ const monoFont = JetBrains_Mono({
   preload: false,
 });
 
+// Centraliza a URL publica usada por canonical, compartilhamento e dados estruturados.
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://grupoimesul.com.br").replace(/\/$/, "");
 
+// Metadata compartilhada por todas as rotas do site institucional.
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
@@ -77,6 +80,7 @@ export const viewport = {
   themeColor: "#0A1628",
 };
 
+// Descreve a empresa e suas unidades para mecanismos de busca.
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -118,6 +122,7 @@ const structuredData = {
   ],
 };
 
+// Aplica fontes, estilos globais e JSON-LD ao documento do App Router.
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">

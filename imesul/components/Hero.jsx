@@ -1,48 +1,89 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { m as motion } from "framer-motion";
+import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
+import { getInstitutionalVideoSources, institutionalVideo } from "../data/videoAssets";
 
+// Apresenta a mensagem principal sobre o video da fabrica e controla seu fallback.
 export default function Hero() {
   const heroRef = useRef(null);
   const visualRef = useRef(null);
+  const videoRef = useRef(null);
+  const videoProfile = useAdaptiveVideoProfile();
+  const videoSources = getInstitutionalVideoSources(videoProfile);
 
+  // Aplica parallax enquanto o Hero sai da viewport e limpa o ScrollTrigger no final.
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    let ctx;
+    let cancelled = false;
 
-    const ctx = gsap.context(() => {
-      gsap.to(visualRef.current, {
-        yPercent: 8,
-        scale: 1.04,
-        ease: "none",
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    }, heroRef);
+    const setup = async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
 
-    return () => ctx.revert();
+      ctx = gsap.context(() => {
+        gsap.to(visualRef.current, {
+          yPercent: 8,
+          scale: 1.04,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      }, heroRef);
+    };
+
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setup();
+    }
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
   }, []);
+
+  // Recarrega o elemento ao trocar de perfil e remove a midia quando fica apenas o poster.
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (!videoSources) {
+      videoRef.current.pause();
+      videoRef.current.load();
+      return;
+    }
+    videoRef.current.load();
+    videoRef.current.play().catch(() => {});
+  }, [videoSources]);
 
   return (
     <section id="inicio" ref={heroRef} className="relative min-h-screen overflow-hidden bg-[#050b14]">
       <div ref={visualRef} className="absolute inset-x-0 top-[-6%] h-[112%] w-full">
         <video
+          ref={videoRef}
           className="h-full w-full object-cover"
-          autoPlay
+          autoPlay={Boolean(videoSources)}
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
+          poster={institutionalVideo.poster}
           aria-hidden="true"
         >
-          <source src="/videos/fabrica-dourados-hero.webm" type="video/webm" />
-          <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
+          {videoSources?.mp4 && videoSources?.webm && (
+            <>
+              {/* Prioriza MP4 porque a comparacao visual preservou melhor os detalhes da fabrica. */}
+              <source src={videoSources.mp4} type="video/mp4" />
+              <source src={videoSources.webm} type="video/webm" />
+            </>
+          )}
         </video>
       </div>
 

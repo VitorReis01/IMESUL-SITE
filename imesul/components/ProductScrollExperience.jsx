@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { products, salesSiteUrl } from "../data/products";
 
+// Mantem o tratamento visual das imagens consistente nos cards e no palco desktop.
 function ProductImage({ product, compact = false }) {
   const isAccessoryShowroom = product.id === "acessorios-serralheria";
 
@@ -40,6 +39,7 @@ function ProductImage({ product, compact = false }) {
   );
 }
 
+// Leva a selecao para o site comercial sem simular compra no institucional.
 function SalesLink({ compact = false }) {
   return (
     <a
@@ -63,6 +63,7 @@ function SalesLink({ compact = false }) {
   );
 }
 
+// Compartilha textos, variacoes e uso principal entre os dois layouts responsivos.
 function ProductInformation({ product, compact = false }) {
   const longTitle = product.name.length > 22;
 
@@ -129,91 +130,110 @@ function ProductInformation({ product, compact = false }) {
   );
 }
 
+// Exibe cards no mobile e um showroom fixado, controlado por scroll, no desktop.
 export default function ProductScrollExperience() {
   const sectionRef = useRef(null);
   const visualRefs = useRef([]);
   const progressRef = useRef(null);
   const [active, setActive] = useState(0);
 
+  // No desktop, transforma o progresso da secao em trocas de produto com foco e escala.
+  // O matchMedia desativa o efeito no mobile e respeita movimento reduzido.
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-    const media = gsap.matchMedia();
+    let media;
+    let cancelled = false;
 
-    media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
-      const context = gsap.context(() => {
-        const visualItems = visualRefs.current.filter(Boolean);
+    const setup = async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
+      media = gsap.matchMedia();
 
-        gsap.set(visualItems, {
-          autoAlpha: 0,
-          scale: 0.9,
-          y: 36,
-          filter: "blur(14px)",
-        });
-        gsap.set(visualItems[0], {
-          autoAlpha: 1,
-          scale: 1,
-          y: 0,
-          filter: "blur(0px)",
-        });
+      media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        const context = gsap.context(() => {
+          const visualItems = visualRefs.current.filter(Boolean);
 
-        const timeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top top",
-            end: `+=${products.length * 680}`,
-            pin: true,
-            scrub: 0.75,
-            invalidateOnRefresh: true,
-            onUpdate: ({ progress }) => {
-              const next = Math.min(products.length - 1, Math.floor(progress * products.length));
-              setActive(next);
-              gsap.set(progressRef.current, { scaleY: progress });
+          gsap.set(visualItems, {
+            autoAlpha: 0,
+            scale: 0.9,
+            y: 36,
+            filter: "blur(14px)",
+          });
+          gsap.set(visualItems[0], {
+            autoAlpha: 1,
+            scale: 1,
+            y: 0,
+            filter: "blur(0px)",
+          });
+
+          const timeline = gsap.timeline({
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top top",
+              end: `+=${products.length * 680}`,
+              pin: true,
+              scrub: 0.75,
+              invalidateOnRefresh: true,
+              onUpdate: ({ progress }) => {
+                const next = Math.min(products.length - 1, Math.floor(progress * products.length));
+                setActive(next);
+                gsap.set(progressRef.current, { scaleY: progress });
+              },
             },
-          },
-        });
+          });
 
-        products.forEach((product, index) => {
-          const at = index * 1.1;
+          products.forEach((product, index) => {
+            const at = index * 1.1;
 
-          timeline
-            .to(
-              visualRefs.current[index],
-              {
-                autoAlpha: 1,
-                scale: 1,
-                y: 0,
-                filter: "blur(0px)",
-                duration: 0.42,
-                ease: "power2.out",
-              },
-              at
-            )
-            .to(
-              visualRefs.current[index],
-              { scale: 1.045, y: -18, duration: 0.62, ease: "none" },
-              at + 0.34
-            );
+            timeline
+              .to(
+                visualRefs.current[index],
+                {
+                  autoAlpha: 1,
+                  scale: 1,
+                  y: 0,
+                  filter: "blur(0px)",
+                  duration: 0.42,
+                  ease: "power2.out",
+                },
+                at
+              )
+              .to(
+                visualRefs.current[index],
+                { scale: 1.045, y: -18, duration: 0.62, ease: "none" },
+                at + 0.34
+              );
 
-          if (index < products.length - 1) {
-            timeline.to(
-              visualRefs.current[index],
-              {
-                autoAlpha: 0,
-                scale: 1.1,
-                y: -46,
-                filter: "blur(14px)",
-                duration: 0.3,
-              },
-              at + 0.84
-            );
-          }
-        });
-      }, sectionRef);
+            if (index < products.length - 1) {
+              timeline.to(
+                visualRefs.current[index],
+                {
+                  autoAlpha: 0,
+                  scale: 1.1,
+                  y: -46,
+                  filter: "blur(14px)",
+                  duration: 0.3,
+                },
+                at + 0.84
+              );
+            }
+          });
+        }, sectionRef);
 
-      return () => context.revert();
-    });
+        return () => context.revert();
+      });
+    };
 
-    return () => media.revert();
+    setup();
+
+    // Encerra timelines e ScrollTriggers quando o breakpoint ou a pagina muda.
+    return () => {
+      cancelled = true;
+      media?.revert();
+    };
   }, []);
 
   const activeProduct = products[active];

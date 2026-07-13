@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { m as motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
+import { getInstitutionalVideoSources, institutionalVideo } from "../data/videoAssets";
 
+// Conteudo editorial dos cinco paineis anteriores ao video institucional.
 const chapters = [
   {
     number: "01",
@@ -56,6 +57,7 @@ const chapters = [
   },
 ];
 
+// Escolhe entre foto, metrica e lista de credibilidade sem duplicar o painel.
 function StoryVisual({ chapter, index }) {
   if (chapter.highlights) {
     return (
@@ -98,21 +100,26 @@ function StoryVisual({ chapter, index }) {
   );
 }
 
+// Controla a narrativa horizontal no desktop e preserva cards verticais no mobile.
 export default function CompanyStory() {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const progressRef = useRef(null);
   const videoPanelRef = useRef(null);
-  const [isStoryVideoReady, setIsStoryVideoReady] = useState(false);
+  const storyVideoRef = useRef(null);
+  const [isStoryVideoNear, setIsStoryVideoNear] = useState(false);
+  const videoProfile = useAdaptiveVideoProfile({ enabled: isStoryVideoNear });
+  const videoSources = getInstitutionalVideoSources(videoProfile);
 
+  // Habilita a selecao de midia somente quando o painel final se aproxima da viewport.
   useEffect(() => {
     const panel = videoPanelRef.current;
-    if (!panel || isStoryVideoReady) return undefined;
+    if (!panel || isStoryVideoNear) return undefined;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsStoryVideoReady(true);
+          setIsStoryVideoNear(true);
           observer.disconnect();
         }
       },
@@ -121,45 +128,72 @@ export default function CompanyStory() {
 
     observer.observe(panel);
     return () => observer.disconnect();
-  }, [isStoryVideoReady]);
+  }, [isStoryVideoNear]);
 
+  // Recarrega o video ao trocar de perfil e remove fontes no modo de poster.
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    if (!storyVideoRef.current) return;
+    if (!videoSources) {
+      storyVideoRef.current.pause();
+      storyVideoRef.current.load();
+      return;
+    }
+    storyVideoRef.current.load();
+    storyVideoRef.current.play().catch(() => {});
+  }, [videoSources]);
 
-    const updatePosition = (nextProgress) => {
-      const nextX =
-        window.innerWidth >= 768 ? -nextProgress * 5 * window.innerWidth : 0;
-      const videoProgress = Math.min(
-        Math.max((nextProgress - 0.8) / 0.2, 0),
-        1
-      );
+  // Converte progresso vertical em deslocamento horizontal e crescimento do video.
+  // O gatilho e removido quando a secao deixa de existir.
+  useEffect(() => {
+    let trigger;
+    let cancelled = false;
 
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${nextX}px, 0, 0)`;
-      }
-      if (progressRef.current) {
-        progressRef.current.style.transform = `scaleX(${nextProgress})`;
-      }
-      if (videoPanelRef.current) {
-        videoPanelRef.current.style.setProperty(
-          "--story-video-progress",
-          videoProgress
+    const setup = async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      const updatePosition = (nextProgress) => {
+        const nextX =
+          window.innerWidth >= 768 ? -nextProgress * 5 * window.innerWidth : 0;
+        const videoProgress = Math.min(
+          Math.max((nextProgress - 0.8) / 0.2, 0),
+          1
         );
-      }
+
+        if (trackRef.current) {
+          trackRef.current.style.transform = `translate3d(${nextX}px, 0, 0)`;
+        }
+        if (progressRef.current) {
+          progressRef.current.style.transform = `scaleX(${nextProgress})`;
+        }
+        if (videoPanelRef.current) {
+          videoPanelRef.current.style.setProperty(
+            "--story-video-progress",
+            videoProgress
+          );
+        }
+      };
+
+      trigger = ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => updatePosition(self.progress),
+        onRefresh: (self) => updatePosition(self.progress),
+      });
     };
 
-    const trigger = ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start: "top top",
-      end: "bottom bottom",
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => updatePosition(self.progress),
-      onRefresh: (self) => updatePosition(self.progress),
-    });
+    setup();
 
     return () => {
-      trigger.kill();
+      cancelled = true;
+      trigger?.kill();
     };
   }, []);
 
@@ -202,18 +236,21 @@ export default function CompanyStory() {
           >
             <div className="story-video__frame">
               <video
+                ref={storyVideoRef}
                 className="story-video"
-                autoPlay
+                autoPlay={Boolean(videoSources)}
                 muted
                 loop
                 playsInline
                 preload="none"
+                poster={institutionalVideo.poster}
                 aria-label="Estrutura da fábrica da IMESUL em Dourados"
               >
-                {isStoryVideoReady && (
+                {videoSources?.mp4 && videoSources?.webm && (
                   <>
-                    <source src="/videos/fabrica-dourados-hero.webm" type="video/webm" />
-                    <source src="/videos/fabrica-dourados-hero.mp4" type="video/mp4" />
+                    {/* Usa a mesma politica do Hero para manter qualidade e cache consistentes. */}
+                    <source src={videoSources.mp4} type="video/mp4" />
+                    <source src={videoSources.webm} type="video/webm" />
                   </>
                 )}
               </video>

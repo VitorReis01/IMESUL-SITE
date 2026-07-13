@@ -1,5 +1,9 @@
-export const salesSiteUrl = process.env.NEXT_PUBLIC_SALES_SITE_URL || "http://localhost:3100";
+// Destino comercial compartilhado pela navegacao, showroom e CTA final.
+export const salesSiteUrl =
+  process.env.NEXT_PUBLIC_SALES_SITE_URL || "https://grupoimesul.com.br";
 
+// Cada produto exige ID estavel, textos, variacoes, uso, imagem e ordem visual.
+// ProductScrollExperience consome todos os campos nos layouts mobile e desktop.
 export const products = [
   {
     id: "tubos-metalicos",
@@ -111,6 +115,7 @@ export const products = [
   },
 ];
 
+// Diferenciais exibidos por WhyChoose; o nome do icone deve existir no mapa local.
 export const benefits = [
   {
     icon: "warehouse",
@@ -138,22 +143,66 @@ export const benefits = [
   },
 ];
 
-export const navLinks = [
-  { label: "INÍCIO", href: "#inicio" },
-  { label: "DIFERENCIAIS", href: "#diferenciais" },
+// Enderecos oficiais usados pelo rodape e pela pagina interna de links.
+export const officialUnits = [
   {
-    label: "PRODUTOS",
-    href: salesSiteUrl,
-    external: true,
+    id: "dourados-matriz",
+    name: "Dourados — Matriz",
+    address: "Rua Pedro Rigotti, 258 – Jardim São Pedro, Dourados/MS",
+    phone: "(67) 3427-5700",
+    phoneHref: "tel:+556734275700",
+    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
-  { label: "DOURADOS", href: "https://grupoimesul.com.br/dourados/", external: true },
-  { label: "CAMPO GRANDE", href: "https://grupoimesul.com.br/campogrande/", external: true },
-  { label: "LINKS", href: "https://linktr.ee/imesul", external: true },
+  {
+    id: "dourados-fabrica",
+    name: "Dourados — Loja de Fábrica",
+    address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
+    phone: "(67) 3411-5700",
+    phoneHref: "tel:+556734115700",
+    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
+  },
+  {
+    id: "campo-grande",
+    name: "Campo Grande",
+    address: "Av. Cel. Antonino, 1692 – Vila Lucinda, Campo Grande/MS",
+    phone: "(67) 3312-5600",
+    phoneHref: "tel:+556733125600",
+    mapsHref: "https://maps.app.goo.gl/raaCtPNwUQMGVEQi6",
+  },
 ];
 
-export const whatsapp = {
-  number: "5567999999999",
-  message: "Olá! Quero falar com a IMESUL para orçar.",
+// Perfis oficiais usados pela pagina /links, separados por unidade.
+export const officialSocialLinks = {
+  dourados: {
+    facebook: "https://web.facebook.com/imesuldouradosms?_rdc=1&_rdr#",
+    instagram: "https://www.instagram.com/imesul_dourados",
+  },
+  campoGrande: {
+    facebook: "https://web.facebook.com/imesulcampograndems?_rdc=1&_rdr#",
+    instagram: "https://www.instagram.com/imesul_campogrande",
+  },
 };
 
-export const linksUrl = "https://linktr.ee/imesul";
+// Links internos usam ancora ou rota; destinos externos abrem em outra aba.
+export const navLinks = [
+  { label: "INÍCIO", href: "/" },
+  { label: "DIFERENCIAIS", href: "/#diferenciais" },
+  {
+    label: "CATÁLOGO",
+    href: "/catalogo/catalogo-imesul.pdf",
+    external: true,
+  },
+  { label: "DOURADOS", href: "/#dourados" },
+  {
+    label: "CAMPO GRANDE",
+    href: process.env.NEXT_PUBLIC_SALES_SITE_URL || salesSiteUrl,
+    external: true,
+  },
+  { label: "LINKS", href: "/links" },
+];
+
+// Mensagem curta usada apenas pelo CTA institucional, sem dados de formulario.
+export const whatsapp = {
+  number: "556733125600",
+  message: "Olá! Quero falar com a IMESUL para orçar.",
+};

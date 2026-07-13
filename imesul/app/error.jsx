@@ -1,5 +1,6 @@
 "use client";
 
+// Exibe uma falha generica e permite repetir a renderizacao sem detalhes tecnicos.
 export default function ErrorPage({ reset }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#050b14] px-6 text-center text-white">

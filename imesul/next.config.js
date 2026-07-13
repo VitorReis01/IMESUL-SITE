@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV !== "production";
+// Restringe os recursos que a pagina pode carregar e fica mais permissiva apenas no desenvolvimento.
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
@@ -15,14 +16,20 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig = {
+  // Libera os recursos internos do Next.js quando o site e aberto pelo celular na rede local.
+  allowedDevOrigins: [
+    "192.168.1.117",
+    "http://192.168.1.117:3000",
+  ],
   productionBrowserSourceMaps: false,
+  // Mantem o Turbopack limitado a este projeto dentro do repositorio compartilhado.
+  turbopack: {
+    root: __dirname,
+  },
   images: {
-    domains: [],
     formats: ["image/avif", "image/webp"],
   },
-  experimental: {
-    optimizeCss: false,
-  },
+  // Aplica a mesma protecao basica a todas as rotas publicas.
   async headers() {
     return [
       {

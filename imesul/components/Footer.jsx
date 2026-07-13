@@ -1,32 +1,7 @@
-"use client";
-
 import Image from "next/image";
-import { navLinks } from "../data/products";
+import { navLinks, officialUnits } from "../data/products";
 
-const units = [
-  {
-    name: "Dourados — Matriz",
-    address: "Rua Pedro Rigotti, 258 – Jardim São Pedro, Dourados/MS",
-    phone: "(67) 3427-5700",
-    phoneHref: "tel:+556734275700",
-    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
-  },
-  {
-    name: "Dourados — Loja de Fábrica",
-    address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
-    phone: "(67) 3411-5700",
-    phoneHref: "tel:+556734115700",
-    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
-  },
-  {
-    name: "Campo Grande",
-    address: "Av. Cel. Antonino, 1692 – Vila Lucinda, Campo Grande/MS",
-    phone: "(67) 3312-5600",
-    phoneHref: "tel:+556733125600",
-    mapsHref: "https://maps.app.goo.gl/raaCtPNwUQMGVEQi6",
-  },
-];
-
+// Reune marca, navegacao, enderecos, telefones e links verificados do Google Maps.
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -40,7 +15,7 @@ export default function Footer() {
             <div className="mb-6 flex items-center">
               <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
                 <Image
-                  src="/logo/imesul-logo-completa.webp?v=1"
+                  src="/logo/imesul-logo-completa.webp"
                   alt="IMESUL Distribuição"
                   width={707}
                   height={353}
@@ -94,7 +69,7 @@ export default function Footer() {
               UNIDADES
             </h2>
             <div className="flex flex-col gap-7">
-              {units.map((unit) => (
+              {officialUnits.map((unit) => (
                 <div key={unit.name}>
                   <p className="font-condensed text-sm font-semibold tracking-[0.15em] text-white">
                     {unit.name}

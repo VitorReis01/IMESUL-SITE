@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Limita a geracao de classes aos arquivos que compoem a interface.
   content: [
     "./pages/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
@@ -7,6 +8,7 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Tokens compartilhados entre secoes institucionais e estados interativos.
       colors: {
         imesul: {
           red: "#D42B2B",

@@ -38,6 +38,7 @@ imesul-vendas/Backend.js/*.json
 **/Backend.js/analytics-events.json
 
 # Materiais internos e backups documentais
+imesul/docs/performance-assets-originals/
 **/docs/**/*.pdf
 **/docs/**/*.xlsx
 **/docs/**/*.xls

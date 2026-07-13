@@ -1,16 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { m as motion, useScroll, useTransform } from "framer-motion";
 import { navLinks } from "../data/products";
 
+// Exibe a marca, os links institucionais, o menu mobile e o progresso da pagina.
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll();
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
+  // Alterna o fundo do cabecalho depois que o Hero comeca a sair da tela.
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 48);
     handleScroll();
@@ -18,6 +21,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Fecha a navegacao mobile assim que um destino e escolhido.
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -39,14 +43,14 @@ export default function Navbar() {
       >
         <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
           <div className="flex h-[72px] items-center justify-between gap-4">
-            <a
-              href="#inicio"
+            <Link
+              href="/"
               className="group flex shrink-0 items-center"
               onClick={closeMenu}
               aria-label="IMESUL Distribuicao"
             >
               <Image
-                src="/logo/imesul-logo-completa.webp?v=1"
+                src="/logo/imesul-logo-completa.webp"
                 alt="IMESUL Distribuição"
                 width={707}
                 height={353}
@@ -57,7 +61,7 @@ export default function Navbar() {
                     "brightness(1.28) contrast(1.2) saturate(1.06) drop-shadow(0 0 5px rgba(255,255,255,.18)) drop-shadow(0 0 10px rgba(255,255,255,.08))",
                 }}
               />
-            </a>
+            </Link>
 
             <nav className="hidden items-center gap-1 xl:flex">
               {navLinks.map((link) => (

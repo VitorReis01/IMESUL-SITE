@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animacoes compartilhadas e preferencias de movimento */
+@keyframes whatsapp-float-halo {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 0.78;
+    transform: scale(1.04);
+  }
+}
+
+.whatsapp-float-halo {
+  animation: whatsapp-float-halo 3.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-float-halo {
+    animation: none;
+  }
+}
+
+/* Base e tokens visuais */
 :root {
   --red: #D42B2B;
   --red-dark: #A81E1E;
@@ -21,7 +46,8 @@
 }
 
 html {
-  scroll-behavior: auto; /* Lenis takes over */
+  /* O Lenis assume a suavizacao quando o navegador permite movimento. */
+  scroll-behavior: auto;
   overflow-x: clip;
 }
 
@@ -36,7 +62,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
+/* Barra de rolagem */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -48,7 +74,7 @@ body {
   border-radius: 2px;
 }
 
-/* Typography utilities */
+/* Tipografia */
 .font-display {
   font-family: var(--font-display), sans-serif;
   letter-spacing: 0.05em;
@@ -62,7 +88,7 @@ body {
   font-family: var(--font-mono), monospace;
 }
 
-/* Noise texture overlay */
+/* Texturas e efeitos compartilhados */
 .noise-overlay {
   position: fixed;
   inset: 0;
@@ -73,7 +99,43 @@ body {
   background-size: 200px 200px;
 }
 
-/* Red accent line */
+/* Marca d'agua decorativa usada atras do conteudo nas secoes institucionais. */
+.imesul-logo-watermark {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: min(92vw, 980px);
+  aspect-ratio: 1 / 1;
+  background-image: url("/logo/imesul-symbol.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.12;
+  filter: blur(7px) saturate(1.08);
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+}
+
+/* A escala e opacidade caem em telas menores para manter a leitura do conteudo. */
+@media (max-width: 1024px) {
+  .imesul-logo-watermark {
+    width: min(110vw, 820px);
+    opacity: 0.09;
+    filter: blur(6px) saturate(1.05);
+  }
+}
+
+@media (max-width: 640px) {
+  .imesul-logo-watermark {
+    width: 138vw;
+    opacity: 0.055;
+    filter: blur(4px) saturate(1.02);
+  }
+}
+
+/* Linhas de destaque */
 .red-line {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--red), transparent);
@@ -84,7 +146,7 @@ body {
   background: linear-gradient(180deg, transparent, var(--red), transparent);
 }
 
-/* Glow effects */
+/* Brilhos usados nos pontos de destaque */
 .glow-red {
   box-shadow: 0 0 40px rgba(212, 43, 43, 0.3), 0 0 80px rgba(212, 43, 43, 0.1);
 }
@@ -93,7 +155,7 @@ body {
   text-shadow: 0 0 30px rgba(212, 43, 43, 0.5);
 }
 
-/* Steel shimmer */
+/* Reflexo aplicado a superficies metalicas */
 .steel-shimmer {
   background: linear-gradient(
     105deg,
@@ -104,13 +166,13 @@ body {
   background-size: 200% 100%;
 }
 
-/* Section transitions */
+/* Transicoes entre secoes */
 .section-fade-in {
   opacity: 0;
   transform: translateY(30px);
 }
 
-/* Image overlay */
+/* Tratamento comum de imagens */
 .img-overlay {
   background: linear-gradient(
     to bottom,
@@ -120,7 +182,7 @@ body {
   );
 }
 
-/* Product card */
+/* Componentes compartilhados do showroom */
 .product-card {
   position: relative;
   overflow: hidden;
@@ -146,7 +208,7 @@ body {
   opacity: 1;
 }
 
-/* Corner brackets */
+/* Cantos tecnicos usados como moldura */
 .bracket-corner {
   position: relative;
 }
@@ -173,12 +235,12 @@ body {
   border-width: 0 2px 2px 0;
 }
 
-/* Clip path utility */
+/* Utilitarios de forma e numeracao */
 .clip-diagonal {
   clip-path: polygon(0 0, 100% 0, 100% 90%, 95% 100%, 0 100%);
 }
 
-/* Number counter style */
+/* Numeracao das experiencias de scroll */
 .counter-label {
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -187,7 +249,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Sticky section */
+/* Estruturas fixadas durante a rolagem */
 .sticky-section {
   position: sticky;
   top: 0;
@@ -195,7 +257,7 @@ body {
   overflow: hidden;
 }
 
-/* Progress bar */
+/* Indicadores de progresso */
 .progress-bar {
   position: fixed;
   top: 0;
@@ -206,7 +268,7 @@ body {
   z-index: 100;
 }
 
-/* Scanline effect */
+/* Linha de varredura decorativa */
 .scanlines::after {
   content: '';
   position: absolute;
@@ -221,7 +283,7 @@ body {
   pointer-events: none;
 }
 
-/* Hero title animation */
+/* Hero e entradas de texto */
 @keyframes titleReveal {
   from {
     clip-path: inset(0 100% 0 0);
@@ -235,7 +297,7 @@ body {
   animation: titleReveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards;
 }
 
-/* Metallic text */
+/* Texto com acabamento metalico */
 .metallic-text {
   background: linear-gradient(
     135deg,
@@ -250,7 +312,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Line clamp */
+/* Limites de texto e interacoes */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -258,7 +320,7 @@ body {
   overflow: hidden;
 }
 
-/* Hover lift */
+/* Elevacao discreta de elementos interativos */
 .hover-lift {
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -266,7 +328,7 @@ body {
   transform: translateY(-4px);
 }
 
-/* Smooth image zoom */
+/* Zoom de imagem sem alterar o fluxo */
 .img-zoom {
   overflow: hidden;
 }
@@ -278,7 +340,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Red border bottom accent */
+/* Acento inferior da identidade IMESUL */
 .border-red-accent {
   position: relative;
 }
@@ -292,7 +354,7 @@ body {
   background: linear-gradient(90deg, var(--red), transparent);
 }
 
-/* Company story */
+/* Nossa Historia */
 .company-story {
   position: relative;
   height: 600vh;
@@ -811,10 +873,12 @@ body {
   }
 }
 
+/* CTA final */
 #cta-final p.font-mono {
   display: none;
 }
 
+/* Acessibilidade: mantem a narrativa legivel sem movimento horizontal. */
 @media (prefers-reduced-motion: reduce) {
   .company-story {
     height: auto;
