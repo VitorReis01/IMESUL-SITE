@@ -10,6 +10,8 @@ import {
   Wrench,
 } from "lucide-react";
 
+// Categorias exibidas antes dos produtos; ID, nome, imagem e icone sao obrigatorios.
+// ProductCatalog usa o ID para buscar os itens correspondentes.
 export const catalogCategories = [
   {
     id: "tubos-metalicos",
@@ -34,9 +36,9 @@ export const catalogCategories = [
   },
   {
     id: "laminados",
-    name: "Laminados",
-    description: "Cantoneiras e barras para fabricação, reforço e montagem estrutural.",
-    image: "/catalog-products/cantoneiras.webp",
+    name: "Barras",
+    description: "Barras laminadas para fabricação, reforço e montagem estrutural.",
+    image: "/catalog-products/barras-chatas.webp",
     icon: AlignJustify,
   },
   {
@@ -62,10 +64,17 @@ export const catalogCategories = [
   },
   {
     id: "acessorios-serralheria",
-    name: "Acessórios para Serralheria",
+    name: "Acessórios",
     description: "Ferragens, roldanas, guias, fechaduras e itens para montagem.",
     image: "/catalog-products/acessorios-serralheria.webp",
     icon: Wrench,
+  },
+  {
+    id: "thinner-fixadores",
+    name: "Thinner e Solventes",
+    description: "Thinner e solventes para diluição, limpeza e preparação para pintura.",
+    image: "/catalog-products/tintas-solventes.webp",
+    icon: FlaskConical,
   },
   {
     id: "tintas-solventes-consumiveis",
@@ -76,6 +85,7 @@ export const catalogCategories = [
   },
 ];
 
+// Resolve o rotulo da categoria usado no formulario, resumo e WhatsApp.
 export function getCatalogCategory(categoryId) {
   return catalogCategories.find((category) => category.id === categoryId);
 }

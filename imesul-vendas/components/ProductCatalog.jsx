@@ -5,9 +5,56 @@ import { ArrowRight, Check, Database, ImageIcon } from "lucide-react";
 import { catalogCategories } from "../data/catalogCategories";
 import { getCatalogProductsByCategory } from "../data/catalogProducts";
 
+const materialShowcaseCards = [
+  {
+    categoryId: "tubos-metalicos",
+    title: "Tubos e Metalons",
+    image: "/images/vendas/materiais/tubos-e-metalons.png",
+  },
+  {
+    categoryId: "perfis-estruturais",
+    title: "Perfis Estruturais",
+    image: "/images/vendas/materiais/perfis-estruturais.png",
+  },
+  {
+    categoryId: "chapas",
+    title: "Chapas",
+    image: "/images/vendas/materiais/chapas.png",
+  },
+  {
+    categoryId: "telhas-metalicas",
+    title: "Telhas Metálicas",
+    image: "/images/vendas/materiais/telhas-e-tercas.png",
+  },
+  {
+    categoryId: "laminados",
+    title: "Barras",
+    image: "/images/vendas/materiais/barras-e-vergalhoes.png",
+  },
+  {
+    categoryId: "acessorios-serralheria",
+    title: "Acessórios",
+    image: "/images/vendas/materiais/acessorios-e-fixadores.png",
+  },
+  {
+    categoryId: "thinner-fixadores",
+    title: "Thinner e Solventes",
+    image: "/images/vendas/materiais/acessorios-e-fixadores.png",
+  },
+  {
+    categoryId: "perfis-serralheria",
+    title: "Serralheria e Acabamentos",
+    image: "/images/vendas/materiais/serralheria-e-acabamentos.png",
+  },
+];
+
+// Mostra categorias e, depois da escolha, somente os produtos ligados a ela.
+// Os callbacks pertencem ao ProjectSelector, que controla o fluxo completo.
 export default function ProductCatalog({
   selectedCategoryId,
   selectedProductId,
+  recommendedProjectTitle,
+  recommendedCategoryIds = [],
   onSelectCategory,
   onSelectProduct,
 }) {
@@ -17,13 +64,32 @@ export default function ProductCatalog({
   const selectedCategory = catalogCategories.find(
     (category) => category.id === selectedCategoryId
   );
+  const hasRecommendations = recommendedCategoryIds.length > 0;
 
   return (
     <div className="mt-12 lg:mt-14">
-      <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {catalogCategories.map((category) => {
+      {hasRecommendations && (
+        <div className="mb-7 flex flex-col gap-4 rounded-[8px] border border-imesul-red/55 bg-[linear-gradient(135deg,rgba(212,43,43,0.16),rgba(7,19,33,0.92)_58%)] px-5 py-5 shadow-[0_22px_70px_rgba(212,43,43,0.14)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p className="font-condensed text-2xl font-semibold uppercase leading-tight tracking-[0.065em] text-white sm:text-[1.7rem]">
+            Materiais indicados para:{" "}
+            <span className="text-[#ff3b3b] drop-shadow-[0_0_16px_rgba(212,43,43,0.34)]">
+              {recommendedProjectTitle}
+            </span>
+          </p>
+          <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[10px] uppercase leading-5 tracking-[0.18em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:text-[11px]">
+            Clique em uma categoria abaixo para ver os produtos.
+          </span>
+        </div>
+      )}
+
+      <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {materialShowcaseCards.map((card) => {
+          const category = catalogCategories.find((item) => item.id === card.categoryId);
+          if (!category) return null;
+
           const Icon = category.icon;
           const isSelected = category.id === selectedCategoryId;
+          const isRecommended = recommendedCategoryIds.includes(category.id);
           const productCount = getCatalogProductsByCategory(category.id).length;
 
           return (
@@ -33,42 +99,51 @@ export default function ProductCatalog({
               data-testid={`category-${category.id}`}
               aria-pressed={isSelected}
               onClick={() => onSelectCategory(category.id)}
-              className={`group relative grid min-h-[210px] grid-cols-[0.95fr_1.05fr] overflow-hidden rounded-[8px] border text-left shadow-[0_18px_52px_rgba(0,0,0,0.16)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+              className={`group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_22px_70px_rgba(0,0,0,0.2)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                 isSelected
-                  ? "border-imesul-red bg-[#101d2d] shadow-[0_24px_64px_rgba(212,43,43,0.15)]"
-                  : "border-white/[0.1] bg-[#0b192b]/88 hover:-translate-y-1 hover:border-imesul-red/45"
+                  ? "border-imesul-red shadow-[0_26px_80px_rgba(212,43,43,0.16)]"
+                  : isRecommended
+                    ? "border-imesul-red/60 shadow-[0_24px_70px_rgba(212,43,43,0.14)] hover:-translate-y-1 hover:border-imesul-red"
+                    : hasRecommendations
+                      ? "border-white/[0.08] opacity-55 hover:-translate-y-1 hover:border-white/[0.18] hover:opacity-100"
+                      : "border-white/[0.1] hover:-translate-y-1 hover:border-imesul-red/45"
               }`}
             >
-              <span className="relative min-h-[210px] overflow-hidden bg-[#f3f5f7]">
+              <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                 <Image
-                  src={category.image}
+                  src={card.image}
                   alt=""
                   fill
-                  sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 18vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
-                <span className="absolute inset-y-0 right-0 w-12 bg-gradient-to-r from-transparent to-[#101d2d]" />
+                <span className="absolute inset-0 bg-gradient-to-t from-[#071321] via-transparent to-transparent" />
+                {isSelected && (
+                  <span className="absolute right-4 top-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-imesul-red text-white">
+                    <Check size={15} strokeWidth={2.5} aria-hidden="true" />
+                  </span>
+                )}
+                {isRecommended && !isSelected && (
+                  <span className="absolute right-4 top-4 rounded-full border border-imesul-red/45 bg-[#071321]/88 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-imesul-red shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+                    Indicado
+                  </span>
+                )}
               </span>
 
-              <span className="flex min-w-0 flex-col p-5">
+              <span className="flex min-w-0 flex-1 flex-col p-5">
                 <span className="flex items-start justify-between gap-2">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.05] text-imesul-steel-light">
                     <Icon size={20} strokeWidth={1.7} aria-hidden="true" />
                   </span>
-                  {isSelected && (
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-imesul-red text-white">
-                      <Check size={15} strokeWidth={2.5} aria-hidden="true" />
-                    </span>
-                  )}
                 </span>
                 <strong className="mt-5 font-condensed text-xl font-semibold leading-tight text-white">
-                  {category.name}
+                  {card.title}
                 </strong>
                 <span className="mt-2 text-xs leading-5 text-imesul-steel-light/62">
                   {productCount} {productCount === 1 ? "produto" : "produtos"}
                 </span>
-                <span className="mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.13em] text-imesul-steel-light/72">
-                  Ver produtos
+                <span className="mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.13em] text-white">
+                  Ver materiais
                   <ArrowRight size={14} aria-hidden="true" />
                 </span>
               </span>
@@ -98,9 +173,13 @@ export default function ProductCatalog({
               const isSelected = item.id === selectedProductId;
 
               return (
-                <article
+                <button
                   key={item.id}
-                  className={`group flex h-full flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] shadow-[0_20px_55px_rgba(0,0,0,0.18)] transition-all duration-300 ${
+                  type="button"
+                  data-testid={`product-${item.id}`}
+                  aria-pressed={isSelected}
+                  onClick={() => onSelectProduct(item.id)}
+                  className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_20px_55px_rgba(0,0,0,0.18)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
                       ? "border-imesul-red shadow-[0_24px_70px_rgba(212,43,43,0.16)]"
                       : "border-white/[0.1] hover:-translate-y-1 hover:border-imesul-red/45"
@@ -158,11 +237,7 @@ export default function ProductCatalog({
                           ? `${item.specifications.variacoes.length} opções`
                           : "Detalhes livres"}
                       </span>
-                      <button
-                        type="button"
-                        data-testid={`product-${item.id}`}
-                        aria-pressed={isSelected}
-                        onClick={() => onSelectProduct(item.id)}
+                      <span
                         className={`inline-flex min-h-11 items-center gap-2 rounded-[8px] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all ${
                           isSelected
                             ? "bg-[#a91f1f]"
@@ -171,10 +246,10 @@ export default function ProductCatalog({
                       >
                         {isSelected ? "Selecionado" : "Selecionar"}
                         {isSelected ? <Check size={15} /> : <ArrowRight size={15} />}
-                      </button>
+                      </span>
                     </div>
                   </div>
-                </article>
+                </button>
               );
             })}
           </div>

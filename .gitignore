@@ -1,17 +1,43 @@
+# Dependencias
 node_modules/
+
+# Builds e saidas geradas
 .next/
 out/
 dist/
+
+# Variaveis locais
 .env*
 !.env.example
 !*/.env.example
+
+# Logs
 *.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
 .vscode/
+
+# Backups locais
+*.bak
+*.tmp
+
+# Ferramentas e arquivos de analise
 claude-proxy.ps1
 index.html
 .codex-dev-check/
 
-# Materiais internos de referência não devem ser versionados com o frontend.
+# Analytics local de desenvolvimento
+Backend.js/analytics-events.json
+Backend.js/*.json
+imesul-vendas/Backend.js/analytics-events.json
+imesul-vendas/Backend.js/*.json
+**/Backend.js/analytics-events.json
+
+# Materiais internos e backups documentais
 **/docs/**/*.pdf
 **/docs/**/*.xlsx
 **/docs/**/*.xls

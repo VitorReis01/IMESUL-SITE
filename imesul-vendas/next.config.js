@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV !== "production";
+// Define as origens permitidas para scripts, fontes, imagens e conexoes da aplicacao.
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
@@ -16,6 +17,11 @@ const contentSecurityPolicy = [
 const nextConfig = {
   reactStrictMode: true,
   productionBrowserSourceMaps: false,
+  // Evita que o Turbopack use o projeto vizinho como raiz do build.
+  turbopack: {
+    root: __dirname,
+  },
+  // Os headers valem para a pagina, rotas de erro e assets servidos pelo Next.js.
   async headers() {
     return [
       {

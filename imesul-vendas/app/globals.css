@@ -4,6 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tipografia */
 :root {
   --font-display: "Bebas Neue", sans-serif;
   --font-body: "Barlow", sans-serif;
@@ -11,6 +12,7 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+/* Base e layout */
 *,
 *::before,
 *::after {
@@ -31,6 +33,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Controles e interacoes */
 button,
 a {
   -webkit-tap-highlight-color: transparent;
@@ -41,7 +44,53 @@ textarea {
   font: inherit;
 }
 
+/* Acessibilidade e selecao de texto */
 ::selection {
   background: rgba(212, 43, 43, 0.78);
   color: white;
+}
+
+/* Anima as secoes comerciais abaixo da hero conforme entram e saem da viewport. */
+[data-scroll-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+[data-scroll-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Movimento leve no balao PNG do mascote sem afetar o CTA do card. */
+@keyframes mascotBalloonFloat {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -7px);
+  }
+}
+
+.mascot-balloon {
+  animation: mascotBalloonFloat 3.8s ease-in-out infinite;
+}
+
+/* Usuarios com reducao de movimento veem o conteudo sem transicoes continuas. */
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .mascot-balloon {
+    animation: none;
+  }
 }

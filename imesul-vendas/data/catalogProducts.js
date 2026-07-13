@@ -1,5 +1,7 @@
 import { catalogSpecifications } from "./catalogSpecifications";
 
+// Normaliza produtos e deriva os indicadores de tabela tecnica automaticamente.
+// Especificacoes e nota tecnica sao opcionais; os demais campos sao obrigatorios.
 const product = ({
   id,
   categoryId,
@@ -22,6 +24,8 @@ const product = ({
   hasCompleteData: Boolean(specifications?.dadosCompletos && specifications?.variacoes?.length),
 });
 
+// Para adicionar um item, use um ID unico e um categoryId existente.
+// Vincule somente especificacoes extraidas e documentadas no catalogo oficial.
 export const catalogProducts = [
   product({
     id: "tubo-retangular",
@@ -109,7 +113,7 @@ export const catalogProducts = [
 
   product({
     id: "cantoneiras-abas-iguais",
-    categoryId: "laminados",
+    categoryId: "perfis-estruturais",
     name: "Cantoneiras de Abas Iguais",
     description: "Perfil laminado em L para reforços, suportes e montagens metálicas.",
     usage: ["Travamentos", "Suportes", "Estruturas"],
@@ -266,7 +270,6 @@ export const catalogProducts = [
     ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/fechaduras.webp"],
     ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/fechos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
-    ["thinner-acessorios", "Thinner", "Diluição e limpeza em trabalhos de serralheria.", "/catalog-products/tintas-solventes.webp"],
     ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
     product({
@@ -281,10 +284,8 @@ export const catalogProducts = [
   ),
 
   ...[
-    ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/tintas-solventes.webp"],
     ["primers", "Primers", "Preparação de superfícies metálicas antes do acabamento.", "/catalog-products/tintas-solventes.webp"],
     ["galvanizantes-frio", "Galvanizantes a Frio", "Proteção de áreas metálicas e pontos de manutenção.", "/catalog-products/tintas-solventes.webp"],
-    ["thinner", "Thinner", "Diluição e limpeza em processos de pintura.", "/catalog-products/tintas-solventes.webp"],
     ["consumiveis-acabamento", "Consumíveis para Acabamento e Proteção", "Itens complementares para acabamento de estruturas metálicas.", "/catalog-products/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
     product({
@@ -297,12 +298,29 @@ export const catalogProducts = [
       specifications: catalogSpecifications.tintasSolventes,
     })
   ),
+
+  ...[
+    ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/tintas-solventes.webp", catalogSpecifications.tintasSolventes],
+    ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/tintas-solventes.webp", catalogSpecifications.tintasSolventes],
+  ].map(([id, name, description, image, specifications]) =>
+    product({
+      id,
+      categoryId: "thinner-fixadores",
+      name,
+      description,
+      usage: ["Diluição", "Limpeza", "Preparação"],
+      image,
+      specifications,
+    })
+  ),
 ];
 
+// Filtra os cards exibidos depois que o cliente escolhe uma categoria.
 export function getCatalogProductsByCategory(categoryId) {
   return catalogProducts.filter((item) => item.categoryId === categoryId);
 }
 
+// Localiza o produto selecionado pelo ProjectSelector.
 export function getCatalogProduct(productId) {
   return catalogProducts.find((item) => item.id === productId);
 }

@@ -1,6 +1,7 @@
 import { ClipboardList } from "lucide-react";
 import { formatOptionValue } from "./ProductOptionSelector";
 
+// Padroniza linhas preenchidas e ausentes no painel de confirmacao.
 function SummaryRow({ label, value }) {
   return (
     <div className="border-b border-white/[0.09] py-3.5">
@@ -14,6 +15,7 @@ function SummaryRow({ label, value }) {
   );
 }
 
+// Reune produto, opcoes tecnicas e localidade antes do envio.
 export default function ProductSummary({ category, product, form, selectedVariation, children }) {
   const weight = selectedVariation?.peso !== undefined
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
@@ -33,13 +35,13 @@ export default function ProductSummary({ category, product, form, selectedVariat
         <SummaryRow label="Produto" value={product.name} />
         <SummaryRow label="Medida" value={formatOptionValue(form.measure, "measure")} />
         <SummaryRow label="Espessura" value={formatOptionValue(form.thickness, "thickness")} />
-        <SummaryRow label="Comprimento" value={formatOptionValue(form.length, "length")} />
         {!product.hasStructuredOptions && (
           <SummaryRow label="Características" value={form.details} />
         )}
         <SummaryRow label="Peso informado no catálogo" value={weight} />
         <SummaryRow label="Quantidade" value={form.quantity} />
         <SummaryRow label="Cidade" value={form.city} />
+        <SummaryRow label="Estado" value={form.state} />
         <SummaryRow label="Observações" value={form.notes} />
       </dl>
 

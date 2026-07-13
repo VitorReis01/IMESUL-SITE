@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { AlertCircle, Scale } from "lucide-react";
+import { AlertCircle, Check, Scale } from "lucide-react";
 
 const sameValue = (left, right) => String(left) === String(right);
 
+// Formata valores tecnicos sem alterar a unidade armazenada no catalogo.
 export function formatOptionValue(value, type) {
   if (value === "" || value === null || value === undefined) return "";
   if (type === "thickness" && typeof value === "number") {
@@ -16,33 +17,26 @@ export function formatOptionValue(value, type) {
   return String(value);
 }
 
+// Mantem somente linhas compativeis com as escolhas ja feitas pelo cliente.
 function filterVariations(variations, form, ignoredField) {
   return variations.filter((variation) =>
-    ["measure", "thickness", "length"].every((field) => {
+    ["measure", "thickness"].every((field) => {
       if (field === ignoredField || !form[field]) return true;
       const variationKey = {
         measure: "medida",
         thickness: "espessura",
-        length: "comprimento",
       }[field];
       return variation[variationKey] === undefined || sameValue(variation[variationKey], form[field]);
     })
   );
 }
 
+// Calcula as proximas opcoes validas e impede combinacoes inexistentes na tabela.
 export function getAvailableOptions(product, form) {
   const specifications = product.specifications;
   if (!specifications?.variacoes?.length) {
-    return { measures: [], thicknesses: [], lengths: [] };
+    return { measures: [], thicknesses: [] };
   }
-
-  const relatedLengths = [
-    ...new Set(
-      filterVariations(specifications.variacoes, form, "length")
-        .map((variation) => variation.comprimento)
-        .filter((value) => value !== undefined)
-    ),
-  ];
 
   return {
     measures: specifications.medidas || [],
@@ -50,26 +44,26 @@ export function getAvailableOptions(product, form) {
       ...new Set(
         filterVariations(specifications.variacoes, form, "thickness")
           .map((variation) => variation.espessura)
-          .filter((value) => value !== undefined)
+        .filter((value) => value !== undefined)
       ),
     ],
-    lengths: relatedLengths.length ? relatedLengths : specifications.comprimentos || [],
   };
 }
 
+// Retorna a linha completa usada no resumo e no peso, quando todas as chaves conferem.
 export function findSelectedVariation(product, form) {
   const variations = product.specifications?.variacoes || [];
   return variations.find((variation) =>
     [
       ["medida", form.measure],
       ["espessura", form.thickness],
-      ["comprimento", form.length],
     ].every(([key, selected]) =>
       variation[key] === undefined ? true : Boolean(selected) && sameValue(variation[key], selected)
     )
   );
 }
 
+// Renderiza chips acessiveis e omite grupos sem dados confiaveis.
 function OptionGroup({ label, type, options, value, onSelect }) {
   if (!options.length) return null;
 
@@ -93,7 +87,8 @@ function OptionGroup({ label, type, options, value, onSelect }) {
                   : "border-white/[0.11] bg-white/[0.035] text-imesul-steel-light hover:border-imesul-red/45 hover:bg-white/[0.055] hover:text-white"
               }`}
             >
-              {formatOptionValue(option, type)}
+              <span>{formatOptionValue(option, type)}</span>
+              {isSelected && <Check size={14} className="ml-2 inline text-imesul-red" aria-hidden="true" />}
             </button>
           );
         })}
@@ -102,6 +97,7 @@ function OptionGroup({ label, type, options, value, onSelect }) {
   );
 }
 
+// Coordena medida e espessura conforme a tabela tecnica do produto.
 export default function ProductOptionSelector({ product, form, setForm }) {
   const options = useMemo(() => getAvailableOptions(product, form), [product, form]);
   const selectedVariation = useMemo(
@@ -109,25 +105,26 @@ export default function ProductOptionSelector({ product, form, setForm }) {
     [product, form]
   );
 
+  // Seleciona valores unicos e preserva escolhas que ainda continuam validas.
   useEffect(() => {
     const updates = {};
     if (!form.measure && options.measures.length === 1) updates.measure = options.measures[0];
     if (!form.thickness && options.thicknesses.length === 1) updates.thickness = options.thicknesses[0];
-    if (!form.length && options.lengths.length === 1) updates.length = options.lengths[0];
     if (Object.keys(updates).length) {
       setForm((current) => ({ ...current, ...updates }));
     }
-  }, [form.length, form.measure, form.thickness, options, setForm]);
+  }, [form.measure, form.thickness, options, setForm]);
 
+  // Uma nova medida invalida a espessura escolhida anteriormente.
   const selectMeasure = (measure) =>
-    setForm((current) => ({ ...current, measure, thickness: "", length: "" }));
+    setForm((current) => ({ ...current, measure, thickness: "" }));
   const selectThickness = (thickness) =>
-    setForm((current) => ({ ...current, thickness, length: "" }));
-  const selectLength = (length) => setForm((current) => ({ ...current, length }));
+    setForm((current) => ({ ...current, thickness }));
 
+  // Produtos sem tabela permanecem livres e deixam a confirmacao para o atendimento.
   if (!product.hasStructuredOptions) {
     return (
-      <div>
+      <div className="space-y-6">
         <label className="block">
           <span className="mb-2.5 block font-condensed text-[13px] font-semibold uppercase tracking-[0.13em] text-imesul-steel-light/85">
             Características desejadas
@@ -139,12 +136,14 @@ export default function ProductOptionSelector({ product, form, setForm }) {
               setForm((current) => ({ ...current, details: event.target.value }))
             }
             placeholder="Informe as características desejadas."
-            className="min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-white/[0.035] px-4 py-4 text-[15px] leading-relaxed text-white outline-none transition focus:border-imesul-red/75 focus:ring-4 focus:ring-imesul-red/[0.08]"
+            className="min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[15px] leading-relaxed text-white outline-none transition focus:border-imesul-red/75 focus:ring-4 focus:ring-imesul-red/[0.08]"
           />
         </label>
-        <div className="mt-4 flex items-start gap-3 rounded-[7px] border border-[#e0a43b]/20 bg-[#e0a43b]/[0.07] p-4 text-sm leading-6 text-[#f0c776]">
+        <div className="flex items-start gap-3 rounded-[7px] border border-[#e0a43b]/20 bg-[#e0a43b]/[0.07] p-4 text-sm leading-6 text-[#f0c776]">
           <AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
-          <p>{product.specifications?.observacao || "Produto sem tabela técnica completa no catálogo."}</p>
+          <p>
+            {product.specifications?.observacao || "Produto sem tabela técnica completa no catálogo. A equipe comercial confirmará as características pelo WhatsApp."}
+          </p>
         </div>
       </div>
     );
@@ -166,20 +165,6 @@ export default function ProductOptionSelector({ product, form, setForm }) {
         value={form.thickness}
         onSelect={selectThickness}
       />
-      <OptionGroup
-        label="Comprimento"
-        type="length"
-        options={options.lengths}
-        value={form.length}
-        onSelect={selectLength}
-      />
-
-      {!options.lengths.length && (
-        <p className="text-sm leading-6 text-imesul-steel/62">
-          Comprimento não informado na tabela do catálogo. A equipe comercial confirmará a disponibilidade.
-        </p>
-      )}
-
       {product.specifications.observacoesTecnicas?.length > 0 && (
         <div className="rounded-[7px] border border-white/[0.09] bg-white/[0.025] p-4">
           <p className="font-mono text-[9px] tracking-[0.22em] text-imesul-red">

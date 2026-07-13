@@ -1,0 +1,50 @@
+{
+  "projetos/estruturas-metalicas.png": {
+    "site_path": "/images/vendas/projetos/estruturas-metalicas.png",
+    "local_target": "public/images/vendas/projetos/estruturas-metalicas.png"
+  },
+  "projetos/cobertimento-e-telhados.png": {
+    "site_path": "/images/vendas/projetos/cobertimento-e-telhados.png",
+    "local_target": "public/images/vendas/projetos/cobertimento-e-telhados.png"
+  },
+  "projetos/serralheria-e-acabamentos.png": {
+    "site_path": "/images/vendas/projetos/serralheria-e-acabamentos.png",
+    "local_target": "public/images/vendas/projetos/serralheria-e-acabamentos.png"
+  },
+  "projetos/industria-e-manutencao.png": {
+    "site_path": "/images/vendas/projetos/industria-e-manutencao.png",
+    "local_target": "public/images/vendas/projetos/industria-e-manutencao.png"
+  },
+  "projetos/linha-rural-e-campo.png": {
+    "site_path": "/images/vendas/projetos/linha-rural-e-campo.png",
+    "local_target": "public/images/vendas/projetos/linha-rural-e-campo.png"
+  },
+  "materiais/tubos-e-metalons.png": {
+    "site_path": "/images/vendas/materiais/tubos-e-metalons.png",
+    "local_target": "public/images/vendas/materiais/tubos-e-metalons.png"
+  },
+  "materiais/perfis-estruturais.png": {
+    "site_path": "/images/vendas/materiais/perfis-estruturais.png",
+    "local_target": "public/images/vendas/materiais/perfis-estruturais.png"
+  },
+  "materiais/chapas.png": {
+    "site_path": "/images/vendas/materiais/chapas.png",
+    "local_target": "public/images/vendas/materiais/chapas.png"
+  },
+  "materiais/telhas-e-tercas.png": {
+    "site_path": "/images/vendas/materiais/telhas-e-tercas.png",
+    "local_target": "public/images/vendas/materiais/telhas-e-tercas.png"
+  },
+  "materiais/barras-e-vergalhoes.png": {
+    "site_path": "/images/vendas/materiais/barras-e-vergalhoes.png",
+    "local_target": "public/images/vendas/materiais/barras-e-vergalhoes.png"
+  },
+  "materiais/acessorios-e-fixadores.png": {
+    "site_path": "/images/vendas/materiais/acessorios-e-fixadores.png",
+    "local_target": "public/images/vendas/materiais/acessorios-e-fixadores.png"
+  },
+  "materiais/serralheria-e-acabamentos.png": {
+    "site_path": "/images/vendas/materiais/serralheria-e-acabamentos.png",
+    "local_target": "public/images/vendas/materiais/serralheria-e-acabamentos.png"
+  }
+}

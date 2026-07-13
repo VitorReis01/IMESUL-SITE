@@ -1,5 +1,7 @@
+// Remove repeticoes sem descartar zero, que pode ser um valor tecnico valido.
 const unique = (values) => [...new Set(values.filter((value) => value !== undefined && value !== null))];
 
+// Deriva listas de selecao a partir das variacoes extraidas do PDF.
 const buildSpecs = (
   rows,
   {
@@ -25,6 +27,7 @@ const buildSpecs = (
   observacoesTecnicas,
 });
 
+// Converte linhas compactas em objetos usados pelo seletor e pelo resumo.
 const weightedRows = (rows, pesoUnidade) =>
   rows.map(([medida, espessura, peso, comprimento]) => ({
     medida,
@@ -34,6 +37,7 @@ const weightedRows = (rows, pesoUnidade) =>
     pesoUnidade,
   }));
 
+// Marca produtos sem leitura confiavel para manter o preenchimento livre.
 const incompleteSpecs = (paginaFonte, observacao) => ({
   medidas: [],
   espessuras: [],
@@ -45,6 +49,8 @@ const incompleteSpecs = (paginaFonte, observacao) => ({
   observacoesTecnicas: [],
 });
 
+// Fonte unica de medidas, espessuras, comprimentos e pesos publicados no fluxo.
+// Nao adicione valores que nao estejam confirmados no catalogo oficial.
 export const catalogSpecifications = {
   tubosMetalicos: {
     retangular: buildSpecs(
@@ -241,10 +247,12 @@ export const catalogSpecifications = {
   tintasSolventes: incompleteSpecs(12, "Tintas e thinners aparecem visualmente, sem especificações técnicas completas no catálogo."),
 };
 
+// Conta variacoes tecnicas sem somar o mesmo objeto mais de uma vez.
 export function countCatalogVariations() {
   const visited = new Set();
   let count = 0;
 
+  // Percorre a arvore porque as familias possuem niveis diferentes de agrupamento.
   const walk = (value) => {
     if (!value || typeof value !== "object" || visited.has(value)) return;
     visited.add(value);

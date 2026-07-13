@@ -1,8 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Inclui dados porque alguns modulos mantem classes associadas ao catalogo.
   content: ["./app/**/*.{js,jsx}", "./components/**/*.{js,jsx}", "./data/**/*.{js,jsx}"],
   theme: {
     extend: {
+      // Mantem a Area de Vendas na mesma identidade do site institucional.
       colors: {
         imesul: {
           red: "#D42B2B",

@@ -1,5 +1,6 @@
 "use client";
 
+// Permite repetir o fluxo depois de uma falha sem expor detalhes internos.
 export default function ErrorPage({ reset }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#06101d] px-6 text-center text-white">

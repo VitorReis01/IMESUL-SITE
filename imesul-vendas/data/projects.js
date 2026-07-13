@@ -8,6 +8,8 @@ import {
   Wrench,
 } from "lucide-react";
 
+// Cada projeto define subtipos, categorias recomendadas e complementos comerciais.
+// ProjectSelector e ProjectQuoteFlow consomem esses campos diretamente.
 export const projects = [
   {
     id: "portao",
