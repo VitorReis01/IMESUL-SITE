@@ -98,6 +98,7 @@ export default function ProductCatalog({
               type="button"
               data-testid={`category-${category.id}`}
               aria-pressed={isSelected}
+              aria-label={`Ver materiais da categoria ${card.title}`}
               onClick={() => onSelectCategory(category.id)}
               className={`group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_22px_70px_rgba(0,0,0,0.2)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                 isSelected
@@ -112,7 +113,7 @@ export default function ProductCatalog({
               <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                 <Image
                   src={card.image}
-                  alt=""
+                  alt={card.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
@@ -178,6 +179,7 @@ export default function ProductCatalog({
                   type="button"
                   data-testid={`product-${item.id}`}
                   aria-pressed={isSelected}
+                  aria-label={`${isSelected ? "Material escolhido" : "Escolher"} ${item.name}`}
                   onClick={() => onSelectProduct(item.id)}
                   className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_20px_55px_rgba(0,0,0,0.18)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
@@ -244,7 +246,7 @@ export default function ProductCatalog({
                             : "bg-imesul-red hover:-translate-y-0.5 hover:bg-[#ef3434]"
                         }`}
                       >
-                        {isSelected ? "Selecionado" : "Selecionar"}
+                        {isSelected ? "Material escolhido" : "Escolher este material"}
                         {isSelected ? <Check size={15} /> : <ArrowRight size={15} />}
                       </span>
                     </div>

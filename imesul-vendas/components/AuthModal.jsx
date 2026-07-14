@@ -117,7 +117,7 @@ function GoogleIdentityButton({ onCredential, text = "signin_with", disabled = f
   if (!googleClientId || loadFailed) {
     return (
       <p className="flex min-h-12 items-center rounded-[8px] border border-white/[0.1] bg-white/[0.035] px-4 text-sm leading-5 text-imesul-steel-light/68">
-        Login com Google indisponível no momento.
+        Login com Google indisponível no momento. Você pode enviar seu orçamento sem fazer login.
       </p>
     );
   }
@@ -280,7 +280,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
           </h2>
           {mode === "start" && (
             <p className="mt-3 max-w-xl text-sm leading-6 text-imesul-steel-light/70">
-              Interface inicial para cliente e equipe IMESUL. Nesta etapa, o acesso é apenas visual e não grava dados sensíveis no navegador.{" "}
+              Área em implantação. Você pode enviar seu orçamento sem fazer login.{" "}
               <button
                 type="button"
                 onClick={() => setMode("admin-login")}
@@ -319,7 +319,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                   Criar conta
                 </strong>
                 <span className="mt-2 block text-sm leading-6 text-imesul-steel-light/68">
-                  Cadastre seus dados para facilitar futuras solicitações.
+                  Cadastro opcional para facilitar próximos atendimentos.
                 </span>
               </button>
             </div>
@@ -334,7 +334,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                 Manter conectado neste dispositivo
               </label>
               <p className="rounded-[8px] border border-white/[0.09] bg-white/[0.035] p-4 text-sm leading-6 text-imesul-steel-light/72">
-                Por segurança, não salvamos sua senha no site. Se desejar, use o gerenciador de senhas do seu navegador.
+                Por segurança, não salvamos sua senha no site. Você também pode enviar seu orçamento sem fazer login.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <ActionButton type="submit">
@@ -357,7 +357,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                 <TextField label="Confirmar senha" type="password" required />
               </div>
               <p className="rounded-[8px] border border-imesul-red/25 bg-imesul-red/[0.08] p-4 text-sm leading-6 text-imesul-steel-light/78">
-                Suas informações são armazenadas com segurança e usadas apenas para identificar seu atendimento, facilitar contato e organizar solicitações de orçamento.
+                Cadastro opcional para facilitar próximos atendimentos. O orçamento também pode ser enviado sem login.
               </p>
               <label className="flex items-start gap-3 text-sm leading-6 text-imesul-steel-light/72">
                 <input

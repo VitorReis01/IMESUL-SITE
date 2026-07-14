@@ -24,6 +24,7 @@ import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
 import { MaterialQuoteFlow, ProjectQuoteFlow } from "./QuoteBuilder";
 import ProductCatalog from "./ProductCatalog";
+import ProductShowcaseCarousel from "./ProductShowcaseCarousel";
 import SalesGuidanceSection from "./SalesGuidanceSection";
 
 const salesUnits = {
@@ -84,7 +85,7 @@ const projectShowcaseCards = [
   {
     projectId: "estrutura-metalica",
     title: "Estruturas Metálicas",
-    description: "Perfis, tubos e chapas para bases, reforços e grandes estruturas.",
+    description: "Perfis, tubos e chapas usados em bases, reforços e montagens metálicas.",
     image: "/images/vendas/projetos/estruturas-metalicas.png",
     recommendedCategoryIds: [
       "perfis-estruturais",
@@ -95,8 +96,8 @@ const projectShowcaseCards = [
   },
   {
     projectId: "cobertura",
-    title: "Cobertimento e Telhados",
-    description: "Telhas, terças e acessórios para coberturas resistentes.",
+    title: "Coberturas e Telhados",
+    description: "Telhas, perfis e fixadores para montar ou reformar coberturas.",
     image: "/images/vendas/projetos/cobertimento-e-telhados.png",
     recommendedCategoryIds: [
       "telhas-metalicas",
@@ -108,7 +109,7 @@ const projectShowcaseCards = [
   {
     projectId: "serralheria",
     title: "Serralheria e Acabamentos",
-    description: "Materiais para portões, grades, esquadrias e acabamento.",
+    description: "Itens usados em portões, grades, esquadrias e serviços de acabamento.",
     image: "/images/vendas/projetos/serralheria-e-acabamentos.png",
     recommendedCategoryIds: [
       "perfis-serralheria",
@@ -120,7 +121,7 @@ const projectShowcaseCards = [
   {
     projectId: "galpao",
     title: "Indústria e Manutenção",
-    description: "Soluções em aço para operação, reforço e manutenção industrial.",
+    description: "Chapas, tubos, perfis e acessórios para manutenção e reforços.",
     image: "/images/vendas/projetos/industria-e-manutencao.png",
     recommendedCategoryIds: [
       "chapas",
@@ -133,7 +134,7 @@ const projectShowcaseCards = [
   {
     projectId: "rural",
     title: "Linha Rural e Campo",
-    description: "Produtos para barracões, cercamentos e estruturas no campo.",
+    description: "Produtos para barracões, cercas, currais e manutenção no campo.",
     image: "/images/vendas/projetos/linha-rural-e-campo.png",
     recommendedCategoryIds: [
       "tubos-metalicos",
@@ -417,6 +418,15 @@ export default function ProjectSelector() {
     scrollToFlow("material-quote-flow");
   };
 
+  // O carrossel abre o produto no mesmo fluxo técnico usado pelo catálogo principal.
+  const selectCarouselProduct = (product) => {
+    setSelectedCategoryId(product.categoryId);
+    setSelectedProductId(product.id);
+    setSelectedProjectId(null);
+    setRecommendedProject(null);
+    scrollToFlow("material-quote-flow");
+  };
+
   // Usa a mesma selecao dos cards para levar a sugestao ate o fluxo correto.
   const selectSearchSuggestion = (suggestion) => {
     trackInteraction({
@@ -487,7 +497,7 @@ export default function ProjectSelector() {
               onClick={() => trackInteraction({ type: "click", label: "Catálogo", section: "Navbar", detail: "PDF catálogo IMESUL" })}
               className={navLinkClassName}
             >
-              Catálogos
+              Catálogo
             </a>
             <a
               href={institutionalUrl}
@@ -548,7 +558,7 @@ export default function ProjectSelector() {
                     ))
                   ) : (
                     <p className="px-4 py-4 text-sm text-imesul-steel-light/65">
-                      Nenhum material encontrado
+                      Não encontramos esse item no catálogo. Tente buscar por tubo, chapa, telha, perfil ou acessório.
                     </p>
                   )}
                 </div>
@@ -567,10 +577,10 @@ export default function ProjectSelector() {
               className="group/login inline-flex h-10 items-center justify-center gap-2 rounded-[5px] border border-white/[0.12] bg-white/[0.035] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-white/[0.06] hover:shadow-[0_0_18px_rgba(255,255,255,0.08),0_0_20px_rgba(212,43,43,0.12)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none sm:px-4"
             >
               <span className="hidden sm:inline">
-                {adminVisualActive ? "Painel admin" : authVisualActive ? "Conta ativa" : "Fazer login"}
+                {adminVisualActive ? "Conta ativa" : authVisualActive ? "Conta ativa" : "Fazer login"}
               </span>
               <span className="sm:hidden">
-                {adminVisualActive ? "Admin" : authVisualActive ? "Conta" : "Login"}
+                {adminVisualActive ? "Conta" : authVisualActive ? "Conta" : "Login"}
               </span>
               {isUserVisuallyLoggedIn && (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#25D366] text-[#04110a] shadow-[0_0_12px_rgba(37,211,102,0.42)]">
@@ -628,7 +638,7 @@ export default function ProjectSelector() {
               garantida, entrega rápida e o suporte técnico de quem entende do assunto.
             </p>
             <p className={`mt-2 max-w-[520px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base ${heroIntroClassName}`} style={heroIntroStyle(760)}>
-              Mais de 45 anos fornecendo soluções em aço para construção,
+              Mais de 45 anos fornecendo materiais em aço para construção,
               serralheria, indústria e campo.
             </p>
 
@@ -694,10 +704,10 @@ export default function ProjectSelector() {
                 AJUDA PARA ESCOLHER
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Conte com nossa equipe técnica para indicar os materiais ideais para seu projeto.
+                Conte com nossa equipe técnica para indicar materiais para seu projeto.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                FALAR COM ESPECIALISTA
+                FALAR COM A EQUIPE
                 <ArrowDownRight
                   size={16}
                   className="transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1"
@@ -726,7 +736,7 @@ export default function ProjectSelector() {
                 O QUE PRECISO
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Encontre rapidamente o material ideal navegando pelas categorias e produtos.
+                Encontre rapidamente materiais por categoria e produto.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                 IR PARA MATERIAIS
@@ -749,7 +759,7 @@ export default function ProjectSelector() {
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
-                Encontre soluções para o seu projeto
+                Encontre materiais para o seu projeto
               </h2>
             </div>
             <p className="max-w-2xl text-base leading-relaxed text-imesul-steel-light/75 sm:text-lg">
@@ -771,6 +781,7 @@ export default function ProjectSelector() {
                   data-testid={`project-${card.projectId}`}
                   style={{ "--reveal-delay": `${index * 70}ms` }}
                   aria-pressed={isSelected}
+                  aria-label={`Ver materiais indicados para ${card.title}`}
                   onClick={() => showRecommendedMaterials(card)}
                   className={`group relative flex min-h-[360px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_22px_70px_rgba(0,0,0,0.22)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
@@ -781,7 +792,7 @@ export default function ProjectSelector() {
                   <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                     <Image
                       src={card.image}
-                      alt=""
+                      alt={card.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 20vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
@@ -822,6 +833,11 @@ export default function ProjectSelector() {
           )}
         </div>
       </section>
+
+      <ProductShowcaseCarousel
+        onSelectProduct={selectCarouselProduct}
+        onTrackInteraction={trackInteraction}
+      />
 
       <section
         id="material-path"

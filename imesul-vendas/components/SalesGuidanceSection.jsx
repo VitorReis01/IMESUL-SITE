@@ -16,19 +16,19 @@ const howItWorks = [
     number: "1",
     icon: ClipboardList,
     title: "CONTE SEU PROJETO",
-    description: "Informe o que está construindo ou buscando o material ideal.",
+    description: "Informe o que está construindo ou qual material precisa.",
   },
   {
     number: "2",
     icon: PackageCheck,
     title: "VEJA MATERIAIS INDICADOS",
-    description: "Escolha as opções certas para facilitar sua solicitação.",
+    description: "Escolha os itens indicados e avance para montar o pedido.",
   },
   {
     number: "3",
     icon: MessageCircle,
     title: "ENVIE NO WHATSAPP",
-    description: "A equipe IMESUL confirma medidas, estoque e preço no atendimento.",
+    description: "Medidas, estoque e valores são confirmados no atendimento.",
   },
 ];
 
@@ -36,7 +36,7 @@ const benefits = [
   {
     icon: Headphones,
     title: "Atendimento técnico",
-    description: "Especialistas prontos para orientar a melhor solução para sua necessidade.",
+    description: "Equipe preparada para ajudar na escolha dos materiais do pedido.",
   },
   {
     icon: Layers3,
@@ -45,18 +45,18 @@ const benefits = [
   },
   {
     icon: MapPin,
-    title: "Campo Grande e Dourados",
-    description: "Duas unidades para atender com agilidade sua região.",
+    title: "Dourados e Campo Grande",
+    description: "Dourados Matriz, Dourados Centro e Campo Grande.",
   },
   {
     icon: Timer,
     title: "Agilidade para orçamentos",
-    description: "Resposta rápida e atendimento prático pelo WhatsApp.",
+    description: "Envie a solicitação e continue o atendimento pelo WhatsApp.",
   },
   {
     icon: ShieldCheck,
     title: "+45 anos de experiência",
-    description: "Confiança no mercado do aço para quem constrói e transforma.",
+    description: "Atendimento para quem constrói, fabrica e trabalha com aço.",
   },
 ];
 
@@ -76,7 +76,7 @@ export default function SalesGuidanceSection() {
             COMO FUNCIONA O PRÉ-ORÇAMENTO?
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-imesul-steel-light/72">
-            Você monta sua solicitação em poucos passos e envia direto para a equipe IMESUL pelo WhatsApp.
+            Você monta sua solicitação em poucos passos. A equipe confirma medidas, estoque e valores pelo WhatsApp.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default function SalesGuidanceSection() {
                 Precisa de ajuda?
               </h3>
               <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
-                Fale com um especialista e receba orientações personalizadas para seu projeto.
+                Não sabe qual medida pedir? Fale com a equipe IMESUL e envie sua dúvida pelo WhatsApp.
               </p>
               <a
                 href={whatsappUrl}
@@ -182,14 +182,14 @@ export default function SalesGuidanceSection() {
                 rel="noopener noreferrer"
                 onClick={() => trackLocalEvent({
                   type: "whatsapp",
-                  label: "Falar com especialista",
+                  label: "Falar com a equipe",
                   section: "Precisa de ajuda",
                   detail: "Card do mascote",
                   isLoggedIn: false,
                 })}
                 className="mt-7 inline-flex min-h-12 items-center justify-center rounded-[8px] bg-imesul-red px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.13em] text-white shadow-[0_14px_40px_rgba(212,43,43,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_18px_52px_rgba(212,43,43,0.34)]"
               >
-                FALAR COM ESPECIALISTA
+                FALAR COM A EQUIPE
               </a>
             </div>
 
@@ -198,7 +198,7 @@ export default function SalesGuidanceSection() {
               <div className="mascot-balloon absolute -top-16 left-1/2 z-20 h-24 w-40 -translate-x-1/2 sm:-top-20 sm:h-28 sm:w-48">
                 <Image
                   src="/images/vendas/fala-comigo.png"
-                  alt=""
+                  alt="Fala comigo"
                   fill
                   sizes="(max-width: 640px) 160px, 192px"
                   className="object-contain"
@@ -208,7 +208,7 @@ export default function SalesGuidanceSection() {
               <div className="relative h-full w-full transition-transform duration-500 ease-out group-hover/help-card:-translate-y-2 group-hover/help-card:scale-[1.05]">
                 <Image
                   src="/images/vendas/mascote-atendente.png"
-                  alt=""
+                  alt="Mascote de atendimento Imesul"
                   fill
                   sizes="(max-width: 640px) 45vw, 310px"
                   className="object-contain object-bottom drop-shadow-[0_26px_54px_rgba(0,0,0,0.52)]"

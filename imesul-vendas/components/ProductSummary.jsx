@@ -28,6 +28,9 @@ export default function ProductSummary({ category, product, form, selectedVariat
         <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
         <h3 className="font-display text-4xl leading-none text-white">Resumo da Solicitação</h3>
       </div>
+      <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
+        Esta é uma solicitação de orçamento. A compra não é finalizada automaticamente pelo site.
+      </p>
 
       <dl className="mt-6">
         <SummaryRow label="Tipo de solicitação" value="Material" />

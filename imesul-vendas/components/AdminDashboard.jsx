@@ -489,7 +489,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                     return (
                       <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td></tr>
                     );
-                  }) : <tr><td colSpan={12} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Nenhum evento registrado para este filtro.</td></tr>}
+                  }) : <tr><td colSpan={12} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Ainda não há eventos para este filtro.</td></tr>}
                 </tbody>
               </table>
             </div>

@@ -14,7 +14,7 @@ export const projects = [
   {
     id: "portao",
     name: "Portão",
-    description: "Estrutura, fechamento e ferragens para seu projeto.",
+    description: "Tubos, chapas e ferragens usados na montagem de portões.",
     icon: DoorOpen,
     subtypes: ["Deslizante", "Basculante", "Social", "Duas folhas"],
     materialIds: ["tubos-metalicos", "chapas", "cantoneiras"],
@@ -23,7 +23,7 @@ export const projects = [
   {
     id: "cobertura",
     name: "Cobertura",
-    description: "Materiais para coberturas leves, resistentes e duráveis.",
+    description: "Telhas, perfis e fixadores para montar ou reformar coberturas.",
     icon: House,
     subtypes: ["Residencial", "Comercial", "Garagem", "Área Gourmet"],
     materialIds: ["telhas-metalicas", "perfis-estruturais", "tubos-metalicos"],
@@ -32,7 +32,7 @@ export const projects = [
   {
     id: "galpao",
     name: "Galpão",
-    description: "Estrutura e fechamento para projetos de maior escala.",
+    description: "Perfis, telhas e chapas para galpões comerciais, industriais ou rurais.",
     icon: Warehouse,
     subtypes: ["Comercial", "Industrial", "Rural"],
     materialIds: ["perfis-estruturais", "telhas-metalicas", "cantoneiras", "chapas"],
@@ -41,7 +41,7 @@ export const projects = [
   {
     id: "estrutura-metalica",
     name: "Estrutura Metálica",
-    description: "Componentes para suportes, reforços e estruturas.",
+    description: "Perfis, tubos e chapas para bases, reforços e montagens metálicas.",
     icon: Building2,
     subtypes: ["Mezanino", "Reforço estrutural", "Estrutura sob medida"],
     materialIds: ["perfis-estruturais", "tubos-metalicos", "chapas", "cantoneiras"],
@@ -50,7 +50,7 @@ export const projects = [
   {
     id: "serralheria",
     name: "Serralheria",
-    description: "Linha versátil para fabricação, montagem e acabamento.",
+    description: "Materiais usados em grades, corrimãos, esquadrias e portões.",
     icon: Wrench,
     subtypes: ["Grade", "Corrimão", "Esquadria"],
     materialIds: ["tubos-metalicos", "chapas", "cantoneiras", "solventes-acessorios"],
@@ -59,7 +59,7 @@ export const projects = [
   {
     id: "rural",
     name: "Rural",
-    description: "Materiais para estruturas, cercamentos e manutenção.",
+    description: "Produtos para barracões, cercas, currais e manutenção no campo.",
     icon: Tractor,
     subtypes: ["Cercamento", "Curral", "Barracão rural"],
     materialIds: ["tubos-metalicos", "telhas-metalicas", "cantoneiras", "barras"],
@@ -68,7 +68,7 @@ export const projects = [
   {
     id: "outro-projeto",
     name: "Outro Projeto",
-    description: "Encontre um ponto de partida com apoio da IMESUL.",
+    description: "Use esta opção quando ainda não souber qual material pedir.",
     icon: CircleHelp,
     subtypes: ["Preciso de orientação"],
     materialIds: [],

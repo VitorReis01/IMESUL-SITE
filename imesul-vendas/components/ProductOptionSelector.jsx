@@ -187,7 +187,7 @@ export default function ProductOptionSelector({ product, form, setForm }) {
           <p className="mt-1 text-lg font-semibold text-white">
             {selectedVariation?.peso !== undefined
               ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-              : "Selecione todas as opções técnicas"}
+              : "Escolha uma opção para continuar"}
           </p>
         </div>
       </div>

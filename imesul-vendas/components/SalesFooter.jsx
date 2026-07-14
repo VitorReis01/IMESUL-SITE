@@ -20,7 +20,7 @@ const units = [
     mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
   {
-    name: "Dourados — Loja de Fábrica",
+    name: "Dourados Centro",
     address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
     phone: "(67) 3411-5700",
     phoneHref: "tel:+556734115700",
@@ -73,8 +73,8 @@ export default function SalesFooter() {
               className="h-auto w-[150px] object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.16)]"
             />
             <p className="mt-6 max-w-[370px] text-sm leading-7 text-imesul-steel-light/72">
-              Distribuidora de aço com atendimento técnico, linha completa e suporte
-              comercial para construção, serralheria, indústria e campo em Mato Grosso do Sul.
+              Distribuidora de materiais em aço para construção, serralheria,
+              indústria e campo em Mato Grosso do Sul.
             </p>
           </div>
 
@@ -168,7 +168,7 @@ export default function SalesFooter() {
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-imesul-steel-light/62">
-            Dourados e Campo Grande — MS
+            Dourados Matriz, Dourados Centro e Campo Grande
           </span>
         </div>
       </div>

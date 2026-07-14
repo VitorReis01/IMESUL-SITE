@@ -12,6 +12,12 @@ function listOrFallback(values) {
   return values.length ? values.map((value) => `- ${value}`).join("\n") : "A definir";
 }
 
+// Inclui campos opcionais apenas quando o cliente informou algo relevante.
+function optionalBlock(label, value) {
+  const normalized = String(value ?? "").trim();
+  return normalized ? `${label}:\n${normalized}` : "";
+}
+
 // Aplica unidade apenas na exibicao; os dados continuam no formato do catalogo.
 function formatTechnicalValue(value, type) {
   if (value === "" || value === null || value === undefined) return "Não informado";
@@ -26,33 +32,19 @@ function formatTechnicalValue(value, type) {
 
 // Monta a mensagem do caminho por projeto na mesma ordem apresentada no resumo.
 export function buildProjectMessage({ project, subtype, materials, form }) {
-  return `Olá, vim pelo site da IMESUL.
-
-Projeto:
-${project.name}
-
-Subtipo:
-${subtype}
-
-Materiais recomendados:
-${listOrFallback(materials)}
-
-Porte estimado:
-${valueOrFallback(form.projectSize)}
-
-Momento da compra:
-${valueOrFallback(form.urgency)}
-
-Quantidade:
-${valueOrFallback(form.quantity)}
-
-Cidade/UF:
-${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}
-
-Observações:
-${valueOrFallback(form.notes)}
-
-Gostaria de solicitar uma cotação.`;
+  return [
+    "Olá, gostaria de solicitar um orçamento com os itens abaixo:",
+    "Tipo de solicitação:\nProjeto",
+    `Projeto:\n${project.name}`,
+    `Subtipo:\n${subtype}`,
+    `Materiais recomendados:\n${listOrFallback(materials)}`,
+    `Porte estimado:\n${valueOrFallback(form.projectSize)}`,
+    `Momento da compra:\n${valueOrFallback(form.urgency)}`,
+    `Quantidade:\n${valueOrFallback(form.quantity)}`,
+    `Cidade/UF:\n${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}`,
+    optionalBlock("Observações", form.notes),
+    "Fico no aguardo da confirmação de medida, disponibilidade e valor.",
+  ].filter(Boolean).join("\n\n");
 }
 
 // Monta a mensagem tecnica e inclui peso somente quando a linha selecionada o informa.
@@ -61,41 +53,26 @@ export function buildProductMessage({ category, product, form, selectedVariation
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
     : "Não informado";
 
-  return `Olá, vim pelo site da IMESUL.
+  const details = optionalBlock("Características adicionais", form.details);
+  const notes = optionalBlock("Observações", form.notes);
+  const thickness = form.thickness || form.thickness === 0
+    ? optionalBlock("Espessura", formatTechnicalValue(form.thickness, "thickness"))
+    : "";
 
-Gostaria de solicitar uma cotação.
-
-Tipo de solicitação:
-Material
-
-Categoria:
-${category?.name || "Não informado"}
-
-Produto:
-${product.name}
-
-Medida:
-${formatTechnicalValue(form.measure, "measure")}
-
-Espessura:
-${formatTechnicalValue(form.thickness, "thickness")}
-
-Características adicionais:
-${valueOrFallback(form.details)}
-
-Peso informado no catálogo:
-${weight}
-
-Quantidade:
-${valueOrFallback(form.quantity)}
-
-Cidade/UF:
-${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}
-
-Observações:
-${valueOrFallback(form.notes)}
-
-Aguardo retorno.`;
+  return [
+    "Olá, gostaria de solicitar um orçamento com os itens abaixo:",
+    "Tipo de solicitação:\nMaterial",
+    `Categoria:\n${category?.name || "Não informado"}`,
+    `Produto:\n${product.name}`,
+    `Medida:\n${formatTechnicalValue(form.measure, "measure")}`,
+    thickness,
+    details,
+    `Peso informado no catálogo:\n${weight}`,
+    `Quantidade:\n${valueOrFallback(form.quantity)}`,
+    `Cidade/UF:\n${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}`,
+    notes,
+    "Fico no aguardo da confirmação de medida, disponibilidade e valor.",
+  ].filter(Boolean).join("\n\n");
 }
 
 // Limita a mensagem a 4.000 caracteres e codifica o texto para a URL do WhatsApp.

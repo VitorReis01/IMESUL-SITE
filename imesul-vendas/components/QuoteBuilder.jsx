@@ -198,7 +198,7 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
       >
         <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
         <span className="relative z-10 font-condensed text-sm font-bold uppercase tracking-[0.1em] text-white">
-          Solicitar Cotação no WhatsApp
+          Enviar solicitação pelo WhatsApp
         </span>
         <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
         {!disabled && <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />}
@@ -233,9 +233,9 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
     ? buildProjectMessage({ project, subtype, materials: recommendationNames, form })
     : "";
   const disabledReason = !subtype
-    ? "Selecione o subtipo do projeto."
+    ? "Escolha uma opção para continuar."
     : !isLocationReady(form)
-      ? "Selecione quantidade, cidade e estado para gerar a mensagem."
+      ? "Complete as informações do pedido antes de enviar para o WhatsApp."
       : "";
 
   return (
@@ -246,7 +246,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
       <StepHeader
         eyebrow="PRÉ-ORÇAMENTO GUIADO"
         title={`Vamos detalhar seu ${project.name}`}
-        description="Escolha as opções principais para a equipe comercial validar medidas, estoque e preço pelo WhatsApp."
+        description="Escolha as opções principais. A equipe confirma medida, disponibilidade e valor pelo WhatsApp."
         steps={["Projeto", "Subtipo", "Seleções", "Resumo"]}
         activeStep={subtype ? 3 : 1}
       />
@@ -288,7 +288,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               </h3>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-              Não é necessário digitar medidas. A equipe IMESUL confirma as dimensões técnicas no atendimento.
+              Não é necessário digitar medidas. A equipe confirma medida, disponibilidade e valor pelo WhatsApp.
             </p>
 
             <div className="mt-7 space-y-7">
@@ -327,6 +327,9 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
               <h3 className="font-display text-4xl leading-none text-white">Resumo da Solicitação</h3>
             </div>
+            <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
+              Esta é uma solicitação de orçamento. A compra não é finalizada automaticamente pelo site.
+            </p>
             <dl className="mt-6">
               <SummaryRow label="Tipo" value="Projeto" />
               <SummaryRow label="Projeto selecionado" value={project.name} />
@@ -376,9 +379,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
-    ? "Selecione uma combinação válida do catálogo."
+    ? "Escolha uma opção do catálogo para continuar."
     : !isLocationReady(form)
-        ? "Selecione quantidade, cidade e estado para gerar a mensagem."
+        ? "Complete as informações do pedido antes de enviar para o WhatsApp."
         : "";
 
   return (
@@ -390,8 +393,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
         eyebrow="SELEÇÃO TÉCNICA"
         title={product.name}
         description={product.hasStructuredOptions
-          ? "Escolha somente combinações publicadas no catálogo oficial da IMESUL."
-          : "Este item não possui tabela técnica completa no catálogo. Informe as características desejadas e a equipe comercial confirma os detalhes."}
+          ? "Escolha somente combinações publicadas no catálogo oficial da IMESUL. A equipe confirma medida, disponibilidade e valor pelo WhatsApp."
+          : "Este item não possui tabela técnica completa no catálogo. Informe as características desejadas e a equipe confirma medida, disponibilidade e valor pelo WhatsApp."}
         steps={["Categoria", "Produto", "Opções", "Resumo"]}
         activeStep={3}
       />
