@@ -1,5 +1,7 @@
 "use client";
 
+// Painel administrativo do analytics local.
+// Consulta as APIs protegidas e mostra eventos, visitantes e detalhes de seguranca.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
@@ -11,6 +13,7 @@ import {
   MousePointerClick,
   Printer,
   Search,
+  ShieldAlert,
   Trash2,
   UserCheck,
   Users,
@@ -24,6 +27,7 @@ const filters = [
   { label: "Busca", value: "search" },
   { label: "Cliques", value: "click" },
   { label: "Login", value: "login" },
+  { label: "Suspeitos", value: "suspicious" },
 ];
 
 const trackedClickTypes = new Set(["click", "whatsapp"]);
@@ -51,7 +55,30 @@ const escapeHtml = (value) =>
     .replaceAll("'", "&#039;");
 
 const reportObservation =
-  "Os IPs são exibidos de forma mascarada para preservar a privacidade. Para uso em produção, mantenha política de privacidade e consentimento conforme LGPD.";
+  "Os IPs sao exibidos de forma mascarada para preservar a privacidade. Para uso em producao, mantenha politica de privacidade e consentimento conforme LGPD.";
+
+const formatDuration = (start, end) => {
+  const seconds = Math.max(0, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return `${minutes}min ${remainingSeconds}s`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
+};
+
+const getLocationLabel = (event) => {
+  const location = event.location || {};
+  return [location.city, location.region, location.country].filter((item) => item && item !== "Desconhecido").join(" / ") || "Desconhecido";
+};
+
+const getDeviceLabel = (event) => {
+  const device = event.device || {};
+  return [device.device, device.browser, device.os].filter((item) => item && item !== "Desconhecido").join(" / ") || "Desconhecido";
+};
+
+const getSecurityStatus = (event) => event.securityStatus || "Normal";
+
+const getSecurityDetails = (event) => event.securityDetails || {};
 
 const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -130,9 +157,17 @@ const groupVisitors = (events) => {
       clicks: 0,
       whatsapp: 0,
       searches: 0,
+      firstActivity: event.timestamp,
       lastActivity: event.timestamp,
       traffic: buildTrafficLabel(event),
-      ipMasked: event.ipMasked || event.ip || "não identificado",
+      trafficSource: event.trafficSource || buildTrafficLabel(event),
+      ipMasked: event.ipMasked || event.ip || "nao identificado",
+      ipHash: event.ipHash || "",
+      location: getLocationLabel(event),
+      device: getDeviceLabel(event),
+      pages: new Set(),
+      securityStatus: getSecurityStatus(event),
+      suspiciousReasons: new Set(event.suspiciousReasons || []),
       status: getClientIdentity(event).status,
     };
 
@@ -146,16 +181,29 @@ const groupVisitors = (events) => {
     if (trackedClickTypes.has(event.type)) current.clicks += 1;
     if (event.type === "whatsapp") current.whatsapp += 1;
     if (event.type === "search") current.searches += 1;
+    if (event.pagePath || event.path) current.pages.add(event.pagePath || event.path);
+    if (new Date(event.timestamp) < new Date(current.firstActivity)) current.firstActivity = event.timestamp;
     if (new Date(event.timestamp) > new Date(current.lastActivity)) current.lastActivity = event.timestamp;
-    if (current.traffic === "Direto / não informado") current.traffic = buildTrafficLabel(event);
-    if (current.ipMasked === "não identificado" && (event.ipMasked || event.ip)) {
+    if (current.traffic === "Direto / nao informado") current.traffic = buildTrafficLabel(event);
+    if (current.location === "Desconhecido") current.location = getLocationLabel(event);
+    if (current.device === "Desconhecido") current.device = getDeviceLabel(event);
+    if (getSecurityStatus(event) === "Suspeito") current.securityStatus = "Suspeito";
+    (event.suspiciousReasons || []).forEach((reason) => current.suspiciousReasons.add(reason));
+    if (current.ipMasked === "nao identificado" && (event.ipMasked || event.ip)) {
       current.ipMasked = event.ipMasked || event.ip;
     }
 
     visitors.set(key, current);
   });
 
-  return [...visitors.values()].sort((left, right) => new Date(right.lastActivity) - new Date(left.lastActivity));
+  return [...visitors.values()]
+    .map((visitor) => ({
+      ...visitor,
+      duration: formatDuration(visitor.firstActivity, visitor.lastActivity),
+      pages: [...visitor.pages],
+      suspiciousReasons: [...visitor.suspiciousReasons],
+    }))
+    .sort((left, right) => new Date(right.lastActivity) - new Date(left.lastActivity));
 };
 
 const buildButtonRanking = (events) => {
@@ -195,6 +243,21 @@ const buildVisitorRanking = (events) =>
     })
     .sort((left, right) => right.clicks - left.clicks)
     .slice(0, 8);
+
+const buildLocationRanking = (visitors) => {
+  const ranking = new Map();
+
+  visitors.forEach((visitor) => {
+    const key = visitor.location || "Desconhecido";
+    const current = ranking.get(key) || { label: key, total: 0, whatsapp: 0, suspicious: 0 };
+    current.total += 1;
+    current.whatsapp += visitor.whatsapp > 0 ? 1 : 0;
+    current.suspicious += visitor.securityStatus === "Suspeito" ? 1 : 0;
+    ranking.set(key, current);
+  });
+
+  return [...ranking.values()].sort((left, right) => right.total - left.total).slice(0, 8);
+};
 
 function SummaryCard({ icon: Icon, label, value, comparison }) {
   const TrendIcon = comparison?.trend === "down" ? ArrowDown : ArrowUp;
@@ -236,6 +299,7 @@ function MiniTable({ title, children }) {
 export default function AdminDashboard({ open, onClose, onLogout }) {
   const [events, setEvents] = useState(() => getLocalEvents());
   const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
 
   // Atualiza o painel com dados da API sem perder o fallback local em desenvolvimento.
   const refreshEvents = useCallback(() => {
@@ -262,12 +326,14 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
     const uniqueVisitors = new Set(events.map((event) => event.visitorId).filter(Boolean)).size;
     const totalAccesses = visitEvents.length;
     const repeatedAccesses = Math.max(totalAccesses - uniqueVisitors, 0);
+    const visitors = groupVisitors(events);
 
     return {
       metrics: {
         uniqueVisitors,
         totalAccesses,
         repeatedAccesses,
+        suspiciousVisitors: visitors.filter((visitor) => visitor.securityStatus === "Suspeito").length,
         clicks: countMetric(events, "clicks"),
         whatsapp: countMetric(events, "whatsapp"),
         searches: countMetric(events, "searches"),
@@ -281,19 +347,28 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         searches: getComparison(events, "searches"),
         logins: getComparison(events, "logins"),
       },
-      visitors: groupVisitors(events),
+      visitors,
       buttonRanking: buildButtonRanking(events),
       visitorRanking: buildVisitorRanking(events),
+      locationRanking: buildLocationRanking(visitors),
     };
   }, [events]);
 
   const filteredEvents = useMemo(() => {
     if (activeFilter === "all") return events;
+    if (activeFilter === "suspicious") return events.filter((event) => getSecurityStatus(event) === "Suspeito");
     return events.filter((event) => event.type === activeFilter);
   }, [activeFilter, events]);
 
+  const suspiciousEvents = useMemo(
+    () => events.filter((event) => getSecurityStatus(event) === "Suspeito"),
+    [events],
+  );
+
   const exportEventsAsJson = () => {
-    const file = new Blob([JSON.stringify(events, null, 2)], { type: "application/json" });
+    // Exporta apenas a visao comum; detalhes sensiveis ficam restritos ao modal de seguranca.
+    const sanitizedEvents = events.map(({ securityDetails, ...event }) => event);
+    const file = new Blob([JSON.stringify(sanitizedEvents, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");
 
@@ -322,7 +397,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   const printReport = () => {
     const generatedAt = new Date();
-    const { metrics, comparisons, visitors, buttonRanking, visitorRanking } = analytics;
+    const { metrics, comparisons, visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) return;
 
@@ -387,7 +462,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   if (!open) return null;
 
-  const { metrics, comparisons, visitors, buttonRanking, visitorRanking } = analytics;
+  const { metrics, comparisons, visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
+  const selectedSecurityDetails = getSecurityDetails(selectedSecurityEvent || {});
 
   return (
     <div className="fixed inset-0 z-[210] bg-[#030811]/88 px-4 py-5 backdrop-blur-lg">
@@ -420,7 +496,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         </header>
 
         <div className="overflow-y-auto px-5 py-5 sm:px-7">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
             <SummaryCard icon={Users} label="Visitantes únicos" value={metrics.uniqueVisitors} comparison={comparisons.uniqueVisitors} />
             <SummaryCard icon={BarChart3} label="Total de acessos" value={metrics.totalAccesses} />
             <SummaryCard icon={BarChart3} label="Acessos repetidos" value={metrics.repeatedAccesses} />
@@ -428,10 +504,48 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             <SummaryCard icon={MessageCircle} label="Cliques WhatsApp" value={metrics.whatsapp} comparison={comparisons.whatsapp} />
             <SummaryCard icon={Search} label="Pesquisas" value={metrics.searches} comparison={comparisons.searches} />
             <SummaryCard icon={UserCheck} label="Logins/cadastros" value={metrics.logins} comparison={comparisons.logins} />
+            <SummaryCard icon={ShieldAlert} label="Suspeitos" value={metrics.suspiciousVisitors} />
           </div>
 
           <div className="mt-5 rounded-[10px] border border-white/[0.1] bg-white/[0.035] p-4 text-sm leading-6 text-imesul-steel-light/72">
             <strong className="text-white">Privacidade:</strong> IPs são exibidos de forma mascarada. Origem/referrer/UTM são registrados apenas quando o navegador informa esses dados.
+          </div>
+
+          <div className="mt-5">
+            <MiniTable title="Detalhes de seguranca">
+              <table className="min-w-[900px] w-full border-collapse text-left">
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Evento</th><th className="px-4 py-3">Path</th><th className="px-4 py-3">Motivo</th><th className="px-4 py-3">Acao</th></tr></thead>
+                <tbody className="divide-y divide-white/[0.07]">
+                  {suspiciousEvents.length ? suspiciousEvents.slice().reverse().map((event) => (
+                    <tr key={`security-${event.id}`} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.label || event.type}</td><td className="px-4 py-3">{event.pagePath || event.path || "-"}</td><td className="px-4 py-3 text-[#fca5a5]">{(event.suspiciousReasons || []).join(", ") || "Suspeito"}</td><td className="px-4 py-3"><button type="button" onClick={() => setSelectedSecurityEvent(event)} className="rounded-full border border-[#f87171]/35 px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-[#fecaca] transition-colors hover:border-[#f87171] hover:bg-[#f87171]/10">Abrir detalhes</button></td></tr>
+                  )) : <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Nenhum evento suspeito registrado.</td></tr>}
+                </tbody>
+              </table>
+            </MiniTable>
+          </div>
+
+          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+            <MiniTable title="Visitantes por cidade/regiao">
+              <table className="min-w-[520px] w-full border-collapse text-left">
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Localizacao</th><th className="px-4 py-3">Visitantes</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Suspeitos</th></tr></thead>
+                <tbody className="divide-y divide-white/[0.07]">
+                  {locationRanking.length ? locationRanking.map((item) => (
+                    <tr key={item.label} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{item.label}</td><td className="px-4 py-3">{item.total}</td><td className="px-4 py-3">{item.whatsapp}</td><td className="px-4 py-3">{item.suspicious}</td></tr>
+                  )) : <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem localizacao registrada.</td></tr>}
+                </tbody>
+              </table>
+            </MiniTable>
+
+            <MiniTable title="Sessoes e seguranca">
+              <table className="min-w-[760px] w-full border-collapse text-left">
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Visitante</th><th className="px-4 py-3">Dispositivo</th><th className="px-4 py-3">Tempo</th><th className="px-4 py-3">Paginas</th><th className="px-4 py-3">Seguranca</th></tr></thead>
+                <tbody className="divide-y divide-white/[0.07]">
+                  {visitors.length ? visitors.map((visitor) => (
+                    <tr key={`session-${visitor.id}`} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{visitor.identity.name}</td><td className="px-4 py-3">{visitor.device}</td><td className="px-4 py-3">{visitor.duration}</td><td className="px-4 py-3">{visitor.pages.join(", ") || "-"}</td><td className={`px-4 py-3 font-semibold ${visitor.securityStatus === "Suspeito" ? "text-[#f87171]" : "text-[#25D366]"}`}>{visitor.securityStatus}{visitor.suspiciousReasons.length ? `: ${visitor.suspiciousReasons.join(", ")}` : ""}</td></tr>
+                  )) : <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem sessoes registradas.</td></tr>}
+                </tbody>
+              </table>
+            </MiniTable>
           </div>
 
           <div className="mt-6 grid gap-5 xl:grid-cols-2">
@@ -496,6 +610,33 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           </div>
         </div>
       </section>
+      {selectedSecurityEvent ? (
+        <div className="fixed inset-0 z-[230] flex items-center justify-center bg-[#020711]/82 px-4 backdrop-blur-md">
+          <section className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[12px] border border-[#f87171]/22 bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] p-5 shadow-[0_26px_90px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#fca5a5]">Evento suspeito</p>
+                <h3 className="mt-2 font-display text-3xl text-white">Detalhes de segurança</h3>
+                <p className="mt-2 text-sm leading-6 text-imesul-steel-light/68">IP completo e headers reduzidos aparecem aqui apenas para investigação administrativa.</p>
+              </div>
+              <button type="button" onClick={() => setSelectedSecurityEvent(null)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.12] text-white hover:bg-white/[0.08]" aria-label="Fechar detalhes de segurança">
+                <X size={17} aria-hidden="true" />
+              </button>
+            </div>
+
+            <dl className="mt-5 grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">IP completo</dt><dd className="mt-1 break-all font-mono text-[#fecaca]">{selectedSecurityDetails.ipFull || "Indisponivel"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Horario exato</dt><dd className="mt-1">{selectedSecurityDetails.serverTimestamp || selectedSecurityEvent.timestamp}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Path acessado</dt><dd className="mt-1 break-all">{selectedSecurityDetails.path || selectedSecurityEvent.pagePath || "-"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Metodo / host</dt><dd className="mt-1">{selectedSecurityDetails.method || "-"} / {selectedSecurityDetails.host || "Nao informado"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Motivo da suspeita</dt><dd className="mt-1 text-[#fca5a5]">{(selectedSecurityDetails.reasons || selectedSecurityEvent.suspiciousReasons || []).join(", ") || "Suspeito"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">User-agent completo</dt><dd className="mt-1 break-all font-mono text-xs">{selectedSecurityDetails.userAgentFull || "Desconhecido"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Referer</dt><dd className="mt-1 break-all">{selectedSecurityDetails.refererFull || "Nao informado"}</dd></div>
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Headers uteis</dt><dd className="mt-2 whitespace-pre-wrap break-all font-mono text-xs text-imesul-steel-light/68">{JSON.stringify(selectedSecurityDetails.headers || {}, null, 2)}</dd></div>
+            </dl>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

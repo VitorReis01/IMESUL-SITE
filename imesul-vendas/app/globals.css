@@ -66,6 +66,16 @@ textarea {
   transform: translateY(0);
 }
 
+/* No mobile a entrada usa menos deslocamento para evitar sensação pesada durante o scroll. */
+@media (max-width: 640px) {
+  [data-scroll-reveal] {
+    transform: translateY(14px);
+    transition:
+      opacity 0.5s ease,
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
 /* Movimento leve no balao PNG do mascote sem afetar o CTA do card. */
 @keyframes mascotBalloonFloat {
   0%,
@@ -82,7 +92,88 @@ textarea {
   animation: mascotBalloonFloat 3.8s ease-in-out infinite;
 }
 
-/* Usuarios com reducao de movimento veem o conteudo sem transicoes continuas. */
+/* Realce discreto para hover de cards, mantendo a leitura e o tom industrial. */
+.premium-soft-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.045) 44%, transparent 62%);
+  opacity: 0;
+  transform: translateX(-26%);
+  transition:
+    opacity 0.28s ease,
+    transform 0.42s ease;
+}
+
+.premium-soft-sheen:hover::after {
+  opacity: 1;
+  transform: translateX(18%);
+}
+
+/* Pulso curto para confirmar selecao sem usar popup ou interromper o fluxo. */
+@keyframes selectionFeedbackPulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(240, 199, 118, 0.34),
+      0 0 0 rgba(37, 211, 102, 0);
+  }
+
+  45% {
+    box-shadow:
+      0 0 0 3px rgba(240, 199, 118, 0.32),
+      0 18px 52px rgba(37, 211, 102, 0.12);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(240, 199, 118, 0),
+      0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+.selection-feedback-pulse {
+  animation: selectionFeedbackPulse 1.15s ease-out 1;
+}
+
+/* Destaques da faixa de confiança comercial sem criar brilho pesado. */
+.imesul-brand-word {
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 14px rgba(212, 43, 43, 0.24),
+    0 0 12px rgba(42, 92, 151, 0.18);
+}
+
+/* Marca o IMESUL do título do catálogo com as cores institucionais sem pesar o layout. */
+.imesul-title-word {
+  display: inline-block;
+  background: linear-gradient(118deg, #ffffff 0%, #d42b2b 34%, #f2f5f8 49%, #2a5c97 78%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow:
+    0 0 18px rgba(212, 43, 43, 0.22),
+    0 0 16px rgba(42, 92, 151, 0.2);
+}
+
+/* A palavra aço recebe acabamento metálico para reforçar a identidade do produto. */
+.steel-word {
+  background: linear-gradient(115deg, #f8fafc 0%, #9ca3af 34%, #ffffff 52%, #65717f 78%, #e5e7eb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+}
+
+/* Camada WebGL dos modelos GLB reais, posicionada atr?s do conte?do do site. */
+.steel-scroll-layer {
+  contain: layout paint style;
+  transition: opacity 0.28s ease;
+  will-change: opacity;
+}
+
+/* Usu?rios com redu??o de movimento veem o conte?do sem transi??es cont?nuas. */
 @media (prefers-reduced-motion: reduce) {
   [data-scroll-reveal] {
     opacity: 1;
@@ -92,5 +183,19 @@ textarea {
 
   .mascot-balloon {
     animation: none;
+  }
+
+  .premium-soft-sheen::after {
+    opacity: 0;
+    transform: none;
+    transition: none;
+  }
+
+  .selection-feedback-pulse {
+    animation: none;
+  }
+
+  .steel-scroll-layer {
+    display: none;
   }
 }

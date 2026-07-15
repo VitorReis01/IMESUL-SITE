@@ -1,5 +1,7 @@
 "use client";
 
+// Seleciona medidas e espessuras validas para o produto escolhido.
+// Usa a tabela tecnica do catalogo para evitar combinacoes inexistentes.
 import { useEffect, useMemo } from "react";
 import { AlertCircle, Check, Scale } from "lucide-react";
 

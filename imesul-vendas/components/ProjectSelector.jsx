@@ -1,7 +1,10 @@
-"use client";
+﻿"use client";
 
+// Tela principal da area de vendas.
+// Conecta hero, busca, carrossel, catalogo, orcamento, login e painel admin.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -26,6 +29,12 @@ import { MaterialQuoteFlow, ProjectQuoteFlow } from "./QuoteBuilder";
 import ProductCatalog from "./ProductCatalog";
 import ProductShowcaseCarousel from "./ProductShowcaseCarousel";
 import SalesGuidanceSection from "./SalesGuidanceSection";
+import SalesTrustStrip from "./SalesTrustStrip";
+
+// Carrega o efeito 3D somente no cliente para deixar o bundle inicial mais leve.
+const SteelScrollObject = dynamic(() => import("./SteelScrollObject"), {
+  ssr: false,
+});
 
 const salesUnits = {
   dourados: "Dourados",
@@ -33,7 +42,7 @@ const salesUnits = {
 };
 
 const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "http://192.168.1.117:3000";
+  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "/";
 
 const sellerMessage =
   "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";
@@ -43,20 +52,92 @@ const navLinkClassName =
 
 // Termos extras ajudam a busca sem alterar o cadastro oficial de produtos.
 const searchAliases = {
-  "telhas-metalicas": ["telha", "telhas", "telhas metalicas", "telhas metálicas", "terça", "terças", "cobertura"],
-  "tubos-metalicos": ["tubo", "tubos", "metalon", "metalons"],
-  laminados: ["barra", "barras", "vergalhao", "vergalhão"],
-  chapas: ["chapa", "chapas"],
-  "perfis-estruturais": ["perfil", "perfis", "cantoneira", "cantoneiras"],
-  "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos"],
-  "thinner-fixadores": ["thinner", "solvente", "solventes", "diluição", "limpeza", "pintura"],
+  "telhas-metalicas": ["telha", "telhas", "telhas metalicas", "telhas metálicas", "telhado", "telhados", "cobertura", "coberturas", "terca", "terças", "cumeeira"],
+  "tubos-metalicos": ["tubo", "tubos", "metalon", "metalons", "ferro", "aço", "metal", "estrutura", "portão", "serralheria"],
+  laminados: ["barra", "barras", "vergalhao", "vergalhão", "ferro", "aço", "metal", "cantoneira", "cantoneiras"],
+  chapas: ["chapa", "chapas", "piso", "corte", "dobra", "fechamento", "metal", "aço"],
+  "chapas-frisadas-lambris": ["chapa", "chapas", "frisada", "frisadas", "meia cana", "lambril", "lambris", "portão", "fachada", "fechamento"],
+  "perfis-estruturais": ["perfil", "perfis", "perfil u", "cantoneira", "cantoneiras", "estrutura", "galpão", "cobertura", "ferro", "aço"],
+  "perfis-serralheria": ["perfil", "perfis", "serralheria", "portão", "portões", "porta", "portas", "janela", "janelas", "esquadria", "esquadrias"],
+  "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria"],
+  "thinner-fixadores": ["thinner", "solvente", "solventes", "diluição", "limpeza", "pintura", "acabamento", "preparação"],
+  "tintas-solventes-consumiveis": ["tinta", "tintas", "primer", "primers", "galvanizante", "galvanizantes", "consumível", "consumíveis", "disco", "discos", "corte", "solda", "eletrodo", "eletrodos", "acabamento", "proteção"],
 };
 
+const productSearchAliases = {
+  "tubo-retangular": ["metalon", "metalons", "tubo", "tubos", "portão", "serralheria", "estrutura"],
+  "tubo-quadrado": ["metalon", "metalons", "tubo", "tubos", "portão", "serralheria", "estrutura"],
+  "tubo-redondo": ["tubo", "tubos", "corrimão", "estrutura", "suporte"],
+  "perfil-u-enrijecido": ["perfil", "perfil u", "u enrijecido", "estrutura", "galpão", "cobertura"],
+  "perfil-u-simples": ["perfil", "perfil u", "u simples", "estrutura", "travamento", "cobertura"],
+  "telha-trapezoidal-40": ["telha", "telhado", "cobertura", "trapezoidal", "telha 40", "tp40"],
+  "telha-trapezoidal-25": ["telha", "telhado", "cobertura", "trapezoidal", "telha 25", "tp25"],
+  "telha-ondulada": ["telha", "telhado", "cobertura", "ondulada"],
+  cumeeiras: ["telha", "telhado", "cobertura", "acabamento", "cumeeira"],
+  "cantoneiras-abas-iguais": ["cantoneira", "cantoneiras", "perfil", "perfis", "reforço"],
+  "barras-chatas": ["barra", "barras", "ferro chato", "barra chata"],
+  "barras-quadradas": ["barra", "barras", "barra quadrada", "ferro quadrado"],
+  "barras-redondas": ["barra", "barras", "barra redonda", "ferro redondo"],
+  "chapas-planas": ["chapa", "chapas", "lisa", "plana", "corte", "dobra"],
+  "chapas-grossas": ["chapa", "chapas", "grossa", "corte", "estrutura"],
+  "chapas-finas-frio": ["chapa", "chapas", "fina", "frio", "dobras"],
+  "chapas-finas-quente": ["chapa", "chapas", "fina", "quente", "dobras"],
+  "chapas-piso": ["chapa", "chapas", "piso", "xadrez"],
+  "chapas-frisadas-u": ["chapa", "chapas", "frisada", "frisadas", "portão", "fechamento"],
+  "chapa-meia-cana-1090": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
+  "chapa-meia-cana-545": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
+  lambris: ["lambril", "lambris", "chapa", "fachada", "fechamento"],
+  "perfis-portoes-elevacao": ["perfil", "perfis", "portão", "portões", "elevação", "basculante"],
+  "perfis-portas-aco": ["perfil", "perfis", "porta", "portas", "aço", "esquadria"],
+  "perfis-janelas-aco": ["perfil", "perfis", "janela", "janelas", "aço", "esquadria"],
+  roldanas: ["roldana", "roldanas", "portão", "deslizante"],
+  trilhos: ["trilho", "trilhos", "guia", "guias", "portão", "deslizante"],
+  fechos: ["fecho", "fechos", "trava", "travas", "portão"],
+  dobradicas: ["dobradiça", "dobradiças", "portão", "porta"],
+  guias: ["guia", "guias", "trilho", "trilhos", "portão"],
+  parafusos: ["parafuso", "parafusos", "fixador", "fixadores", "montagem"],
+  fechaduras: ["fechadura", "fechaduras", "portão", "porta", "segurança"],
+  solventes: ["solvente", "solventes", "thinner", "limpeza", "diluição"],
+  thinner: ["thinner", "solvente", "solventes", "limpeza", "diluição", "pintura"],
+};
+
+const relatedSearchTerms = {
+  telhado: ["telha", "cobertura"],
+  telhados: ["telha", "cobertura"],
+  cobertura: ["telha", "telhado", "cumeeira"],
+  coberturas: ["telha", "telhado", "cumeeira"],
+  portao: ["portão", "perfis", "roldanas", "trilhos", "fechaduras", "acessorios"],
+  portão: ["portao", "perfis", "roldanas", "trilhos", "fechaduras", "acessórios"],
+  portoes: ["portão", "perfis", "roldanas", "trilhos", "fechaduras"],
+  portões: ["portao", "perfis", "roldanas", "trilhos", "fechaduras"],
+  serralheria: ["perfis", "acessórios", "tubos", "chapas"],
+  ferro: ["aço", "tubo", "perfil", "chapa", "barra"],
+  aco: ["aço", "tubo", "perfil", "chapa", "barra"],
+  aço: ["aco", "tubo", "perfil", "chapa", "barra"],
+  metal: ["tubo", "perfil", "chapa", "barra"],
+  metalon: ["tubo", "tubos"],
+  solvente: ["solventes", "thinner", "limpeza"],
+  solventes: ["solvente", "thinner", "limpeza"],
+};
 const normalizeSearch = (value) =>
   String(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+
+const getSearchTokens = (value) =>
+  normalizeSearch(value)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+const expandSearchQuery = (value) => {
+  const normalized = normalizeSearch(value.trim());
+  const tokens = getSearchTokens(value);
+  const relatedTerms = tokens.flatMap((token) => relatedSearchTerms[token] || []);
+
+  return Array.from(new Set([normalized, ...tokens, ...relatedTerms.map(normalizeSearch)].filter(Boolean)));
+};
 
 const trustItems = [
   {
@@ -151,8 +232,11 @@ const projectShowcaseCards = [
 export default function ProjectSelector() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [recommendedProject, setRecommendedProject] = useState(null);
+  const [highlightedProjectId, setHighlightedProjectId] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [highlightedCategoryId, setHighlightedCategoryId] = useState(null);
+  const [highlightedProductId, setHighlightedProductId] = useState(null);
   const [originUnit, setOriginUnit] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -164,12 +248,15 @@ export default function ProjectSelector() {
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
   const [adminVisualActive, setAdminVisualActive] = useState(false);
   const searchRef = useRef(null);
+  const carouselScrollTimeoutRef = useRef(null);
+  const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
   const selectedProduct = getCatalogProduct(selectedProductId);
   const sellerWhatsAppUrl = createWhatsAppUrl(sellerMessage);
 
   const isUserVisuallyLoggedIn = authVisualActive || adminVisualActive;
 
+  // Padroniza eventos comerciais antes de enviar para o analytics local.
   const trackInteraction = useCallback((event) => {
     trackLocalEvent({
       ...event,
@@ -195,33 +282,44 @@ export default function ProjectSelector() {
       description: product.description,
       categoryId: product.categoryId,
       productId: product.id,
-      keywords: [product.name, product.description, ...(product.usage || [])],
+      keywords: [product.name, product.description, ...(product.usage || []), ...(productSearchAliases[product.id] || [])],
     }));
 
     return [...categoryItems, ...productItems];
   }, []);
 
   const searchSuggestions = useMemo(() => {
-    const query = normalizeSearch(searchTerm.trim());
-    if (!query) return [];
+    const queryTerms = expandSearchQuery(searchTerm);
+    if (!queryTerms.length) return [];
 
     return searchItems
       .map((item) => {
         const haystack = item.keywords.map(normalizeSearch);
-        const startsWithScore = haystack.some((value) =>
-          value.split(/\s+/).some((word) => word.startsWith(query))
+        const title = normalizeSearch(item.title);
+        const directTitleMatch = queryTerms.some((query) => title === query || title.includes(query));
+        const startsWithScore = queryTerms.some((query) =>
+          haystack.some((value) => value.split(/\s+/).some((word) => word.startsWith(query)))
         );
-        const includesScore = haystack.some((value) => value.includes(query));
+        const includesScore = queryTerms.some((query) =>
+          haystack.some((value) => value.includes(query))
+        );
 
-        if (!startsWithScore && !includesScore) return null;
-        return { ...item, score: startsWithScore ? 0 : 1 };
+        if (!directTitleMatch && !startsWithScore && !includesScore) return null;
+        return {
+          ...item,
+          score: directTitleMatch ? 0 : startsWithScore ? 1 : 2,
+        };
       })
       .filter(Boolean)
-      .sort((left, right) => left.score - right.score || left.title.localeCompare(right.title))
+      .sort((left, right) => {
+        if (left.score !== right.score) return left.score - right.score;
+        if (left.type !== right.type) return left.type === "product" ? -1 : 1;
+        return left.title.localeCompare(right.title);
+      })
       .slice(0, 6);
   }, [searchItems, searchTerm]);
 
-  // Captura a unidade enviada pelo site institucional e mantÃ©m o dado no fluxo comercial.
+  // Captura a unidade enviada pelo site institucional e mantém o dado no fluxo comercial.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const unitParam = new URLSearchParams(window.location.search).get("unidade");
@@ -248,16 +346,17 @@ export default function ProjectSelector() {
     if (query.length < 2) return undefined;
 
     const timer = window.setTimeout(() => {
+      const resultCount = searchSuggestions.length;
       trackInteraction({
         type: "search",
-        label: "Pesquisa realizada",
+        label: resultCount ? "Pesquisa realizada com resultado" : "Pesquisa sem resultado",
         section: "Busca do topo",
-        detail: query,
+        detail: `${query} / ${resultCount} resultado${resultCount === 1 ? "" : "s"}`,
       });
     }, 700);
 
     return () => window.clearTimeout(timer);
-  }, [searchTerm, trackInteraction]);
+  }, [searchSuggestions.length, searchTerm, trackInteraction]);
 
   // Fecha a busca quando o usuario sai do campo ou usa Esc.
   useEffect(() => {
@@ -321,11 +420,9 @@ export default function ProjectSelector() {
 
   // Revela os blocos abaixo da hero quando entram na viewport e oculta ao sair.
   useEffect(() => {
-    const revealElements = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
-    if (!revealElements.length) return undefined;
-
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) {
+      const revealElements = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
       revealElements.forEach((element) => element.classList.add("is-visible"));
       return undefined;
     }
@@ -339,18 +436,71 @@ export default function ProjectSelector() {
       { threshold: 0.16, rootMargin: "0px 0px -8% 0px" }
     );
 
-    revealElements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
+    const observedElements = new WeakSet();
+    const observeRevealElements = (root = document) => {
+      root.querySelectorAll("[data-scroll-reveal]").forEach((element) => {
+        if (observedElements.has(element)) return;
+        observedElements.add(element);
+        observer.observe(element);
+      });
+    };
+
+    observeRevealElements();
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          if (node.matches?.("[data-scroll-reveal]")) {
+            if (!observedElements.has(node)) {
+              observedElements.add(node);
+              observer.observe(node);
+            }
+          }
+          observeRevealElements(node);
+        });
+      });
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      mutationObserver.disconnect();
+      observer.disconnect();
+    };
+  }, []);
+
+  // Limpa timers de navegação acionados pelo carrossel quando a página desmonta.
+  useEffect(() => () => {
+    if (carouselScrollTimeoutRef.current) window.clearTimeout(carouselScrollTimeoutRef.current);
+    if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
   }, []);
 
   // Aguarda a renderizacao do bloco escolhido antes de leva-lo para a viewport.
-  const scrollToFlow = (id) => {
-    window.setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({
+  const scrollToFlow = (id, attempt = 0) => {
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById(id);
+      if (!target && attempt < 8) {
+        window.setTimeout(() => scrollToFlow(id, attempt + 1), 60);
+        return;
+      }
+
+      target?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    }, 80);
+    });
+  };
+
+  // Mostra confirmacao visual curta quando uma categoria ou produto e escolhido.
+  const triggerSelectionFeedback = ({ projectId = null, categoryId = null, productId = null }) => {
+    if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
+    setHighlightedProjectId(projectId);
+    setHighlightedCategoryId(categoryId);
+    setHighlightedProductId(productId);
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedProjectId(null);
+      setHighlightedCategoryId(null);
+      setHighlightedProductId(null);
+    }, 3200);
   };
 
   // Limpa a selecao de material ao iniciar uma solicitacao guiada por projeto.
@@ -366,6 +516,7 @@ export default function ProjectSelector() {
     setRecommendedProject(null);
     setSelectedCategoryId(null);
     setSelectedProductId(null);
+    triggerSelectionFeedback({ projectId });
     scrollToFlow("project-quote-flow");
   };
 
@@ -385,6 +536,7 @@ export default function ProjectSelector() {
     });
     setSelectedCategoryId(null);
     setSelectedProductId(null);
+    triggerSelectionFeedback({ projectId: card.projectId });
     scrollToFlow("material-path");
   };
 
@@ -401,6 +553,7 @@ export default function ProjectSelector() {
     setSelectedProductId(null);
     setSelectedProjectId(null);
     setRecommendedProject(null);
+    triggerSelectionFeedback({ categoryId });
     scrollToFlow("catalog-products");
   };
 
@@ -413,18 +566,44 @@ export default function ProjectSelector() {
       section: "Materiais",
       detail: product?.name || productId,
     });
+    if (product?.categoryId) {
+      setSelectedCategoryId(product.categoryId);
+    }
     setSelectedProductId(productId);
     setSelectedProjectId(null);
+    setRecommendedProject(null);
+    triggerSelectionFeedback({ categoryId: product?.categoryId || null, productId });
     scrollToFlow("material-quote-flow");
   };
 
-  // O carrossel abre o produto no mesmo fluxo técnico usado pelo catálogo principal.
+  // O carrossel entrega categoria e produto validados para evitar clique sem destino.
   const selectCarouselProduct = (product) => {
-    setSelectedCategoryId(product.categoryId);
-    setSelectedProductId(product.id);
+    const target = product.target || {};
+    const targetCategoryId = target.categoryId || product.categoryId;
+    const exactProduct = target.productId ? getCatalogProduct(target.productId) : null;
+    const category = catalogCategories.find((item) => item.id === targetCategoryId);
+
+    if (!category) return;
+
+    trackInteraction({
+      type: "click",
+      label: "Destino do carrossel",
+      section: "Produtos do catálogo IMESUL",
+      detail: `${category.name} / ${target.productName || product.name} / ${exactProduct ? "produto exato" : "fallback de categoria"}`,
+    });
+    setSelectedCategoryId(targetCategoryId);
+    setSelectedProductId(exactProduct ? exactProduct.id : null);
+    triggerSelectionFeedback({
+      categoryId: targetCategoryId,
+      productId: exactProduct ? exactProduct.id : null,
+    });
     setSelectedProjectId(null);
     setRecommendedProject(null);
-    scrollToFlow("material-quote-flow");
+    scrollToFlow("material-path");
+    if (carouselScrollTimeoutRef.current) window.clearTimeout(carouselScrollTimeoutRef.current);
+    carouselScrollTimeoutRef.current = window.setTimeout(() => {
+      scrollToFlow(exactProduct ? "material-quote-flow" : "catalog-products");
+    }, 260);
   };
 
   // Usa a mesma selecao dos cards para levar a sugestao ate o fluxo correto.
@@ -433,7 +612,7 @@ export default function ProjectSelector() {
       type: "search",
       label: "Sugestão clicada",
       section: "Busca do topo",
-      detail: suggestion.title,
+      detail: `${searchTerm.trim()} -> ${suggestion.title} (${suggestion.type === "product" ? "produto" : "categoria"})`,
     });
     setSearchTerm("");
     setSearchOpen(false);
@@ -465,7 +644,7 @@ export default function ProjectSelector() {
             <span className="pointer-events-none absolute inset-[-18px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.16),rgba(212,43,43,0.08)_38%,transparent_68%)] blur-xl" />
             <Image
             src="/logo/imesul-logo-completa.png"
-            alt="IMESUL DistribuiÃ§Ã£o"
+            alt="IMESUL Distribuição"
             width={707}
             height={353}
             priority
@@ -558,7 +737,7 @@ export default function ProjectSelector() {
                     ))
                   ) : (
                     <p className="px-4 py-4 text-sm text-imesul-steel-light/65">
-                      Não encontramos esse item no catálogo. Tente buscar por tubo, chapa, telha, perfil ou acessório.
+                      Não encontramos esse item no catálogo. Tente buscar por tubo, chapa, telha, perfil, barra, parafuso ou acessório.
                     </p>
                   )}
                 </div>
@@ -618,6 +797,8 @@ export default function ProjectSelector() {
           aria-hidden="true"
         />
         <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(5,11,20,0.9)_0%,rgba(5,11,20,0.68)_44%,rgba(5,11,20,0.55)_100%)] motion-safe:block motion-reduce:hidden" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(212,43,43,0.14),transparent_28%),radial-gradient(circle_at_78%_32%,rgba(42,92,151,0.15),transparent_36%),linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.46))]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#06101d] via-[#06101d]/52 to-transparent" />
 
         <div className="relative z-10 mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-8 px-6 py-10 sm:px-8 sm:py-12 lg:grid-cols-[0.93fr_1.07fr] lg:px-12 lg:py-12">
           <div className="max-w-[620px]">
@@ -691,9 +872,9 @@ export default function ProjectSelector() {
                 trackInteraction({ type: "click", label: "Tenho um projeto", section: "Hero", detail: "Card Preciso de ajuda" });
                 scrollToFlow("project-path");
               }}
-              className={`group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-imesul-red/40 bg-[linear-gradient(145deg,rgba(212,43,43,0.13),rgba(7,16,29,0.78)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-imesul-red/75 hover:bg-[linear-gradient(145deg,rgba(212,43,43,0.18),rgba(7,16,29,0.86)_62%)] hover:shadow-[0_22px_60px_rgba(212,43,43,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1280)}
+              className={`premium-soft-sheen group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-imesul-red/40 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(7,16,29,0.78)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-red/65 hover:bg-[linear-gradient(145deg,rgba(212,43,43,0.15),rgba(7,16,29,0.84)_62%)] hover:shadow-[0_20px_58px_rgba(212,43,43,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1280)}
             >
-              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(212,43,43,0.2),transparent_34%)]" />
+              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(212,43,43,0.13),transparent_36%)]" />
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-imesul-red/45 bg-imesul-red text-white shadow-[0_8px_22px_rgba(212,43,43,0.22)]">
                 <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
@@ -723,9 +904,9 @@ export default function ProjectSelector() {
                 trackInteraction({ type: "click", label: "Já sei o material", section: "Hero", detail: "Card Já sei o que preciso" });
                 scrollToFlow("material-path");
               }}
-              className={`group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(31,66,108,0.22),rgba(7,16,29,0.76)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-imesul-steel/50 hover:bg-[linear-gradient(145deg,rgba(31,66,108,0.28),rgba(7,16,29,0.84)_62%)] hover:shadow-[0_22px_60px_rgba(30,76,128,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-steel focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1400)}
+              className={`premium-soft-sheen group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(31,66,108,0.20),rgba(7,16,29,0.76)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.19)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-steel/45 hover:bg-[linear-gradient(145deg,rgba(31,66,108,0.24),rgba(7,16,29,0.82)_62%)] hover:shadow-[0_20px_58px_rgba(30,76,128,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-steel focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1400)}
             >
-              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(42,92,151,0.18),transparent_34%)]" />
+              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(42,92,151,0.12),transparent_36%)]" />
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-white/[0.14] bg-[#1f5fb0]/55 text-white">
                 <PackageSearch size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
@@ -751,11 +932,13 @@ export default function ProjectSelector() {
         </div>
       </section>
 
+      <SteelScrollObject />
+
       <section
         id="project-path"
-        className="relative z-10 scroll-mt-0 border-b border-white/[0.08] bg-[#071321]/70"
+        className="relative scroll-mt-0 border-b border-white/[0.08] bg-[#071321]/70"
       >
-        <div className="mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+        <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
@@ -772,6 +955,7 @@ export default function ProjectSelector() {
             {projectShowcaseCards.map((card, index) => {
               const project = projects.find((item) => item.id === card.projectId);
               const isSelected = card.projectId === recommendedProject?.projectId;
+              const isHighlighted = card.projectId === highlightedProjectId;
 
               return (
                 <button
@@ -783,11 +967,11 @@ export default function ProjectSelector() {
                   aria-pressed={isSelected}
                   aria-label={`Ver materiais indicados para ${card.title}`}
                   onClick={() => showRecommendedMaterials(card)}
-                  className={`group relative flex min-h-[360px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_22px_70px_rgba(0,0,0,0.22)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+                  className={`group relative flex min-h-[360px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.2)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
-                      ? "border-imesul-red shadow-[0_26px_80px_rgba(212,43,43,0.18)]"
-                      : "border-white/[0.1] hover:-translate-y-1 hover:border-imesul-red/45"
-                  }`}
+                      ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
+                      : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/42 hover:shadow-[0_22px_68px_rgba(212,43,43,0.09),inset_0_1px_0_rgba(255,255,255,0.045)]"
+                  } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#071321]" : ""}`}
                 >
                   <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                     <Image
@@ -795,7 +979,7 @@ export default function ProjectSelector() {
                       alt={card.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 20vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
                     />
                     <span className="absolute inset-0 bg-gradient-to-t from-[#071321] via-[#071321]/18 to-transparent" />
                     {isSelected && (
@@ -813,7 +997,7 @@ export default function ProjectSelector() {
                     </span>
                     <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                       VER MATERIAIS
-                      <ArrowRight size={14} aria-hidden="true" />
+                      <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                     </span>
                   </span>
                 </button>
@@ -841,9 +1025,9 @@ export default function ProjectSelector() {
 
       <section
         id="material-path"
-        className="relative z-10 scroll-mt-0 bg-[#091727]/58"
+        className="relative scroll-mt-0 bg-[#091727]/58"
       >
-        <div className="mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+        <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
@@ -860,6 +1044,8 @@ export default function ProjectSelector() {
             <ProductCatalog
               selectedCategoryId={selectedCategoryId}
               selectedProductId={selectedProductId}
+              highlightedCategoryId={highlightedCategoryId}
+              highlightedProductId={highlightedProductId}
               recommendedProjectTitle={recommendedProject?.title}
               recommendedCategoryIds={recommendedProject?.categoryIds || []}
               onSelectCategory={selectCategory}
@@ -868,7 +1054,7 @@ export default function ProjectSelector() {
           </div>
 
           {selectedProduct && (
-            <div className="mt-10">
+            <div className={`mt-10 rounded-[10px] ${highlightedProductId === selectedProduct.id ? "selection-feedback-pulse" : ""}`}>
               <MaterialQuoteFlow
                 key={selectedProduct.id}
                 product={selectedProduct}
@@ -880,6 +1066,7 @@ export default function ProjectSelector() {
         </div>
       </section>
 
+      <SalesTrustStrip />
       <SalesGuidanceSection />
       <AuthModal
         open={authModalOpen}
@@ -903,3 +1090,5 @@ export default function ProjectSelector() {
     </main>
   );
 }
+
+

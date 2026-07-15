@@ -1,3 +1,5 @@
+// Pagina interna com links oficiais, redes sociais e enderecos da IMESUL.
+// Reaproveita dados de unidades usados no footer para evitar informacoes duplicadas.
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import WhatsAppFloat from "../../components/WhatsAppFloat";

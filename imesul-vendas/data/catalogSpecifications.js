@@ -1,3 +1,5 @@
+// Tabelas tecnicas extraidas do catalogo PDF.
+// ProductOptionSelector usa estes dados para montar medidas e pesos validos.
 // Remove repeticoes sem descartar zero, que pode ser um valor tecnico valido.
 const unique = (values) => [...new Set(values.filter((value) => value !== undefined && value !== null))];
 

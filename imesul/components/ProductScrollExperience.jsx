@@ -1,5 +1,7 @@
 "use client";
 
+// Showroom institucional dos produtos principais.
+// Usa dados de products.js e direciona o cliente para a area de vendas.
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products, salesSiteUrl } from "../data/products";

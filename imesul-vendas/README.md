@@ -20,8 +20,8 @@ app/          layout, pagina principal, estilos e paginas de erro
 components/   seletores, catalogo, formulario e resumo
 data/         projetos, categorias, produtos, medidas e opcoes comerciais
 lib/          montagem e validacao da mensagem do WhatsApp
-docs/         catalogo de origem, arquitetura e regras do produto
 public/       imagens do catalogo e marca
+Backend.js/   apoio local para analytics e sessao admin demo
 ```
 
 ## Como os dois sites se conectam
@@ -47,9 +47,10 @@ NEXT_PUBLIC_INSTITUTIONAL_SITE_URL=https://grupoimesul.com.br
 NEXT_PUBLIC_WHATSAPP_NUMBER=556733125600
 ADMIN_DEMO_USER=
 ADMIN_DEMO_PASSWORD=
+ANALYTICS_SECURITY_KEY=
 ```
 
-O numero possui fallback no codigo para evitar um CTA sem destino. Variaveis `NEXT_PUBLIC_` sao publicas e nao devem conter credenciais. O login administrativo demo usa `ADMIN_DEMO_USER` e `ADMIN_DEMO_PASSWORD` somente no servidor; em producao, substituir por autenticacao real com sessao segura.
+O numero possui fallback no codigo para evitar um CTA sem destino. Variaveis `NEXT_PUBLIC_` sao publicas e nao devem conter credenciais. O login administrativo demo usa `ADMIN_DEMO_USER` e `ADMIN_DEMO_PASSWORD` somente no servidor; em producao, substituir por autenticacao real com sessao segura. `ANALYTICS_SECURITY_KEY` protege o IP completo usado apenas em investigacao de seguranca.
 
 ## Comandos
 
@@ -70,7 +71,7 @@ npm start -- -p 3001
 - `projects.js`: projetos, subtipos e materiais recomendados.
 - `quoteOptions.js`: cidades, estados e opcoes compartilhadas pelo formulario.
 
-Nao invente medidas ou pesos. Quando o PDF nao for legivel, mantenha o campo vazio e registre a limitacao em `docs/catalogo/especificacoes-extraidas.md`.
+Nao invente medidas ou pesos. Quando o PDF nao for legivel, mantenha o campo vazio e registre a limitacao diretamente nos dados tecnicos correspondentes.
 
 ## Build e deploy
 
@@ -92,5 +93,3 @@ Configure as variaveis publicas no provedor de deploy e confirme o numero comerc
 - PDF do catalogo
 - imagens e outros arquivos binarios
 - caches e resultados gerados por ferramentas
-
-Veja `docs/arquitetura.md` e `docs/glossario.md` para detalhes de manutencao.

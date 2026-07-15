@@ -1,5 +1,7 @@
 "use client";
 
+// Fluxos de pre-orcamento por projeto e por material.
+// Monta formularios, resumo e envio ao WhatsApp sem finalizar compra no site.
 import { useMemo, useState } from "react";
 import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";

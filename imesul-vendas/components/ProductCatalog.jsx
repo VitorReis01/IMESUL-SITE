@@ -1,5 +1,7 @@
 "use client";
 
+// Catalogo de materiais da area de vendas.
+// Recebe selecoes vindas da busca, projetos e carrossel para abrir o produto correto.
 import Image from "next/image";
 import { ArrowRight, Check, Database, ImageIcon } from "lucide-react";
 import { catalogCategories } from "../data/catalogCategories";
@@ -53,6 +55,8 @@ const materialShowcaseCards = [
 export default function ProductCatalog({
   selectedCategoryId,
   selectedProductId,
+  highlightedCategoryId,
+  highlightedProductId,
   recommendedProjectTitle,
   recommendedCategoryIds = [],
   onSelectCategory,
@@ -83,12 +87,13 @@ export default function ProductCatalog({
       )}
 
       <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {materialShowcaseCards.map((card) => {
+        {materialShowcaseCards.map((card, index) => {
           const category = catalogCategories.find((item) => item.id === card.categoryId);
           if (!category) return null;
 
           const Icon = category.icon;
           const isSelected = category.id === selectedCategoryId;
+          const isHighlighted = category.id === highlightedCategoryId;
           const isRecommended = recommendedCategoryIds.includes(category.id);
           const productCount = getCatalogProductsByCategory(category.id).length;
 
@@ -96,19 +101,21 @@ export default function ProductCatalog({
             <button
               key={category.id}
               type="button"
+              data-scroll-reveal
               data-testid={`category-${category.id}`}
+              style={{ "--reveal-delay": `${index * 45}ms` }}
               aria-pressed={isSelected}
               aria-label={`Ver materiais da categoria ${card.title}`}
               onClick={() => onSelectCategory(category.id)}
-              className={`group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_22px_70px_rgba(0,0,0,0.2)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+              className={`group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.18)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                 isSelected
-                  ? "border-imesul-red shadow-[0_26px_80px_rgba(212,43,43,0.16)]"
+                  ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
                   : isRecommended
-                    ? "border-imesul-red/60 shadow-[0_24px_70px_rgba(212,43,43,0.14)] hover:-translate-y-1 hover:border-imesul-red"
+                    ? "border-imesul-red/55 shadow-[0_22px_62px_rgba(212,43,43,0.1)] hover:-translate-y-0.5 hover:border-imesul-red/75 hover:shadow-[0_24px_68px_rgba(212,43,43,0.12)]"
                     : hasRecommendations
-                      ? "border-white/[0.08] opacity-55 hover:-translate-y-1 hover:border-white/[0.18] hover:opacity-100"
-                      : "border-white/[0.1] hover:-translate-y-1 hover:border-imesul-red/45"
-              }`}
+                      ? "border-white/[0.08] opacity-55 hover:-translate-y-0.5 hover:border-white/[0.16] hover:opacity-100 hover:shadow-[0_22px_64px_rgba(255,255,255,0.045)]"
+                      : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_66px_rgba(212,43,43,0.08)]"
+              } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`}
             >
               <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                 <Image
@@ -116,11 +123,11 @@ export default function ProductCatalog({
                   alt={card.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
                 />
                 <span className="absolute inset-0 bg-gradient-to-t from-[#071321] via-transparent to-transparent" />
                 {isSelected && (
-                  <span className="absolute right-4 top-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-imesul-red text-white">
+                  <span className="absolute right-4 top-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f0c776] text-[#071321]">
                     <Check size={15} strokeWidth={2.5} aria-hidden="true" />
                   </span>
                 )}
@@ -145,7 +152,7 @@ export default function ProductCatalog({
                 </span>
                 <span className="mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.13em] text-white">
                   Ver materiais
-                  <ArrowRight size={14} aria-hidden="true" />
+                  <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                 </span>
               </span>
             </button>
@@ -168,24 +175,33 @@ export default function ProductCatalog({
               Selecione um produto para consultar as opções técnicas publicadas no catálogo IMESUL.
             </p>
           </div>
+          <p className="mt-4 inline-flex rounded-full border border-[#f0c776]/28 bg-[#f0c776]/8 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#f0c776]">
+            {selectedProductId
+              ? "Produto selecionado. Confira as opções abaixo."
+              : "Categoria selecionada. Escolha um produto para continuar."}
+          </p>
 
           <div className="mt-7 grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((item) => {
+            {products.map((item, index) => {
               const isSelected = item.id === selectedProductId;
+              const isHighlighted = item.id === highlightedProductId;
 
               return (
                 <button
                   key={item.id}
+                  id={`catalog-product-${item.id}`}
                   type="button"
+                  data-scroll-reveal
                   data-testid={`product-${item.id}`}
+                  style={{ "--reveal-delay": `${index * 45}ms` }}
                   aria-pressed={isSelected}
                   aria-label={`${isSelected ? "Material escolhido" : "Escolher"} ${item.name}`}
                   onClick={() => onSelectProduct(item.id)}
-                  className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_20px_55px_rgba(0,0,0,0.18)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+                  className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
                     isSelected
-                      ? "border-imesul-red shadow-[0_24px_70px_rgba(212,43,43,0.16)]"
-                      : "border-white/[0.1] hover:-translate-y-1 hover:border-imesul-red/45"
-                  }`}
+                      ? "border-[#f0c776]/80 shadow-[0_22px_62px_rgba(240,199,118,0.12)]"
+                      : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_64px_rgba(212,43,43,0.08),inset_0_1px_0_rgba(255,255,255,0.045)]"
+                  } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`}
                 >
                   <div className="relative h-60 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6]">
                     <Image
@@ -193,7 +209,7 @@ export default function ProductCatalog({
                       alt={item.name}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      className="object-contain p-5 transition-transform duration-500 group-hover:scale-[1.04]"
+                      className="object-contain p-5 transition-transform duration-700 group-hover:scale-[1.045]"
                     />
                     <span
                       className={`absolute left-4 top-4 rounded-[5px] border px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] ${
@@ -247,7 +263,7 @@ export default function ProductCatalog({
                         }`}
                       >
                         {isSelected ? "Material escolhido" : "Escolher este material"}
-                        {isSelected ? <Check size={15} /> : <ArrowRight size={15} />}
+                        {isSelected ? <Check size={15} /> : <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />}
                       </span>
                     </div>
                   </div>

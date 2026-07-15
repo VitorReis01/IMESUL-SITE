@@ -1,3 +1,5 @@
+// Resumo exibido antes do envio ao WhatsApp.
+// Mostra somente os dados uteis para a equipe confirmar medida, estoque e valor.
 import { ClipboardList } from "lucide-react";
 import { formatOptionValue } from "./ProductOptionSelector";
 

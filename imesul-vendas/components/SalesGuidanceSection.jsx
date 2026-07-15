@@ -1,3 +1,5 @@
+// Secao de apoio comercial abaixo do catalogo.
+// Explica o pre-orcamento e oferece contato com a equipe pelo WhatsApp.
 import Image from "next/image";
 import {
   ClipboardList,
@@ -66,11 +68,11 @@ const whatsappUrl =
 // Complementa a home com orientacao comercial sem alterar os fluxos de orcamento.
 export default function SalesGuidanceSection() {
   return (
-    <section className="relative z-10 overflow-hidden border-t border-white/[0.08] bg-[#06101d]">
+    <section id="quote-steps" className="relative overflow-hidden border-t border-white/[0.08] bg-[#06101d]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(212,43,43,0.12),transparent_28%),radial-gradient(circle_at_82%_72%,rgba(43,94,151,0.16),transparent_34%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-imesul-red/50 to-transparent" />
 
-      <div className="relative mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+      <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
         <div data-scroll-reveal>
           <h2 className="font-display text-[clamp(2.8rem,5vw,5.4rem)] leading-[0.92] text-white">
             COMO FUNCIONA O PRÉ-ORÇAMENTO?

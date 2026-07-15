@@ -1,5 +1,7 @@
 "use client";
 
+// Modal de login visual para cliente e administrador.
+// O admin valida credenciais na API e libera o painel sem salvar senha no navegador.
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
@@ -217,7 +219,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
   const completeAdminVisualAuth = async (event) => {
     event.preventDefault();
 
-    // Envia credenciais ao backend demo para evitar expor senha no bundle do navegador.
+    // Envia credenciais ao backend para evitar expor senha no bundle do navegador.
     const response = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -240,8 +242,8 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
       return;
     }
 
+    startAdminSession(result.adminSessionToken);
     removeCurrentVisitorEvents();
-    startAdminSession();
     onAuthenticated();
     onAdminAuthenticated?.();
     closeModal();

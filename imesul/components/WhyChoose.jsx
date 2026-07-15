@@ -1,5 +1,7 @@
 "use client";
 
+// Secao de diferenciais institucionais.
+// Combina dados de beneficios com animacao discreta durante a rolagem.
 import { useRef, useEffect } from "react";
 import { m as motion } from "framer-motion";
 import { benefits } from "../data/products";

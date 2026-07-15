@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+// Configura o build do site institucional e os headers aplicados em produção.
+const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 // Restringe os recursos que a pagina pode carregar e fica mais permissiva apenas no desenvolvimento.
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -16,11 +23,8 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig = {
-  // Libera os recursos internos do Next.js quando o site e aberto pelo celular na rede local.
-  allowedDevOrigins: [
-    "192.168.1.117",
-    "http://192.168.1.117:3000",
-  ],
+  // Permite informar origens locais de desenvolvimento sem versionar IP da rede.
+  allowedDevOrigins,
   productionBrowserSourceMaps: false,
   // Mantem o Turbopack limitado a este projeto dentro do repositorio compartilhado.
   turbopack: {

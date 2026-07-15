@@ -1,8 +1,10 @@
+// Rodape da area de vendas.
+// Reune unidades, catalogo, site institucional e caminhos principais do atendimento.
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 
 const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "http://192.168.1.117:3000";
+  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "/";
 
 const navigationLinks = [
   { label: "Projetos", href: "#project-path" },
@@ -64,7 +66,7 @@ export default function SalesFooter() {
 
       <div className="mx-auto max-w-[1480px] px-6 py-14 sm:px-8 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
-          <div>
+          <div data-scroll-reveal>
             <Image
               src="/logo/imesul-logo-completa.png"
               alt="IMESUL Distribuição"
@@ -78,7 +80,7 @@ export default function SalesFooter() {
             </p>
           </div>
 
-          <div>
+          <div data-scroll-reveal style={{ "--reveal-delay": "50ms" }}>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-white">
               <span className="h-px w-4 bg-imesul-red" />
               Navegação
@@ -106,7 +108,7 @@ export default function SalesFooter() {
             </ul>
           </div>
 
-          <div>
+          <div data-scroll-reveal style={{ "--reveal-delay": "100ms" }}>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-white">
               <span className="h-px w-4 bg-imesul-red" />
               Unidades
@@ -136,7 +138,7 @@ export default function SalesFooter() {
             </div>
           </div>
 
-          <div>
+          <div data-scroll-reveal style={{ "--reveal-delay": "150ms" }}>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-white">
               <span className="h-px w-4 bg-imesul-red" />
               Links úteis
@@ -163,7 +165,7 @@ export default function SalesFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.07] pt-7 sm:flex-row">
+        <div data-scroll-reveal style={{ "--reveal-delay": "180ms" }} className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.07] pt-7 sm:flex-row">
           <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-imesul-steel-light/62">
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>

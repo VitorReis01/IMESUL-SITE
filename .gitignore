@@ -3,6 +3,7 @@ node_modules/
 
 # Builds e saidas geradas
 .next/
+**/.next/
 out/
 dist/
 
@@ -29,6 +30,7 @@ Thumbs.db
 claude-proxy.ps1
 index.html
 .codex-dev-check/
+**/.codex-dev-check/
 
 # Analytics local de desenvolvimento
 Backend.js/analytics-events.json
@@ -37,8 +39,20 @@ imesul-vendas/Backend.js/analytics-events.json
 imesul-vendas/Backend.js/*.json
 **/Backend.js/analytics-events.json
 
+# Assets 3D gerados que nao fazem parte do efeito publicado atual
+imesul-vendas/public/images/produtos-3d/
+imesul-vendas/public/models/3d/barra-quadrada.glb
+imesul-vendas/public/models/3d/barra-redonda.glb
+imesul-vendas/public/models/3d/chapa-lisa.glb
+imesul-vendas/public/models/3d/chapa-xadrez.glb
+imesul-vendas/public/models/3d/perfil-u-enrijecido.glb
+imesul-vendas/public/models/3d/telha-isotermica-sanduiche.glb
+
 # Materiais internos e backups documentais
 imesul/docs/performance-assets-originals/
+**/performance-assets-originals/
+**/docs/
+imesul-vendas/docs/
 **/docs/**/*.pdf
 **/docs/**/*.xlsx
 **/docs/**/*.xls

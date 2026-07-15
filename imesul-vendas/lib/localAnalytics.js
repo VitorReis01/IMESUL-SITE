@@ -1,10 +1,12 @@
+// Cliente leve do analytics usado pela area de vendas.
+// Envia eventos para as APIs internas e usa localStorage apenas como fallback.
 const storageKey = "imesul_demo_events";
 const visitorKey = "imesul_demo_visitor_id";
-const adminSessionKey = "imesul_demo_admin_session";
 const eventName = "imesul-demo-events-updated";
 const trackEndpoint = "/api/analytics/track";
 const eventsEndpoint = "/api/analytics/events";
 const clearEndpoint = "/api/analytics/clear";
+let adminSessionToken = "";
 
 const canUseBrowserStorage = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -33,16 +35,18 @@ const writeStoredEvents = (events) => {
 };
 
 export const isAdminSession = () =>
-  canUseBrowserStorage() && window.sessionStorage.getItem(adminSessionKey) === "true";
+  Boolean(adminSessionToken);
 
-export const startAdminSession = () => {
-  if (!canUseBrowserStorage()) return;
-  window.sessionStorage.setItem(adminSessionKey, "true");
+export const getAdminSessionToken = () =>
+  adminSessionToken;
+
+export const startAdminSession = (token = "") => {
+  // O token admin fica apenas em memoria; ao recarregar a pagina, o login precisa ser refeito.
+  adminSessionToken = token;
 };
 
 export const endAdminSession = () => {
-  if (!canUseBrowserStorage()) return;
-  window.sessionStorage.removeItem(adminSessionKey);
+  adminSessionToken = "";
 };
 
 export const removeCurrentVisitorEvents = () => {
@@ -52,7 +56,10 @@ export const removeCurrentVisitorEvents = () => {
   writeStoredEvents(readStoredEvents().filter((event) => event.visitorId !== currentVisitorId));
 
   // Remove do backend local os eventos criados antes da sessao atual virar admin.
-  fetch(`${clearEndpoint}?visitorId=${encodeURIComponent(currentVisitorId)}`, { method: "DELETE" })
+  fetch(`${clearEndpoint}?visitorId=${encodeURIComponent(currentVisitorId)}`, {
+    method: "DELETE",
+    headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+  })
     .then(() => notifyEventsUpdated())
     .catch(() => {});
 };
@@ -120,6 +127,7 @@ const createBackendPayload = (event) => ({
   label: event.label,
   detail: event.detail,
   section: event.section,
+  path: event.path,
   isLoggedIn: event.isLoggedIn,
   userName: event.client?.name || "",
   userPhone: event.client?.phone || "",
@@ -163,6 +171,7 @@ export function trackLocalEvent({
     label,
     detail,
     section,
+    path: window.location.pathname || "/",
     origin: origin || traffic.origin,
     referrer: traffic.referrer,
     utm: traffic.utm,
@@ -184,7 +193,10 @@ export async function getAnalyticsEvents() {
   if (!canUseBrowserStorage()) return [];
 
   try {
-    const response = await fetch(eventsEndpoint, { cache: "no-store" });
+    const response = await fetch(eventsEndpoint, {
+      cache: "no-store",
+      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+    });
     if (!response.ok) throw new Error("Falha ao consultar analytics.");
 
     const data = await response.json();
@@ -202,7 +214,10 @@ export async function clearLocalEvents() {
   writeStoredEvents([]);
 
   try {
-    await fetch(clearEndpoint, { method: "DELETE" });
+    await fetch(clearEndpoint, {
+      method: "DELETE",
+      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+    });
   } catch {
     // Se o backend estiver indisponivel, o fallback local ja foi limpo.
   }
