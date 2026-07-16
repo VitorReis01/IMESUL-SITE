@@ -144,6 +144,8 @@ export default function ProductScrollExperience() {
   useEffect(() => {
     let media;
     let cancelled = false;
+    let refreshFrame;
+    let refreshProductScroll;
 
     const setup = async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
@@ -153,6 +155,7 @@ export default function ProductScrollExperience() {
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
       media = gsap.matchMedia();
+      refreshProductScroll = () => ScrollTrigger.refresh();
 
       media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
@@ -225,6 +228,10 @@ export default function ProductScrollExperience() {
           });
         }, sectionRef);
 
+        refreshFrame = window.requestAnimationFrame(refreshProductScroll);
+        window.addEventListener("load", refreshProductScroll, { once: true });
+        window.addEventListener("resize", refreshProductScroll);
+
         return () => context.revert();
       });
     };
@@ -234,6 +241,11 @@ export default function ProductScrollExperience() {
     // Encerra timelines e ScrollTriggers quando o breakpoint ou a pagina muda.
     return () => {
       cancelled = true;
+      if (refreshFrame) window.cancelAnimationFrame(refreshFrame);
+      if (refreshProductScroll) {
+        window.removeEventListener("load", refreshProductScroll);
+        window.removeEventListener("resize", refreshProductScroll);
+      }
       media?.revert();
     };
   }, []);

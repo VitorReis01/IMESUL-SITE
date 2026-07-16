@@ -147,6 +147,8 @@ export default function CompanyStory() {
   useEffect(() => {
     let trigger;
     let cancelled = false;
+    let refreshFrame;
+    let refreshStoryTrigger;
 
     const setup = async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
@@ -157,8 +159,9 @@ export default function CompanyStory() {
       gsap.registerPlugin(ScrollTrigger);
 
       const updatePosition = (nextProgress) => {
-        const nextX =
-          window.innerWidth >= 768 ? -nextProgress * 5 * window.innerWidth : 0;
+        const trackWidth = trackRef.current?.scrollWidth || window.innerWidth * 6;
+        const maxOffset = Math.max(trackWidth - window.innerWidth, 0);
+        const nextX = window.innerWidth >= 768 ? -nextProgress * maxOffset : 0;
         const videoProgress = Math.min(
           Math.max((nextProgress - 0.8) / 0.2, 0),
           1
@@ -178,6 +181,8 @@ export default function CompanyStory() {
         }
       };
 
+      refreshStoryTrigger = () => ScrollTrigger.refresh();
+
       trigger = ScrollTrigger.create({
         trigger: sectionRef.current,
         start: "top top",
@@ -187,12 +192,21 @@ export default function CompanyStory() {
         onUpdate: (self) => updatePosition(self.progress),
         onRefresh: (self) => updatePosition(self.progress),
       });
+
+      refreshFrame = window.requestAnimationFrame(refreshStoryTrigger);
+      window.addEventListener("load", refreshStoryTrigger, { once: true });
+      window.addEventListener("resize", refreshStoryTrigger);
     };
 
     setup();
 
     return () => {
       cancelled = true;
+      if (refreshFrame) window.cancelAnimationFrame(refreshFrame);
+      if (refreshStoryTrigger) {
+        window.removeEventListener("load", refreshStoryTrigger);
+        window.removeEventListener("resize", refreshStoryTrigger);
+      }
       trigger?.kill();
     };
   }, []);

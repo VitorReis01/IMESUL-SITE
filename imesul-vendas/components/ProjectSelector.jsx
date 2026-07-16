@@ -420,16 +420,19 @@ export default function ProjectSelector() {
 
   // Revela os blocos abaixo da hero quando entram na viewport e oculta ao sair.
   useEffect(() => {
+    document.body.classList.add("reveal-motion-ready");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) {
       const revealElements = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
       revealElements.forEach((element) => element.classList.add("is-visible"));
-      return undefined;
+      return () => document.body.classList.remove("reveal-motion-ready");
     }
 
+    let visibleCount = 0;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          if (entry.isIntersecting) visibleCount += 1;
           entry.target.classList.toggle("is-visible", entry.isIntersecting);
         });
       },
@@ -462,7 +465,17 @@ export default function ProjectSelector() {
     });
     mutationObserver.observe(document.body, { childList: true, subtree: true });
 
+    // Fallback de producao: se o observer nao disparar, evita secoes invisiveis no site publicado.
+    const visibilityFallback = window.setTimeout(() => {
+      if (visibleCount > 0) return;
+      document.querySelectorAll("[data-scroll-reveal]").forEach((element) => {
+        element.classList.add("is-visible");
+      });
+    }, 2200);
+
     return () => {
+      window.clearTimeout(visibilityFallback);
+      document.body.classList.remove("reveal-motion-ready");
       mutationObserver.disconnect();
       observer.disconnect();
     };

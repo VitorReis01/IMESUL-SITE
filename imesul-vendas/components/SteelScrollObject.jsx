@@ -11,6 +11,15 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const transparentTextureDataUri =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
+const hasWebGLSupport = () => {
+  try {
+    const canvas = document.createElement("canvas");
+    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+  } catch {
+    return false;
+  }
+};
+
 // Pontos visuais do 3D nas secoes: sempre ao lado/acima do texto, com folga para leitura.
 const scrollTargets = [
   { anchorId: "project-path", modelId: "telha-metalica", xRatio: 0.86, yOffset: 72, scale: 0.58 },
@@ -104,16 +113,27 @@ export default function SteelScrollObject() {
       return undefined;
     }
 
+    if (!hasWebGLSupport()) {
+      layer.classList.add("steel-scroll-layer--fallback");
+      return undefined;
+    }
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0.2, 7.4);
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
-    });
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+    } catch {
+      layer.classList.add("steel-scroll-layer--fallback");
+      return undefined;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
     renderer.setSize(window.innerWidth, window.innerHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -288,6 +308,7 @@ export default function SteelScrollObject() {
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="h-full w-full" />
+      <div className="steel-scroll-fallback" />
       <span className="sr-only">
         {scroll3dObjects.map((item) => item.label).join(", ")}
       </span>

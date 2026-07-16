@@ -52,6 +52,12 @@ textarea {
 
 /* Anima as secoes comerciais abaixo da hero conforme entram e saem da viewport. */
 [data-scroll-reveal] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* O JS arma a animacao depois da hidratacao; sem JS, o conteudo continua visivel. */
+body.reveal-motion-ready [data-scroll-reveal] {
   opacity: 0;
   transform: translateY(22px);
   transition:
@@ -61,6 +67,7 @@ textarea {
   will-change: opacity, transform;
 }
 
+body.reveal-motion-ready [data-scroll-reveal].is-visible,
 [data-scroll-reveal].is-visible {
   opacity: 1;
   transform: translateY(0);
@@ -68,7 +75,7 @@ textarea {
 
 /* No mobile a entrada usa menos deslocamento para evitar sensação pesada durante o scroll. */
 @media (max-width: 640px) {
-  [data-scroll-reveal] {
+  body.reveal-motion-ready [data-scroll-reveal] {
     transform: translateY(14px);
     transition:
       opacity 0.5s ease,
@@ -173,6 +180,49 @@ textarea {
   will-change: opacity;
 }
 
+/* Fallback visual para desktop sem WebGL: mantém profundidade sem depender do canvas. */
+.steel-scroll-fallback {
+  position: absolute;
+  top: 30%;
+  right: clamp(3rem, 9vw, 9rem);
+  display: none;
+  width: clamp(190px, 18vw, 310px);
+  height: clamp(34px, 4vw, 64px);
+  border: 1px solid rgba(226, 238, 249, 0.28);
+  border-radius: 10px;
+  background:
+    linear-gradient(100deg, rgba(255, 255, 255, 0.32), rgba(135, 152, 168, 0.1) 42%, rgba(255, 255, 255, 0.24) 58%, rgba(87, 101, 118, 0.18)),
+    linear-gradient(180deg, rgba(226, 238, 249, 0.22), rgba(18, 35, 54, 0.54));
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.34),
+    0 0 42px rgba(212, 43, 43, 0.1);
+  transform: rotate(-14deg);
+}
+
+.steel-scroll-layer--fallback {
+  opacity: 0.46 !important;
+}
+
+.steel-scroll-layer--fallback .steel-scroll-fallback {
+  display: block;
+  animation: steelFallbackFloat 8s ease-in-out infinite;
+}
+
+.steel-scroll-layer--fallback canvas {
+  display: none;
+}
+
+@keyframes steelFallbackFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-14deg);
+  }
+
+  50% {
+    transform: translate3d(-18px, -10px, 0) rotate(-8deg);
+  }
+}
+
 /* Usu?rios com redu??o de movimento veem o conte?do sem transi??es cont?nuas. */
 @media (prefers-reduced-motion: reduce) {
   [data-scroll-reveal] {
@@ -197,5 +247,9 @@ textarea {
 
   .steel-scroll-layer {
     display: none;
+  }
+
+  .steel-scroll-fallback {
+    animation: none;
   }
 }
