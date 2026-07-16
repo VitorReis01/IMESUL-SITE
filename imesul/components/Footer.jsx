@@ -13,18 +13,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1.15fr_0.65fr_1.45fr]">
           <div>
             <div className="mb-6 flex items-center">
-              <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
-                <Image
+              {/* Base branca em degradê mantém a marca legível no rodapé escuro sem alterar o restante da seção. */}
+              <div className="rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-3 py-2.5">
+                <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
+                  <Image
                   src="/logo/imesul-logo-completa.webp"
                   alt="IMESUL Distribuição"
-                  width={707}
-                  height={353}
-                  className="block h-auto w-full object-contain"
-                  style={{
-                    filter:
-                      "brightness(1.15) contrast(1.1) drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 12px rgba(255,255,255,.12))",
-                  }}
-                />
+                    width={707}
+                    height={353}
+                    className="block h-auto w-full object-contain"
+                  />
+                </div>
               </div>
               <div className="sr-only">
                 <span className="font-display text-xl tracking-[0.2em] text-white">IMESUL</span>

@@ -683,16 +683,16 @@ export default function ProjectSelector() {
 
       <header ref={mobileMenuRef} className="relative z-40 border-b border-white/[0.08] bg-[#050b14]/88 backdrop-blur-xl">
         <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
-          <span className="relative inline-flex shrink-0 items-center">
-            <span className="pointer-events-none absolute inset-[-18px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.16),rgba(212,43,43,0.08)_38%,transparent_68%)] blur-xl" />
+          {/* Base branca em degradê mantém a logo nítida no header sem clarear o restante do topo. */}
+          <span className="relative inline-flex shrink-0 items-center rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-2.5 py-1.5 sm:px-3 sm:py-2">
             <Image
-            src="/logo/imesul-logo-completa.png"
-            alt="IMESUL Distribuição"
-            width={707}
-            height={353}
-            priority
-            className="relative h-auto w-[112px] object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.16)] sm:w-[154px]"
-          />
+              src="/logo/imesul-logo-completa.png"
+              alt="IMESUL Distribuição"
+              width={707}
+              height={353}
+              priority
+              className="relative h-auto w-[112px] object-contain sm:w-[154px]"
+            />
           </span>
           <nav
             className="hidden items-center gap-5 font-condensed text-[13px] font-semibold uppercase tracking-[0.12em] text-imesul-steel-light/82 xl:flex"

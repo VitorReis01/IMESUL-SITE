@@ -67,13 +67,16 @@ export default function SalesFooter() {
       <div className="mx-auto max-w-[1480px] px-6 py-14 sm:px-8 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
           <div data-scroll-reveal>
-            <Image
-              src="/logo/imesul-logo-completa.png"
+            {/* Base branca em degradê destaca a marca no rodapé escuro sem alterar os demais blocos. */}
+            <div className="inline-flex rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-3 py-2.5">
+              <Image
+                src="/logo/imesul-logo-completa.png"
               alt="IMESUL Distribuição"
-              width={707}
-              height={353}
-              className="h-auto w-[150px] object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.16)]"
-            />
+                width={707}
+                height={353}
+                className="h-auto w-[150px] object-contain"
+              />
+            </div>
             <p className="mt-6 max-w-[370px] text-sm leading-7 text-imesul-steel-light/72">
               Distribuidora de materiais em aço para construção, serralheria,
               indústria e campo em Mato Grosso do Sul.

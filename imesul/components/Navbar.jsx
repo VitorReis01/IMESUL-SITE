@@ -49,18 +49,17 @@ export default function Navbar() {
               onClick={closeMenu}
               aria-label="IMESUL Distribuicao"
             >
-              <Image
+              {/* Base branca em degradê destaca a logo no header escuro sem clarear o restante do site. */}
+              <span className="relative inline-flex rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-3 py-2 sm:px-4 sm:py-2.5">
+                <Image
                 src="/logo/imesul-logo-completa.webp"
                 alt="IMESUL Distribuição"
-                width={707}
-                height={353}
-                priority
-                className="block h-auto w-[150px] object-contain transition-transform duration-300 ease-out group-hover:-translate-y-px sm:w-[185px] lg:w-[195px] xl:w-[190px]"
-                style={{
-                  filter:
-                    "brightness(1.28) contrast(1.2) saturate(1.06) drop-shadow(0 0 5px rgba(255,255,255,.18)) drop-shadow(0 0 10px rgba(255,255,255,.08))",
-                }}
-              />
+                  width={707}
+                  height={353}
+                  priority
+                  className="block h-auto w-[150px] object-contain transition-transform duration-300 ease-out group-hover:-translate-y-px sm:w-[185px] lg:w-[195px] xl:w-[190px]"
+                />
+              </span>
             </Link>
 
             <nav className="hidden items-center gap-1 xl:flex">
