@@ -68,12 +68,12 @@ export default function SalesFooter() {
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
           <div data-scroll-reveal>
             {/* Base branca em degradê destaca a marca no rodapé escuro sem alterar os demais blocos. */}
-            <div className="inline-flex rounded-[10px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.7)_50%,rgba(255,255,255,0.24)_74%,rgba(255,255,255,0)_100%)] px-2.5 py-1.5">
+            <div className="inline-flex rounded-[4px] bg-white px-2 py-1">
               <Image
-                src="/logo/imesul-logo-completa.png"
+                src="/images/logo-imesul-oficial.jpeg"
               alt="IMESUL Distribuição"
-                width={707}
-                height={353}
+                width={1600}
+                height={477}
                 className="h-auto w-[150px] object-contain"
               />
             </div>

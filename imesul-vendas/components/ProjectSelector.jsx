@@ -50,7 +50,7 @@ const sellerMessage =
   "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";
 
 const navLinkClassName =
-  "group/nav relative inline-flex origin-center items-center py-2 transition-[color,text-shadow,transform] duration-300 hover:text-white hover:[text-shadow:0_0_12px_rgba(255,255,255,0.22),0_0_18px_rgba(212,43,43,0.18)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-gradient-to-r after:from-imesul-red after:via-white/70 after:to-transparent after:transition-transform after:duration-300 hover:after:scale-x-100 motion-reduce:after:transition-none";
+  "group/nav relative inline-flex origin-center items-center py-2 text-slate-800 transition-[color,transform] duration-300 hover:text-imesul-red active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-imesul-red after:transition-transform after:duration-300 hover:after:scale-x-100 motion-reduce:after:transition-none";
 
 // Termos extras ajudam a busca sem alterar o cadastro oficial de produtos.
 const searchAliases = {
@@ -681,21 +681,20 @@ export default function ProjectSelector() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
-      <header ref={mobileMenuRef} className="relative z-40 border-b border-white/[0.08] bg-[#050b14]/88 backdrop-blur-xl">
+      <header ref={mobileMenuRef} className="relative z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
-          {/* Base branca em degrade fica compacta no header mobile e nao invade a hero. */}
-          <span className="relative inline-flex max-h-[54px] shrink-0 items-center rounded-[9px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.68)_48%,rgba(255,255,255,0.2)_72%,rgba(255,255,255,0)_100%)] px-1.5 py-0.5 sm:px-2">
+          <span className="relative inline-flex max-h-[54px] shrink-0 items-center">
             <Image
-              src="/logo/imesul-logo-completa.png"
+              src="/images/logo-imesul-oficial.jpeg"
               alt="IMESUL Distribuição"
-              width={707}
-              height={353}
+              width={1600}
+              height={477}
               priority
-              className="relative h-auto max-h-[44px] w-[112px] object-contain sm:max-h-[48px] sm:w-[154px]"
+              className="relative h-auto max-h-[44px] w-[132px] object-contain sm:max-h-[48px] sm:w-[174px]"
             />
           </span>
           <nav
-            className="hidden items-center gap-5 font-condensed text-[13px] font-semibold uppercase tracking-[0.12em] text-imesul-steel-light/82 xl:flex"
+            className="hidden items-center gap-5 font-condensed text-[13px] font-semibold uppercase tracking-[0.12em] xl:flex"
             aria-label="Navegação principal"
           >
             <a
@@ -742,7 +741,7 @@ export default function ProjectSelector() {
           </nav>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div ref={searchRef} className="relative flex min-w-0">
-              <label className="flex h-10 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-white/[0.1] bg-[#06101d]/72 px-2.5 text-imesul-steel-light/65 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
+              <label className="flex h-10 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
                 <span className="sr-only">Buscar materiais</span>
                 <input
                   type="search"
@@ -753,7 +752,7 @@ export default function ProjectSelector() {
                   }}
                   onFocus={() => setSearchOpen(true)}
                   placeholder="Buscar materiais..."
-                  className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-imesul-steel-light/58 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 />
                 <Search size={16} strokeWidth={1.8} aria-hidden="true" />
               </label>
@@ -796,7 +795,7 @@ export default function ProjectSelector() {
 
                 setAuthModalOpen(true);
               }}
-              className="group/login hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-white/[0.12] bg-white/[0.035] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-white/[0.06] hover:shadow-[0_0_18px_rgba(255,255,255,0.08),0_0_20px_rgba(212,43,43,0.12)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex sm:px-4"
+              className="group/login hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-slate-200 bg-white px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-slate-800 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-slate-50 hover:text-imesul-red hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex sm:px-4"
             >
               <span className="hidden sm:inline">
                 {adminVisualActive ? "Conta ativa" : authVisualActive ? "Conta ativa" : "Fazer login"}
@@ -815,12 +814,12 @@ export default function ProjectSelector() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackInteraction({ type: "whatsapp", label: "Falar com vendedor", section: "Navbar", detail: "Botão superior" })}
-              className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red/65 px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
+              className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red bg-imesul-red px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
             >
               <MessageCircle
                 size={15}
                 strokeWidth={2}
-                className="text-imesul-red transition-[filter,color,transform] duration-300 group-hover/seller:text-white group-hover/seller:drop-shadow-[0_0_8px_rgba(255,255,255,0.34)] group-active/seller:scale-110 motion-reduce:transform-none motion-reduce:transition-none"
+                className="text-white transition-[filter,color,transform] duration-300 group-hover/seller:text-white group-hover/seller:drop-shadow-[0_0_8px_rgba(255,255,255,0.34)] group-active/seller:scale-110 motion-reduce:transform-none motion-reduce:transition-none"
                 aria-hidden="true"
               />
               Falar com vendedor
@@ -831,7 +830,7 @@ export default function ProjectSelector() {
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-sales-menu"
               onClick={() => setMobileMenuOpen((open) => !open)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-white/[0.12] bg-white/[0.04] text-white transition-colors hover:border-imesul-red/55 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red xl:hidden"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-slate-200 bg-slate-50 text-slate-900 transition-colors hover:border-imesul-red/55 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red xl:hidden"
             >
               {mobileMenuOpen ? <X size={20} strokeWidth={2.2} aria-hidden="true" /> : <Menu size={22} strokeWidth={2.2} aria-hidden="true" />}
             </button>

@@ -14,13 +14,13 @@ export default function Footer() {
           <div>
             <div className="mb-6 flex items-center">
               {/* Base branca em degradê mantém a marca legível no rodapé escuro sem alterar o restante da seção. */}
-              <div className="inline-flex rounded-[10px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.7)_50%,rgba(255,255,255,0.24)_74%,rgba(255,255,255,0)_100%)] px-2.5 py-1.5">
+              <div className="inline-flex rounded-[4px] bg-white px-2 py-1">
                 <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
                   <Image
-                  src="/logo/imesul-logo-completa.webp"
+                    src="/images/logo-imesul-oficial.jpeg"
                   alt="IMESUL Distribuição"
-                    width={707}
-                    height={353}
+                    width={1600}
+                    height={477}
                     className="block h-auto w-full object-contain"
                   />
                 </div>
