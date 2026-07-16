@@ -1,6 +1,9 @@
+"use client";
+
 // Rodape da area de vendas.
 // Reune unidades, catalogo, site institucional e caminhos principais do atendimento.
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 
 const institutionalUrl =
@@ -59,14 +62,71 @@ const socialLinks = [
 // Rodapé comercial com os mesmos contatos oficiais usados no site institucional.
 export default function SalesFooter() {
   const year = new Date().getFullYear();
+  const footerRef = useRef(null);
+  const footerVisibleRef = useRef(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Revela o rodape uma vez por viewport e evita animacoes duplicadas nos blocos internos.
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = () => {
+      setReducedMotion(media.matches);
+      if (media.matches && !footerVisibleRef.current) {
+        footerVisibleRef.current = true;
+        setFooterVisible(true);
+      }
+    };
+
+    syncReducedMotion();
+
+    const addMediaListener = media.addEventListener
+      ? () => media.addEventListener("change", syncReducedMotion)
+      : () => media.addListener(syncReducedMotion);
+    const removeMediaListener = media.removeEventListener
+      ? () => media.removeEventListener("change", syncReducedMotion)
+      : () => media.removeListener(syncReducedMotion);
+
+    addMediaListener();
+
+    const footerNode = footerRef.current;
+    if (media.matches || !footerNode || !("IntersectionObserver" in window)) {
+      footerVisibleRef.current = true;
+      setFooterVisible(true);
+      return removeMediaListener;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const nextVisible = entry.isIntersecting;
+        if (footerVisibleRef.current !== nextVisible) {
+          footerVisibleRef.current = nextVisible;
+          setFooterVisible(nextVisible);
+        }
+      },
+      { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
+    );
+
+    observer.observe(footerNode);
+
+    return () => {
+      observer.disconnect();
+      removeMediaListener();
+    };
+  }, []);
 
   return (
-    <footer className="relative border-t border-slate-200 bg-white">
+    <footer
+      ref={footerRef}
+      className={`relative border-t border-slate-200 bg-white transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none ${
+        reducedMotion || footerVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      }`}
+    >
       <div className="h-px bg-gradient-to-r from-transparent via-imesul-red/35 to-transparent" />
 
       <div className="mx-auto max-w-[1480px] px-6 py-14 sm:px-8 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
-          <div data-scroll-reveal>
+          <div>
             {/* Base branca em degradê destaca a marca no rodapé escuro sem alterar os demais blocos. */}
             <div className="inline-flex">
               <Image
@@ -83,7 +143,7 @@ export default function SalesFooter() {
             </p>
           </div>
 
-          <div data-scroll-reveal style={{ "--reveal-delay": "50ms" }}>
+          <div>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
               <span className="h-px w-4 bg-imesul-red" />
               Navegação
@@ -111,7 +171,7 @@ export default function SalesFooter() {
             </ul>
           </div>
 
-          <div data-scroll-reveal style={{ "--reveal-delay": "100ms" }}>
+          <div>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
               <span className="h-px w-4 bg-imesul-red" />
               Unidades
@@ -141,7 +201,7 @@ export default function SalesFooter() {
             </div>
           </div>
 
-          <div data-scroll-reveal style={{ "--reveal-delay": "150ms" }}>
+          <div>
             <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
               <span className="h-px w-4 bg-imesul-red" />
               Links úteis
@@ -168,7 +228,7 @@ export default function SalesFooter() {
           </div>
         </div>
 
-        <div data-scroll-reveal style={{ "--reveal-delay": "180ms" }} className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-7 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-7 sm:flex-row">
           <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-slate-600">
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>

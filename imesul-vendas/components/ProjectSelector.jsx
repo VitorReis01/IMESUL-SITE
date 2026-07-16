@@ -250,8 +250,10 @@ export default function ProjectSelector() {
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
   const [adminVisualActive, setAdminVisualActive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navbarHidden, setNavbarHidden] = useState(false);
   const searchRef = useRef(null);
   const mobileMenuRef = useRef(null);
+  const navbarHiddenRef = useRef(false);
   const carouselScrollTimeoutRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
@@ -401,6 +403,32 @@ export default function ProjectSelector() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [mobileMenuOpen]);
+
+  // Esconde o topo branco no scroll usando rAF e atualizando estado apenas quando muda.
+  useEffect(() => {
+    let frameId = 0;
+
+    const handleScroll = () => {
+      if (frameId) return;
+
+      frameId = window.requestAnimationFrame(() => {
+        const nextHidden = window.scrollY > 56;
+        if (navbarHiddenRef.current !== nextHidden) {
+          navbarHiddenRef.current = nextHidden;
+          setNavbarHidden(nextHidden);
+        }
+        frameId = 0;
+      });
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
+  }, []);
 
   // Revela os textos e cards da hero em sequência sem animar quem prefere menos movimento.
   useEffect(() => {
@@ -672,6 +700,7 @@ export default function ProjectSelector() {
   const heroIntroStyle = (delay) => ({
     transitionDelay: heroReduceMotion ? "0ms" : `${delay}ms`,
   });
+  const shouldHideNavbar = navbarHidden && !mobileMenuOpen && !heroReduceMotion;
   const mobileMenuLinkClassName =
     "flex min-h-12 items-center justify-between rounded-[7px] border border-white/[0.11] bg-[#0b1b2d] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] transition-colors hover:border-imesul-red/55 hover:bg-[#10233a]";
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -681,7 +710,12 @@ export default function ProjectSelector() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
-      <header ref={mobileMenuRef} className="relative z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <header
+        ref={mobileMenuRef}
+        className={`sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl transition-[opacity,transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none ${
+          shouldHideNavbar ? "pointer-events-none -translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
         <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
           <span className="relative inline-flex max-h-[54px] shrink-0 items-center">
             <Image

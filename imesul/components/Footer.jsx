@@ -1,12 +1,72 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { navLinks, officialUnits } from "../data/products";
 
 // Reune marca, navegacao, enderecos, telefones e links verificados do Google Maps.
 export default function Footer() {
   const year = new Date().getFullYear();
+  const footerRef = useRef(null);
+  const footerVisibleRef = useRef(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Revela o rodape com IntersectionObserver sem alterar altura ou espacamento da pagina.
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = () => {
+      setReducedMotion(media.matches);
+      if (media.matches && !footerVisibleRef.current) {
+        footerVisibleRef.current = true;
+        setFooterVisible(true);
+      }
+    };
+
+    syncReducedMotion();
+
+    const addMediaListener = media.addEventListener
+      ? () => media.addEventListener("change", syncReducedMotion)
+      : () => media.addListener(syncReducedMotion);
+    const removeMediaListener = media.removeEventListener
+      ? () => media.removeEventListener("change", syncReducedMotion)
+      : () => media.removeListener(syncReducedMotion);
+
+    addMediaListener();
+
+    const footerNode = footerRef.current;
+    if (media.matches || !footerNode || !("IntersectionObserver" in window)) {
+      footerVisibleRef.current = true;
+      setFooterVisible(true);
+      return removeMediaListener;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const nextVisible = entry.isIntersecting;
+        if (footerVisibleRef.current !== nextVisible) {
+          footerVisibleRef.current = nextVisible;
+          setFooterVisible(nextVisible);
+        }
+      },
+      { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
+    );
+
+    observer.observe(footerNode);
+
+    return () => {
+      observer.disconnect();
+      removeMediaListener();
+    };
+  }, []);
 
   return (
-    <footer className="relative border-t border-slate-200 bg-white">
+    <footer
+      ref={footerRef}
+      className={`relative border-t border-slate-200 bg-white transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none ${
+        reducedMotion || footerVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      }`}
+    >
       <div className="h-px bg-gradient-to-r from-transparent via-imesul-red/35 to-transparent" />
 
       <div className="mx-auto max-w-[1600px] px-6 py-14 sm:px-8 lg:px-16">

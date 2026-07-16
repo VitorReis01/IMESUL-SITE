@@ -2,14 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { m as motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { m as motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { navLinks } from "../data/products";
 
 // Exibe a marca, os links institucionais, o menu mobile e o progresso da pagina.
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const scrolledRef = useRef(false);
+  const shouldReduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
@@ -21,7 +23,11 @@ export default function Navbar() {
       if (frameId) return;
 
       frameId = window.requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 56);
+        const nextScrolled = window.scrollY > 56;
+        if (scrolledRef.current !== nextScrolled) {
+          scrolledRef.current = nextScrolled;
+          setScrolled(nextScrolled);
+        }
         frameId = 0;
       });
     };
@@ -37,7 +43,7 @@ export default function Navbar() {
 
   // Fecha a navegacao mobile assim que um destino e escolhido.
   const closeMenu = () => setMenuOpen(false);
-  const shouldHideNavbar = scrolled && !menuOpen;
+  const shouldHideNavbar = scrolled && !menuOpen && !shouldReduceMotion;
 
   return (
     <>
