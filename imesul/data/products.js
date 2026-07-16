@@ -1,6 +1,6 @@
 // Destino comercial compartilhado pela navegacao, showroom e CTA final.
 export const salesSiteUrl =
-  process.env.NEXT_PUBLIC_SALES_SITE_URL || "https://grupoimesul.com.br";
+  process.env.NEXT_PUBLIC_SALES_URL || "https://imesul-vendas.vercel.app/";
 
 // Cada produto exige ID estavel, textos, variacoes, uso, imagem e ordem visual.
 // ProductScrollExperience consome todos os campos nos layouts mobile e desktop.
@@ -192,10 +192,10 @@ export const navLinks = [
     href: "/catalogo/catalogo-imesul.pdf",
     external: true,
   },
-  { label: "DOURADOS", href: "/#dourados" },
+  { label: "DOURADOS", href: salesSiteUrl, external: true },
   {
     label: "CAMPO GRANDE",
-    href: process.env.NEXT_PUBLIC_SALES_SITE_URL || salesSiteUrl,
+    href: salesSiteUrl,
     external: true,
   },
   { label: "LINKS", href: "/links" },

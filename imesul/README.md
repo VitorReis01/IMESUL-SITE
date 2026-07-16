@@ -26,7 +26,7 @@ O fluxo da homepage e montado em `app/page.jsx`: Navbar, Hero, Nossa Historia, D
 
 ## Relacao com a Area de Vendas
 
-O endereco comercial e lido de `NEXT_PUBLIC_SALES_SITE_URL`. Os links de produtos e o CTA final abrem o projeto `imesul-vendas` em outra aba. Os dois projetos sao independentes no build e no deploy.
+O endereco comercial e lido de `NEXT_PUBLIC_SALES_URL`. Os links de produtos e o CTA final abrem o projeto `imesul-vendas` em outra aba. Os dois projetos sao independentes no build e no deploy.
 
 ## Variaveis de ambiente
 
@@ -34,7 +34,7 @@ Copie `.env.example` para `.env.local` e informe os enderecos publicos:
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://grupoimesul.com.br
-NEXT_PUBLIC_SALES_SITE_URL=https://vendas.seu-dominio.com.br
+NEXT_PUBLIC_SALES_URL=https://imesul-vendas.vercel.app/
 ```
 
 `NEXT_PUBLIC_SITE_URL` alimenta metadata, canonical, sitemap e dados estruturados. Variaveis com prefixo `NEXT_PUBLIC_` ficam visiveis no navegador e nao devem conter segredos.
