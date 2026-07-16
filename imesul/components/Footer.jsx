@@ -71,11 +71,11 @@ export default function Footer() {
 
       <div className="mx-auto max-w-[1600px] px-6 py-14 sm:px-8 lg:px-16">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1.15fr_0.65fr_1.45fr]">
-          <div>
-            <div className="mb-6 flex items-center">
+          <div className="flex max-w-[430px] flex-col items-center text-center">
+            <div className="mb-6 flex items-center justify-center">
               {/* Base branca em degradê mantém a marca legível no rodapé escuro sem alterar o restante da seção. */}
               <div className="inline-flex">
-                <div className="w-[162px] sm:w-[182px] lg:w-[202px]">
+                <div className="w-[184px] sm:w-[204px] lg:w-[224px]">
                   <Image
                     src="/images/logo-imesul-oficial.png"
                   alt="IMESUL Distribuição"
@@ -93,8 +93,12 @@ export default function Footer() {
               </div>
             </div>
             <p className="max-w-[410px] text-sm font-bold leading-relaxed text-slate-800">
+              Distribuidora de materiais em aço para construção, serralheria,
+              indústria e campo em Mato Grosso do Sul.
+              <span className="sr-only">
               Distribuidora de aço com grande estoque, atendimento técnico e soluções completas para construção,
               indústria e serralheria em Mato Grosso do Sul.
+              </span>
             </p>
           </div>
 

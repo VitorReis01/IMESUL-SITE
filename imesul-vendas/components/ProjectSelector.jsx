@@ -1074,7 +1074,7 @@ export default function ProjectSelector() {
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-imesul-red/45 bg-imesul-red text-white shadow-[0_8px_22px_rgba(212,43,43,0.22)]">
                 <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
-              <span className="relative mt-5 font-mono text-[9px] tracking-[0.24em] text-imesul-red">
+              <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-red sm:text-[12px]">
                 PRECISO DE
               </span>
               <strong className="relative mt-1 font-display text-[1.68rem] font-normal leading-[0.96] text-imesul-red sm:text-[1.82rem]">
@@ -1106,7 +1106,7 @@ export default function ProjectSelector() {
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-white/[0.14] bg-[#1f5fb0]/55 text-white">
                 <PackageSearch size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
-              <span className="relative mt-5 font-mono text-[9px] tracking-[0.24em] text-imesul-steel">
+              <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-steel sm:text-[12px]">
                 JÁ SEI
               </span>
               <strong className="relative mt-1 font-display text-[1.78rem] font-normal leading-[0.96] text-white sm:text-[1.95rem]">

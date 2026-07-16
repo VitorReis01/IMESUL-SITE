@@ -126,7 +126,7 @@ export default function SalesFooter() {
 
       <div className="mx-auto max-w-[1480px] px-6 py-14 sm:px-8 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
-          <div>
+          <div className="flex max-w-[430px] flex-col items-center text-center">
             {/* Base branca em degradê destaca a marca no rodapé escuro sem alterar os demais blocos. */}
             <div className="inline-flex">
               <Image
@@ -134,7 +134,7 @@ export default function SalesFooter() {
               alt="IMESUL Distribuição"
                 width={1600}
                 height={477}
-                className="h-auto w-[178px] object-contain sm:w-[198px]"
+                className="h-auto w-[194px] object-contain sm:w-[214px]"
               />
             </div>
             <p className="mt-6 max-w-[390px] text-sm font-bold leading-7 text-slate-800">
