@@ -12,11 +12,13 @@ import {
   Check,
   Headphones,
   Layers3,
+  Menu,
   MapPin,
   MessageCircle,
   PackageSearch,
   Search,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { projects } from "../data/projects";
 import { catalogCategories } from "../data/catalogCategories";
@@ -247,7 +249,9 @@ export default function ProjectSelector() {
   const [authVisualActive, setAuthVisualActive] = useState(false);
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
   const [adminVisualActive, setAdminVisualActive] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const carouselScrollTimeoutRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
@@ -374,6 +378,25 @@ export default function ProjectSelector() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  // Controla o menu mobile sem alterar a navegacao desktop nem a busca do topo.
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!mobileMenuRef.current?.contains(event.target)) setMobileMenuOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
 
   // Revela os textos e cards da hero em sequência sem animar quem prefere menos movimento.
   useEffect(() => {
@@ -645,14 +668,17 @@ export default function ProjectSelector() {
   const heroIntroStyle = (delay) => ({
     transitionDelay: heroReduceMotion ? "0ms" : `${delay}ms`,
   });
+  const mobileMenuLinkClassName =
+    "flex min-h-12 items-center justify-between rounded-[7px] border border-white/[0.09] bg-white/[0.035] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-imesul-red/55 hover:bg-white/[0.06]";
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#06101d]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
-      <header className="relative z-30 border-b border-white/[0.08] bg-[#050b14]/88 backdrop-blur-xl">
-        <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
+      <header ref={mobileMenuRef} className="relative z-40 border-b border-white/[0.08] bg-[#050b14]/88 backdrop-blur-xl">
+        <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
           <span className="relative inline-flex shrink-0 items-center">
             <span className="pointer-events-none absolute inset-[-18px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.16),rgba(212,43,43,0.08)_38%,transparent_68%)] blur-xl" />
             <Image
@@ -661,7 +687,7 @@ export default function ProjectSelector() {
             width={707}
             height={353}
             priority
-            className="relative h-auto w-[132px] object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.16)] sm:w-[154px]"
+            className="relative h-auto w-[112px] object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.16)] sm:w-[154px]"
           />
           </span>
           <nav
@@ -710,9 +736,9 @@ export default function ProjectSelector() {
               Contato
             </a>
           </nav>
-          <div className="flex items-center gap-3">
-            <div ref={searchRef} className="relative flex">
-              <label className="flex h-10 w-[min(46vw,270px)] items-center gap-2 rounded-[5px] border border-white/[0.1] bg-[#06101d]/72 px-3 text-imesul-steel-light/65 sm:w-[270px]">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div ref={searchRef} className="relative flex min-w-0">
+              <label className="flex h-10 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-white/[0.1] bg-[#06101d]/72 px-2.5 text-imesul-steel-light/65 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
                 <span className="sr-only">Buscar materiais</span>
                 <input
                   type="search"
@@ -766,7 +792,7 @@ export default function ProjectSelector() {
 
                 setAuthModalOpen(true);
               }}
-              className="group/login inline-flex h-10 items-center justify-center gap-2 rounded-[5px] border border-white/[0.12] bg-white/[0.035] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-white/[0.06] hover:shadow-[0_0_18px_rgba(255,255,255,0.08),0_0_20px_rgba(212,43,43,0.12)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none sm:px-4"
+              className="group/login hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-white/[0.12] bg-white/[0.035] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-white/[0.06] hover:shadow-[0_0_18px_rgba(255,255,255,0.08),0_0_20px_rgba(212,43,43,0.12)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex sm:px-4"
             >
               <span className="hidden sm:inline">
                 {adminVisualActive ? "Conta ativa" : authVisualActive ? "Conta ativa" : "Fazer login"}
@@ -785,7 +811,7 @@ export default function ProjectSelector() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackInteraction({ type: "whatsapp", label: "Falar com vendedor", section: "Navbar", detail: "Botão superior" })}
-              className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red/65 px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none sm:inline-flex"
+              className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red/65 px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
             >
               <MessageCircle
                 size={15}
@@ -795,7 +821,121 @@ export default function ProjectSelector() {
               />
               Falar com vendedor
             </a>
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-sales-menu"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-white/[0.12] bg-white/[0.04] text-white transition-colors hover:border-imesul-red/55 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red xl:hidden"
+            >
+              {mobileMenuOpen ? <X size={20} strokeWidth={2.2} aria-hidden="true" /> : <Menu size={22} strokeWidth={2.2} aria-hidden="true" />}
+            </button>
           </div>
+        </div>
+        <div
+          id="mobile-sales-menu"
+          className={`absolute left-0 right-0 top-full z-[130] border-b border-white/[0.08] bg-[#06101d]/98 px-4 pb-5 pt-3 shadow-[0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-[opacity,transform,visibility] duration-300 xl:hidden ${
+            mobileMenuOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
+          }`}
+        >
+          <nav className="mx-auto grid max-w-[520px] gap-2" aria-label="Menu mobile">
+            <a
+              href="#project-path"
+              onClick={() => {
+                trackInteraction({ type: "click", label: "Projetos", section: "Navbar mobile" });
+                closeMobileMenu();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Projetos
+              <ArrowRight size={16} aria-hidden="true" />
+            </a>
+            <a
+              href="#material-path"
+              onClick={() => {
+                trackInteraction({ type: "click", label: "Materiais", section: "Navbar mobile" });
+                closeMobileMenu();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Materiais
+              <ArrowRight size={16} aria-hidden="true" />
+            </a>
+            <a
+              href="/catalogo/catalogo-imesul.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackInteraction({ type: "click", label: "Catálogo", section: "Navbar mobile", detail: "PDF catálogo IMESUL" });
+                closeMobileMenu();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Catálogo
+              <ArrowRight size={16} aria-hidden="true" />
+            </a>
+            <a
+              href={institutionalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar mobile", detail: institutionalUrl });
+                closeMobileMenu();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Sobre a Imesul
+              <ArrowRight size={16} aria-hidden="true" />
+            </a>
+            <a
+              href={sellerWhatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackInteraction({ type: "whatsapp", label: "Contato/WhatsApp", section: "Navbar mobile", detail: "Contato" });
+                closeMobileMenu();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Contato
+              <MessageCircle size={16} aria-hidden="true" />
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                closeMobileMenu();
+                if (adminVisualActive) {
+                  setAdminDashboardOpen(true);
+                  return;
+                }
+                setAuthModalOpen(true);
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Fazer Login
+              {isUserVisuallyLoggedIn ? (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#25D366] text-[#04110a]">
+                  <Check size={13} strokeWidth={3} aria-hidden="true" />
+                </span>
+              ) : (
+                <ArrowRight size={16} aria-hidden="true" />
+              )}
+            </button>
+            <a
+              href={sellerWhatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackInteraction({ type: "whatsapp", label: "Falar com vendedor", section: "Navbar mobile", detail: "Botão menu mobile" });
+                closeMobileMenu();
+              }}
+              className="mt-1 flex min-h-12 items-center justify-center gap-2 rounded-[7px] border border-[#25D366]/50 bg-[#25D366] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_16px_42px_rgba(37,211,102,0.22)]"
+            >
+              <MessageCircle size={17} aria-hidden="true" />
+              Falar com vendedor
+            </a>
+          </nav>
         </div>
       </header>
 
