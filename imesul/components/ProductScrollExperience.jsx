@@ -316,12 +316,15 @@ export default function ProductScrollExperience() {
             <div className="absolute inset-[7%] rounded-full bg-imesul-red/[0.055] blur-[90px]" />
             <div className="absolute inset-x-[5%] bottom-[9%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             {products.map((product, index) => (
+              // Mantem apenas um produto visivel antes do GSAP inicializar para evitar sobreposicao no build publicado.
               <div
                 key={product.id}
                 ref={(element) => {
                   visualRefs.current[index] = element;
                 }}
-                className="absolute inset-0 flex items-center justify-center will-change-transform"
+                className={`absolute inset-0 flex items-center justify-center will-change-transform ${
+                  index === active ? "visible opacity-100" : "invisible opacity-0"
+                }`}
               >
                 <ProductImage product={product} />
               </div>

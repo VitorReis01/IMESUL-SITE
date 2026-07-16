@@ -8,6 +8,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { scroll3dObjects } from "../data/scroll3dObjects";
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const transparentTextureDataUri =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
 // Pontos visuais do 3D nas secoes: sempre ao lado/acima do texto, com folga para leitura.
 const scrollTargets = [
@@ -68,6 +70,15 @@ const createFallbackModel = (targetSize = 3) => {
   return group;
 };
 
+// Material proprio evita que textura ausente no GLB deixe o produto invisivel em producao.
+const createProductionMetalMaterial = () =>
+  new THREE.MeshStandardMaterial({
+    color: 0xb8c3cf,
+    metalness: 0.86,
+    roughness: 0.34,
+    envMapIntensity: 0.85,
+  });
+
 // Camada WebGL dos produtos 3D: fica atrás do conteúdo e troca modelos conforme o scroll.
 export default function SteelScrollObject() {
   const layerRef = useRef(null);
@@ -119,7 +130,10 @@ export default function SteelScrollObject() {
     blueRim.position.set(4.2, -1.2, 3);
     scene.add(ambient, keyLight, redRim, blueRim);
 
-    const loader = new GLTFLoader();
+    // Ignora texturas embutidas em blob porque o site aplica material metalico proprio aos GLBs.
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.setURLModifier((url) => (url.startsWith("blob:") ? transparentTextureDataUri : url));
+    const loader = new GLTFLoader(loadingManager);
     const loadControllers = [];
 
     scroll3dObjects.forEach((item) => {
@@ -142,19 +156,7 @@ export default function SteelScrollObject() {
             if (!node.isMesh || !node.material) return;
             node.castShadow = false;
             node.receiveShadow = false;
-            if (Array.isArray(node.material)) {
-              node.material = node.material.map((material) => {
-                const clonedMaterial = material.clone();
-                if ("metalness" in clonedMaterial) clonedMaterial.metalness = Math.max(clonedMaterial.metalness ?? 0, 0.74);
-                if ("roughness" in clonedMaterial) clonedMaterial.roughness = Math.min(clonedMaterial.roughness ?? 0.42, 0.46);
-                return clonedMaterial;
-              });
-            } else {
-              const clonedMaterial = node.material.clone();
-              if ("metalness" in clonedMaterial) clonedMaterial.metalness = Math.max(clonedMaterial.metalness ?? 0, 0.74);
-              if ("roughness" in clonedMaterial) clonedMaterial.roughness = Math.min(clonedMaterial.roughness ?? 0.42, 0.46);
-              node.material = clonedMaterial;
-            }
+            node.material = createProductionMetalMaterial();
           });
           group.clear();
           group.add(model);
@@ -203,7 +205,7 @@ export default function SteelScrollObject() {
         return;
       }
 
-      const sectionFade = clamp(active.strength * 1.45, 0, 1);
+      const sectionFade = active.strength > 0.02 ? clamp(0.36 + active.strength * 0.9, 0, 1) : 0;
       targetStateRef.current = {
         modelId: active.modelId,
         x: active.x,
@@ -231,7 +233,7 @@ export default function SteelScrollObject() {
       eased.opacity += (target.opacity - eased.opacity) * 0.08;
       idleRotationRef.current += 0.006;
 
-      layer.style.opacity = String(eased.opacity * 0.5);
+      layer.style.opacity = String(eased.opacity * 0.72);
       root.position.set(eased.x, eased.y, -0.08);
       root.rotation.set(
         THREE.MathUtils.degToRad(-10 + target.strength * 14),
@@ -282,7 +284,7 @@ export default function SteelScrollObject() {
   return (
     <div
       ref={layerRef}
-      className="steel-scroll-layer pointer-events-none fixed inset-0 z-[1] hidden opacity-0 lg:block"
+      className="steel-scroll-layer pointer-events-none fixed inset-0 z-[18] hidden opacity-0 lg:block"
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="h-full w-full" />
