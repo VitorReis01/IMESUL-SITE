@@ -50,7 +50,7 @@ export default function Navbar() {
               aria-label="IMESUL Distribuicao"
             >
               {/* Base branca em degradê destaca a logo no header escuro sem clarear o restante do site. */}
-              <span className="relative inline-flex rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-3 py-2 sm:px-4 sm:py-2.5">
+              <span className="relative inline-flex items-center rounded-[9px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.68)_48%,rgba(255,255,255,0.2)_72%,rgba(255,255,255,0)_100%)] px-2 py-0.5 sm:px-2.5">
                 <Image
                 src="/logo/imesul-logo-completa.webp"
                 alt="IMESUL Distribuição"

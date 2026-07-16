@@ -14,7 +14,7 @@ export default function Footer() {
           <div>
             <div className="mb-6 flex items-center">
               {/* Base branca em degradê mantém a marca legível no rodapé escuro sem alterar o restante da seção. */}
-              <div className="rounded-[12px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.88)_58%,rgba(255,255,255,0.42)_78%,rgba(255,255,255,0)_100%)] px-3 py-2.5">
+              <div className="inline-flex rounded-[10px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.7)_50%,rgba(255,255,255,0.24)_74%,rgba(255,255,255,0)_100%)] px-2.5 py-1.5">
                 <div className="w-[130px] lg:w-[150px] xl:w-[170px]">
                   <Image
                   src="/logo/imesul-logo-completa.webp"
