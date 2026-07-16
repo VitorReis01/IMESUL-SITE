@@ -13,16 +13,31 @@ export default function Navbar() {
   const { scrollYProgress } = useScroll();
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
-  // Alterna o fundo do cabecalho depois que o Hero comeca a sair da tela.
+  // Controla a visibilidade do cabecalho conforme o scroll sem executar trabalho em excesso.
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 48);
+    let frameId = 0;
+
+    const handleScroll = () => {
+      if (frameId) return;
+
+      frameId = window.requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 56);
+        frameId = 0;
+      });
+    };
+
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
   }, []);
 
   // Fecha a navegacao mobile assim que um destino e escolhido.
   const closeMenu = () => setMenuOpen(false);
+  const shouldHideNavbar = scrolled && !menuOpen;
 
   return (
     <>
@@ -33,8 +48,8 @@ export default function Navbar() {
 
       <motion.header
         initial={{ y: -90, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ y: shouldHideNavbar ? -86 : 0, opacity: shouldHideNavbar ? 0 : 1 }}
+        transition={{ duration: shouldHideNavbar ? 0.32 : 0.42, ease: [0.16, 1, 0.3, 1] }}
         className={`fixed inset-x-0 top-0 z-[150] border-b border-slate-200/80 bg-white/95 backdrop-blur-xl transition-all duration-500 ${
           scrolled ? "shadow-[0_10px_30px_rgba(15,23,42,0.08)]" : "shadow-none"
         }`}
