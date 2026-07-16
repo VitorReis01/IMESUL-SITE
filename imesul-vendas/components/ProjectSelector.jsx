@@ -383,6 +383,9 @@ export default function ProjectSelector() {
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const handlePointerDown = (event) => {
       if (!mobileMenuRef.current?.contains(event.target)) setMobileMenuOpen(false);
     };
@@ -393,6 +396,7 @@ export default function ProjectSelector() {
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
+      document.body.style.overflow = originalOverflow;
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -669,7 +673,7 @@ export default function ProjectSelector() {
     transitionDelay: heroReduceMotion ? "0ms" : `${delay}ms`,
   });
   const mobileMenuLinkClassName =
-    "flex min-h-12 items-center justify-between rounded-[7px] border border-white/[0.09] bg-white/[0.035] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-imesul-red/55 hover:bg-white/[0.06]";
+    "flex min-h-12 items-center justify-between rounded-[7px] border border-white/[0.11] bg-[#0b1b2d] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] transition-colors hover:border-imesul-red/55 hover:bg-[#10233a]";
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
@@ -834,12 +838,18 @@ export default function ProjectSelector() {
           </div>
         </div>
         <div
+          className={`fixed inset-x-0 top-[64px] z-[120] h-[calc(100dvh-64px)] bg-[rgba(0,0,0,0.72)] transition-[opacity,visibility] duration-300 xl:hidden ${
+            mobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
+          }`}
+          aria-hidden="true"
+        />
+        <div
           id="mobile-sales-menu"
-          className={`absolute left-0 right-0 top-full z-[130] border-b border-white/[0.08] bg-[#06101d]/98 px-4 pb-5 pt-3 shadow-[0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-xl transition-[opacity,transform,visibility] duration-300 xl:hidden ${
-            mobileMenuOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
+          className={`fixed inset-x-0 top-[64px] z-[130] max-h-[calc(100dvh-64px)] overflow-y-auto border-b border-imesul-red/25 bg-[#050b14] px-4 pb-6 pt-4 shadow-[0_28px_90px_rgba(0,0,0,0.72)] transition-[opacity,transform,visibility] duration-300 xl:hidden ${
+            mobileMenuOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-4 opacity-0"
           }`}
         >
-          <nav className="mx-auto grid max-w-[520px] gap-2" aria-label="Menu mobile">
+          <nav className="mx-auto grid max-w-[520px] gap-2 rounded-[10px] border border-white/[0.08] bg-[#071321] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]" aria-label="Menu mobile">
             <a
               href="#project-path"
               onClick={() => {
