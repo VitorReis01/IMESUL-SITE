@@ -997,29 +997,29 @@ export default function ProjectSelector() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#06101d] via-[#06101d]/52 to-transparent" />
 
         <div className="relative z-10 mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-8 px-6 py-10 sm:px-8 sm:py-12 lg:grid-cols-[0.93fr_1.07fr] lg:px-12 lg:py-12">
-          <div className="max-w-[620px]">
-            <div className={`flex items-center gap-4 ${heroIntroClassName}`} style={heroIntroStyle(80)}>
+          <div className="max-w-[660px] text-left">
+            <div className={`flex max-w-[560px] items-center gap-4 ${heroIntroClassName}`} style={heroIntroStyle(80)}>
               <span className="font-mono text-[10px] tracking-[0.4em] text-imesul-red">
                 IMESUL VENDAS
               </span>
               <span className="h-px w-14 bg-imesul-red" />
             </div>
 
-            <h1 className="mt-4 font-display text-[clamp(2.55rem,4.75vw,5.35rem)] leading-[0.9] tracking-[0.02em] text-white drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
+            <h1 className="mt-4 max-w-[640px] text-balance font-display text-[clamp(2.55rem,4.75vw,5.35rem)] leading-[0.9] tracking-[0.02em] text-white drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
               <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(220)}>ENCONTRE O</span>
               <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>MATERIAL CERTO</span>
               <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>PARA SUA OBRA.</span>
             </h1>
-            <p className={`mt-4 max-w-[520px] text-[0.98rem] leading-7 text-imesul-steel-light/88 sm:text-base ${heroIntroClassName}`} style={heroIntroStyle(620)}>
+            <p className={`mt-5 max-w-[560px] text-[0.98rem] leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(620)}>
               Tubos, metalons, perfis, chapas, telhas e acessórios com qualidade
               garantida, entrega rápida e o suporte técnico de quem entende do assunto.
             </p>
-            <p className={`mt-2 max-w-[520px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base ${heroIntroClassName}`} style={heroIntroStyle(760)}>
+            <p className={`mt-3 max-w-[560px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(760)}>
               Mais de 45 anos fornecendo materiais em aço para construção,
               serralheria, indústria e campo.
             </p>
 
-            <div className="mt-6 grid max-w-[880px] gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-7 grid max-w-[640px] gap-x-5 gap-y-4 sm:grid-cols-2 xl:max-w-[760px] xl:grid-cols-4">
               {trustItems.map((item, index) => {
                 const isGlowing = heroTrustGlowIndex === index && !heroReduceMotion;
 

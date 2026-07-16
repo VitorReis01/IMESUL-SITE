@@ -134,10 +134,10 @@ export default function SalesFooter() {
               alt="IMESUL Distribuição"
                 width={1600}
                 height={477}
-                className="h-auto w-[150px] object-contain"
+                className="h-auto w-[178px] object-contain sm:w-[198px]"
               />
             </div>
-            <p className="mt-6 max-w-[370px] text-sm leading-7 text-slate-700">
+            <p className="mt-6 max-w-[390px] text-sm font-bold leading-7 text-slate-800">
               Distribuidora de materiais em aço para construção, serralheria,
               indústria e campo em Mato Grosso do Sul.
             </p>
