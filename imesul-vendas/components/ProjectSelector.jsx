@@ -42,7 +42,7 @@ const salesUnits = {
 };
 
 const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "/";
+  process.env.NEXT_PUBLIC_INSTITUTIONAL_URL || "https://imesul-site.vercel.app/";
 
 const sellerMessage =
   "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";
