@@ -685,7 +685,7 @@ export default function ProjectSelector() {
         <div className="mx-auto flex h-[64px] max-w-[1480px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
           <span className="relative inline-flex max-h-[54px] shrink-0 items-center">
             <Image
-              src="/images/logo-imesul-oficial.jpeg"
+              src="/images/logo-imesul-oficial.png"
               alt="IMESUL Distribuição"
               width={1600}
               height={477}

@@ -50,7 +50,7 @@ export default function Navbar() {
               {/* Base branca em degradê destaca a logo no header escuro sem clarear o restante do site. */}
               <span className="relative inline-flex items-center">
                 <Image
-                  src="/images/logo-imesul-oficial.jpeg"
+                  src="/images/logo-imesul-oficial.png"
                 alt="IMESUL Distribuição"
                   width={1600}
                   height={477}
