@@ -34,6 +34,7 @@ function shuffle(items) {
 // Intro institucional em canvas: amostra o simbolo oficial e transforma pixels visiveis em particulas.
 export default function IntroParticles() {
   const canvasRef = useRef(null);
+  const logoOverlayRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -178,8 +179,8 @@ export default function IntroParticles() {
           return;
         }
 
-        const sampleStep = isMobile ? 7 : 5;
-        const maxParticles = isMobile ? 720 : 1650;
+        const sampleStep = isMobile ? 6 : 4;
+        const maxParticles = isMobile ? 950 : 2400;
         sampleCanvas.width = Math.max(1, Math.floor(logoWidth));
         sampleCanvas.height = Math.max(1, Math.floor(logoHeight));
         sampleContext.drawImage(image, 0, 0, sampleCanvas.width, sampleCanvas.height);
@@ -216,9 +217,12 @@ export default function IntroParticles() {
           .slice(0, maxParticles)
           .map((particle, index) => {
             const angle = Math.random() * Math.PI * 2;
-            const scatterRadius = Math.max(viewportWidth, viewportHeight) * (0.42 + Math.random() * 0.48);
-            const disperseRadius = Math.max(viewportWidth, viewportHeight) * (0.24 + Math.random() * 0.38);
+            const scatterRadius = Math.max(viewportWidth, viewportHeight) * (0.22 + Math.random() * 0.28);
+            const disperseRadius = Math.max(viewportWidth, viewportHeight) * (0.14 + Math.random() * 0.22);
             const opacity = clamp(particle.alpha / 255, 0.62, 1);
+            const softenedRed = Math.round(particle.red * 0.88 + 10);
+            const softenedGreen = Math.round(particle.green * 0.88 + 10);
+            const softenedBlue = Math.round(particle.blue * 0.88 + 10);
 
             return {
               ...particle,
@@ -226,10 +230,10 @@ export default function IntroParticles() {
               startY: viewportHeight / 2 + Math.sin(angle) * scatterRadius,
               endX: particle.targetX + Math.cos(angle + 0.8) * disperseRadius,
               endY: particle.targetY + Math.sin(angle + 0.8) * disperseRadius,
-              size: isMobile ? 1.35 + Math.random() * 1.25 : 1.45 + Math.random() * 1.9,
-              color: `rgba(${particle.red}, ${particle.green}, ${particle.blue}, ${opacity})`,
-              glowColor: `rgba(${particle.red}, ${particle.green}, ${particle.blue}, ${Math.min(opacity + 0.08, 1)})`,
-              delay: Math.random() * 0.12,
+              size: isMobile ? 0.72 + Math.random() * 0.78 : 0.58 + Math.random() * 0.86,
+              color: `rgba(${softenedRed}, ${softenedGreen}, ${softenedBlue}, ${opacity * 0.86})`,
+              glowColor: `rgba(${softenedRed}, ${softenedGreen}, ${softenedBlue}, ${Math.min(opacity * 0.36, 0.42)})`,
+              delay: Math.random() * 0.07,
             };
           });
 
@@ -240,9 +244,17 @@ export default function IntroParticles() {
 
           try {
             const progress = clamp((now - startedAt) / INTRO_DURATION, 0, 1);
+            const logoFadeIn = clamp((progress - 0.62) / 0.12, 0, 1);
+            const logoFadeOut = progress > HOLD_END ? 1 - clamp((progress - HOLD_END) / (1 - HOLD_END), 0, 1) : 1;
+            const logoOpacity = easeInOutCubic(logoFadeIn) * logoFadeOut * 0.26;
 
             context.clearRect(0, 0, viewportWidth, viewportHeight);
-            context.globalCompositeOperation = "lighter";
+            context.globalCompositeOperation = "source-over";
+
+            if (logoOverlayRef.current) {
+              logoOverlayRef.current.style.opacity = String(logoOpacity);
+              logoOverlayRef.current.style.transform = `translate3d(-50%, -50%, 0) scale(${0.985 + logoOpacity * 0.015})`;
+            }
 
             particles.forEach((particle) => {
               const localProgress = clamp((progress - particle.delay) / (1 - particle.delay), 0, 1);
@@ -254,7 +266,7 @@ export default function IntroParticles() {
                 const phase = easeInOutCubic(localProgress / ASSEMBLE_END);
                 x = particle.startX + (particle.targetX - particle.startX) * phase;
                 y = particle.startY + (particle.targetY - particle.startY) * phase;
-                alpha = 0.18 + phase * 0.82;
+                alpha = 0.05 + phase * 0.95;
               } else if (localProgress < HOLD_END) {
                 const hold = (localProgress - ASSEMBLE_END) / (HOLD_END - ASSEMBLE_END);
                 const pulse = Math.sin(hold * Math.PI) * 0.18;
@@ -273,11 +285,11 @@ export default function IntroParticles() {
               context.arc(x, y, particle.size, 0, Math.PI * 2);
               context.fill();
 
-              if (alpha > 0.86 && particle.size > 2.4) {
-                context.globalAlpha = alpha * 0.18;
+              if (alpha > 0.9 && particle.size > 1.18) {
+                context.globalAlpha = alpha * 0.08;
                 context.fillStyle = particle.glowColor;
                 context.beginPath();
-                context.arc(x, y, particle.size * 2.2, 0, Math.PI * 2);
+                context.arc(x, y, particle.size * 1.8, 0, Math.PI * 2);
                 context.fill();
               }
             });
@@ -321,21 +333,26 @@ export default function IntroParticles() {
       }`}
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(212,43,43,0.16),transparent_30%),radial-gradient(circle_at_50%_72%,rgba(47,104,171,0.14),transparent_34%),linear-gradient(180deg,#050b14_0%,#0A1628_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(47,104,171,0.12),transparent_34%),linear-gradient(180deg,#040a12_0%,#0A1628_100%)]" />
       <canvas ref={canvasRef} className="relative z-10 h-full w-full" />
 
-      {reducedMotion && (
+      <div
+        ref={logoOverlayRef}
+        className={`absolute left-1/2 top-1/2 z-20 h-auto w-[220px] -translate-x-1/2 -translate-y-1/2 object-contain opacity-0 transition-opacity duration-500 sm:w-[330px] ${
+          reducedMotion ? "opacity-30" : ""
+        }`}
+      >
         <NextImage
           src={LOGO_SRC}
           alt=""
           width={520}
           height={520}
-          className={`relative z-20 h-auto w-[210px] object-contain transition duration-700 sm:w-[300px] ${
+          className={`h-auto w-full object-contain transition duration-700 ${
             isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           }`}
           draggable="false"
         />
-      )}
+      </div>
     </div>
   );
 }
