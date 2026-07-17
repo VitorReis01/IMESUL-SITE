@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import NextImage from "next/image";
 
-const LOGO_SRC = "/images/logo-imesul-symbol.png";
+const LOGO_SRC = "/images/logo-imesul-symbol-particles.png";
 const INTRO_SESSION_KEY = "imesulIntroParticlesSeen";
-const INTRO_DURATION = 3200;
+const INTRO_DURATION = 4600;
+const ASSEMBLE_END = 0.58;
+const HOLD_END = 0.78;
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);
@@ -164,7 +166,7 @@ export default function IntroParticles() {
           image.naturalWidth > 0 && image.naturalHeight > 0
             ? image.naturalHeight / image.naturalWidth
             : 1;
-        const logoWidth = Math.min(viewportWidth * (isMobile ? 0.5 : 0.34), isMobile ? 230 : 430);
+        const logoWidth = Math.min(viewportWidth * (isMobile ? 0.68 : 0.46), isMobile ? 320 : 620);
         const logoHeight = logoWidth * naturalRatio;
         const targetLeft = viewportWidth / 2 - logoWidth / 2;
         const targetTop = viewportHeight / 2 - logoHeight / 2;
@@ -176,8 +178,8 @@ export default function IntroParticles() {
           return;
         }
 
-        const sampleStep = isMobile ? 9 : 6;
-        const maxParticles = isMobile ? 430 : 1050;
+        const sampleStep = isMobile ? 7 : 5;
+        const maxParticles = isMobile ? 720 : 1650;
         sampleCanvas.width = Math.max(1, Math.floor(logoWidth));
         sampleCanvas.height = Math.max(1, Math.floor(logoHeight));
         sampleContext.drawImage(image, 0, 0, sampleCanvas.width, sampleCanvas.height);
@@ -188,12 +190,19 @@ export default function IntroParticles() {
         for (let y = 0; y < sampleCanvas.height; y += sampleStep) {
           for (let x = 0; x < sampleCanvas.width; x += sampleStep) {
             const pixelIndex = (y * sampleCanvas.width + x) * 4;
+            const red = pixels[pixelIndex];
+            const green = pixels[pixelIndex + 1];
+            const blue = pixels[pixelIndex + 2];
             const alpha = pixels[pixelIndex + 3];
             if (alpha < 60) continue;
 
             candidates.push({
               targetX: targetLeft + x,
               targetY: targetTop + y,
+              red,
+              green,
+              blue,
+              alpha,
             });
           }
         }
@@ -207,9 +216,9 @@ export default function IntroParticles() {
           .slice(0, maxParticles)
           .map((particle, index) => {
             const angle = Math.random() * Math.PI * 2;
-            const scatterRadius = Math.max(viewportWidth, viewportHeight) * (0.36 + Math.random() * 0.42);
-            const disperseRadius = Math.max(viewportWidth, viewportHeight) * (0.28 + Math.random() * 0.44);
-            const isHighlight = index % 13 === 0 || Math.random() > 0.94;
+            const scatterRadius = Math.max(viewportWidth, viewportHeight) * (0.42 + Math.random() * 0.48);
+            const disperseRadius = Math.max(viewportWidth, viewportHeight) * (0.24 + Math.random() * 0.38);
+            const opacity = clamp(particle.alpha / 255, 0.62, 1);
 
             return {
               ...particle,
@@ -217,11 +226,10 @@ export default function IntroParticles() {
               startY: viewportHeight / 2 + Math.sin(angle) * scatterRadius,
               endX: particle.targetX + Math.cos(angle + 0.8) * disperseRadius,
               endY: particle.targetY + Math.sin(angle + 0.8) * disperseRadius,
-              size: isMobile ? 1.2 + Math.random() * 1.3 : 1.25 + Math.random() * 1.8,
-              color: isHighlight
-                ? `rgba(212, 43, 43, ${0.74 + Math.random() * 0.22})`
-                : `rgba(230, 238, 246, ${0.68 + Math.random() * 0.28})`,
-              delay: Math.random() * 0.08,
+              size: isMobile ? 1.35 + Math.random() * 1.25 : 1.45 + Math.random() * 1.9,
+              color: `rgba(${particle.red}, ${particle.green}, ${particle.blue}, ${opacity})`,
+              glowColor: `rgba(${particle.red}, ${particle.green}, ${particle.blue}, ${Math.min(opacity + 0.08, 1)})`,
+              delay: Math.random() * 0.12,
             };
           });
 
@@ -242,17 +250,17 @@ export default function IntroParticles() {
               let y = particle.targetY;
               let alpha = 1;
 
-              if (localProgress < 0.48) {
-                const phase = easeInOutCubic(localProgress / 0.48);
+              if (localProgress < ASSEMBLE_END) {
+                const phase = easeInOutCubic(localProgress / ASSEMBLE_END);
                 x = particle.startX + (particle.targetX - particle.startX) * phase;
                 y = particle.startY + (particle.targetY - particle.startY) * phase;
-                alpha = 0.25 + phase * 0.75;
-              } else if (localProgress < 0.64) {
-                const hold = (localProgress - 0.48) / 0.16;
-                const pulse = Math.sin(hold * Math.PI) * 0.6;
-                alpha = 0.9 + pulse * 0.1;
+                alpha = 0.18 + phase * 0.82;
+              } else if (localProgress < HOLD_END) {
+                const hold = (localProgress - ASSEMBLE_END) / (HOLD_END - ASSEMBLE_END);
+                const pulse = Math.sin(hold * Math.PI) * 0.18;
+                alpha = 0.92 + pulse * 0.08;
               } else {
-                const phase = easeOutCubic((localProgress - 0.64) / 0.36);
+                const phase = easeOutCubic((localProgress - HOLD_END) / (1 - HOLD_END));
                 x = particle.targetX + (particle.endX - particle.targetX) * phase;
                 y = particle.targetY + (particle.endY - particle.targetY) * phase;
                 alpha = 1 - phase;
@@ -264,6 +272,14 @@ export default function IntroParticles() {
               context.beginPath();
               context.arc(x, y, particle.size, 0, Math.PI * 2);
               context.fill();
+
+              if (alpha > 0.86 && particle.size > 2.4) {
+                context.globalAlpha = alpha * 0.18;
+                context.fillStyle = particle.glowColor;
+                context.beginPath();
+                context.arc(x, y, particle.size * 2.2, 0, Math.PI * 2);
+                context.fill();
+              }
             });
 
             context.globalAlpha = 1;
@@ -312,9 +328,9 @@ export default function IntroParticles() {
         <NextImage
           src={LOGO_SRC}
           alt=""
-          width={320}
-          height={320}
-          className={`relative z-20 h-auto w-[140px] object-contain transition duration-700 sm:w-[190px] ${
+          width={520}
+          height={520}
+          className={`relative z-20 h-auto w-[210px] object-contain transition duration-700 sm:w-[300px] ${
             isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           }`}
           draggable="false"
