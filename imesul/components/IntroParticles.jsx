@@ -1,53 +1,54 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import NextImage from "next/image";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const LOGO_SRC = "/images/logo-imesul-symbol-particles.png";
-const INTRO_SESSION_KEY = "imesulIntroParticlesSeen";
-const INTRO_DURATION = 4600;
-const ASSEMBLE_END = 0.58;
-const HOLD_END = 0.78;
+const INTRO_SESSION_KEY = "imesulIntroMinimalSeen";
+const INTRO_TIMING = {
+  activate: 40,
+  close: 1850,
+  remove: 2320,
+  reducedClose: 520,
+  reducedRemove: 780,
+};
 
-function easeOutCubic(value) {
-  return 1 - Math.pow(1 - value, 3);
-}
-
-function easeInOutCubic(value) {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2;
-}
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function shuffle(items) {
-  for (let index = items.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
-  }
-  return items;
-}
-
-// Intro institucional em canvas: amostra o simbolo oficial e transforma pixels visiveis em particulas.
+// Intro institucional minimalista: mostra a marca uma vez por sessao e libera o site se algo falhar.
 export default function IntroParticles() {
-  const canvasRef = useRef(null);
-  const logoOverlayRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
     let showTimer = 0;
+    let activateTimer = 0;
+    let closeTimer = 0;
+    let removeTimer = 0;
+    let cancelled = false;
+
+    const markAsSeen = () => {
+      try {
+        window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
+      } catch {
+        // A intro e opcional; se o navegador bloquear storage, o site segue normalmente.
+      }
+    };
+
+    const closeIntro = (removeDelay) => {
+      if (cancelled) return;
+      markAsSeen();
+      setIsClosing(true);
+      removeTimer = window.setTimeout(() => {
+        if (!cancelled) setIsVisible(false);
+      }, removeDelay);
+    };
 
     try {
       if (typeof window === "undefined") return undefined;
       if (window.sessionStorage.getItem(INTRO_SESSION_KEY) === "1") return undefined;
     } catch {
-      // Sem acesso a sessionStorage, a animacao roda apenas nesta montagem.
+      // Sem sessionStorage, a intro roda apenas nesta montagem e continua descartavel.
     }
 
     let prefersReducedMotion = false;
@@ -58,271 +59,41 @@ export default function IntroParticles() {
     }
 
     showTimer = window.setTimeout(() => {
-      if (!cancelled) {
-        setReducedMotion(prefersReducedMotion);
-        setIsVisible(true);
-      }
+      if (cancelled) return;
+      setReducedMotion(prefersReducedMotion);
+      setIsVisible(true);
+      activateTimer = window.setTimeout(() => {
+        if (!cancelled) setIsActive(true);
+      }, INTRO_TIMING.activate);
     }, 0);
+
+    closeTimer = window.setTimeout(
+      () =>
+        closeIntro(
+          prefersReducedMotion
+            ? INTRO_TIMING.reducedRemove - INTRO_TIMING.reducedClose
+            : INTRO_TIMING.remove - INTRO_TIMING.close
+        ),
+      prefersReducedMotion ? INTRO_TIMING.reducedClose : INTRO_TIMING.close
+    );
 
     return () => {
       cancelled = true;
       window.clearTimeout(showTimer);
+      window.clearTimeout(activateTimer);
+      window.clearTimeout(closeTimer);
+      window.clearTimeout(removeTimer);
     };
   }, []);
 
-  useEffect(() => {
-    if (!isVisible) return undefined;
-
-    let animationFrame = 0;
-    let closeTimer = 0;
-    let removeTimer = 0;
-    let cancelled = false;
-
-    const hideIntro = (markAsSeen = true) => {
-      if (cancelled) return;
-      if (markAsSeen) {
-        try {
-          window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
-        } catch {
-          // A intro continua descartavel mesmo quando o navegador bloqueia sessionStorage.
-        }
-      }
-
-      setIsClosing(true);
-      removeTimer = window.setTimeout(() => {
-        if (!cancelled) setIsVisible(false);
-      }, 460);
-    };
-
-    if (reducedMotion) {
-      closeTimer = window.setTimeout(() => hideIntro(), 1150);
-
-      return () => {
-        cancelled = true;
-        window.clearTimeout(closeTimer);
-        window.clearTimeout(removeTimer);
-      };
-    }
-
-    let image;
-
-    const cleanup = () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.clearTimeout(closeTimer);
-      window.clearTimeout(removeTimer);
-      if (image) {
-        image.onload = null;
-        image.onerror = null;
-      }
-    };
-
-    let canvas;
-    let context;
+  const handleImageError = () => {
     try {
-      canvas = canvasRef.current;
-      context = canvas?.getContext("2d", { alpha: true });
+      window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
     } catch {
-      hideIntro(false);
-      return () => {
-        cancelled = true;
-        cleanup();
-      };
+      // Falha de imagem nao deve impedir a abertura da pagina.
     }
-
-    if (!canvas || !context) {
-      closeTimer = window.setTimeout(() => hideIntro(false), 120);
-      return () => {
-        cancelled = true;
-        cleanup();
-      };
-    }
-
-    try {
-      image = new window.Image();
-      image.decoding = "async";
-      image.src = LOGO_SRC;
-    } catch {
-      hideIntro(false);
-      return () => {
-        cancelled = true;
-        cleanup();
-      };
-    }
-
-    const startAnimation = () => {
-      if (cancelled) return;
-
-      try {
-        const viewportWidth = Math.max(window.innerWidth || 0, 1);
-        const viewportHeight = Math.max(window.innerHeight || 0, 1);
-        const isMobile = viewportWidth < 768;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.floor(viewportWidth * dpr);
-        canvas.height = Math.floor(viewportHeight * dpr);
-        canvas.style.width = `${viewportWidth}px`;
-        canvas.style.height = `${viewportHeight}px`;
-        context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        const naturalRatio =
-          image.naturalWidth > 0 && image.naturalHeight > 0
-            ? image.naturalHeight / image.naturalWidth
-            : 1;
-        const logoWidth = Math.min(viewportWidth * (isMobile ? 0.68 : 0.46), isMobile ? 320 : 620);
-        const logoHeight = logoWidth * naturalRatio;
-        const targetLeft = viewportWidth / 2 - logoWidth / 2;
-        const targetTop = viewportHeight / 2 - logoHeight / 2;
-
-        const sampleCanvas = document.createElement("canvas");
-        const sampleContext = sampleCanvas.getContext("2d", { willReadFrequently: true });
-        if (!sampleContext) {
-          hideIntro(false);
-          return;
-        }
-
-        const sampleStep = isMobile ? 6 : 4;
-        const maxParticles = isMobile ? 950 : 2400;
-        sampleCanvas.width = Math.max(1, Math.floor(logoWidth));
-        sampleCanvas.height = Math.max(1, Math.floor(logoHeight));
-        sampleContext.drawImage(image, 0, 0, sampleCanvas.width, sampleCanvas.height);
-
-        const pixels = sampleContext.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
-        const candidates = [];
-
-        for (let y = 0; y < sampleCanvas.height; y += sampleStep) {
-          for (let x = 0; x < sampleCanvas.width; x += sampleStep) {
-            const pixelIndex = (y * sampleCanvas.width + x) * 4;
-            const red = pixels[pixelIndex];
-            const green = pixels[pixelIndex + 1];
-            const blue = pixels[pixelIndex + 2];
-            const alpha = pixels[pixelIndex + 3];
-            if (alpha < 60) continue;
-
-            candidates.push({
-              targetX: targetLeft + x,
-              targetY: targetTop + y,
-              red,
-              green,
-              blue,
-              alpha,
-            });
-          }
-        }
-
-        if (candidates.length === 0) {
-          hideIntro(false);
-          return;
-        }
-
-        const particles = shuffle(candidates)
-          .slice(0, maxParticles)
-          .map((particle, index) => {
-            const angle = Math.random() * Math.PI * 2;
-            const scatterRadius = Math.max(viewportWidth, viewportHeight) * (0.22 + Math.random() * 0.28);
-            const disperseRadius = Math.max(viewportWidth, viewportHeight) * (0.14 + Math.random() * 0.22);
-            const opacity = clamp(particle.alpha / 255, 0.62, 1);
-            const softenedRed = Math.round(particle.red * 0.88 + 10);
-            const softenedGreen = Math.round(particle.green * 0.88 + 10);
-            const softenedBlue = Math.round(particle.blue * 0.88 + 10);
-
-            return {
-              ...particle,
-              startX: viewportWidth / 2 + Math.cos(angle) * scatterRadius,
-              startY: viewportHeight / 2 + Math.sin(angle) * scatterRadius,
-              endX: particle.targetX + Math.cos(angle + 0.8) * disperseRadius,
-              endY: particle.targetY + Math.sin(angle + 0.8) * disperseRadius,
-              size: isMobile ? 0.72 + Math.random() * 0.78 : 0.58 + Math.random() * 0.86,
-              color: `rgba(${softenedRed}, ${softenedGreen}, ${softenedBlue}, ${opacity * 0.86})`,
-              glowColor: `rgba(${softenedRed}, ${softenedGreen}, ${softenedBlue}, ${Math.min(opacity * 0.36, 0.42)})`,
-              delay: Math.random() * 0.07,
-            };
-          });
-
-        const startedAt = performance.now();
-
-        const draw = (now) => {
-          if (cancelled) return;
-
-          try {
-            const progress = clamp((now - startedAt) / INTRO_DURATION, 0, 1);
-            const logoFadeIn = clamp((progress - 0.62) / 0.12, 0, 1);
-            const logoFadeOut = progress > HOLD_END ? 1 - clamp((progress - HOLD_END) / (1 - HOLD_END), 0, 1) : 1;
-            const logoOpacity = easeInOutCubic(logoFadeIn) * logoFadeOut * 0.26;
-
-            context.clearRect(0, 0, viewportWidth, viewportHeight);
-            context.globalCompositeOperation = "source-over";
-
-            if (logoOverlayRef.current) {
-              logoOverlayRef.current.style.opacity = String(logoOpacity);
-              logoOverlayRef.current.style.transform = `translate3d(-50%, -50%, 0) scale(${0.985 + logoOpacity * 0.015})`;
-            }
-
-            particles.forEach((particle) => {
-              const localProgress = clamp((progress - particle.delay) / (1 - particle.delay), 0, 1);
-              let x = particle.targetX;
-              let y = particle.targetY;
-              let alpha = 1;
-
-              if (localProgress < ASSEMBLE_END) {
-                const phase = easeInOutCubic(localProgress / ASSEMBLE_END);
-                x = particle.startX + (particle.targetX - particle.startX) * phase;
-                y = particle.startY + (particle.targetY - particle.startY) * phase;
-                alpha = 0.05 + phase * 0.95;
-              } else if (localProgress < HOLD_END) {
-                const hold = (localProgress - ASSEMBLE_END) / (HOLD_END - ASSEMBLE_END);
-                const pulse = Math.sin(hold * Math.PI) * 0.18;
-                alpha = 0.92 + pulse * 0.08;
-              } else {
-                const phase = easeOutCubic((localProgress - HOLD_END) / (1 - HOLD_END));
-                x = particle.targetX + (particle.endX - particle.targetX) * phase;
-                y = particle.targetY + (particle.endY - particle.targetY) * phase;
-                alpha = 1 - phase;
-              }
-
-              if (alpha <= 0) return;
-              context.globalAlpha = alpha;
-              context.fillStyle = particle.color;
-              context.beginPath();
-              context.arc(x, y, particle.size, 0, Math.PI * 2);
-              context.fill();
-
-              if (alpha > 0.9 && particle.size > 1.18) {
-                context.globalAlpha = alpha * 0.08;
-                context.fillStyle = particle.glowColor;
-                context.beginPath();
-                context.arc(x, y, particle.size * 1.8, 0, Math.PI * 2);
-                context.fill();
-              }
-            });
-
-            context.globalAlpha = 1;
-            context.globalCompositeOperation = "source-over";
-
-            if (progress < 1) {
-              animationFrame = window.requestAnimationFrame(draw);
-            } else {
-              hideIntro();
-            }
-          } catch {
-            hideIntro(false);
-          }
-        };
-
-        animationFrame = window.requestAnimationFrame(draw);
-      } catch {
-        hideIntro(false);
-      }
-    };
-
-    image.onload = startAnimation;
-    image.onerror = () => {
-      closeTimer = window.setTimeout(() => hideIntro(false), 120);
-    };
-
-    return () => {
-      cancelled = true;
-      cleanup();
-    };
-  }, [isVisible, reducedMotion]);
+    setIsVisible(false);
+  };
 
   if (!isVisible) return null;
 
@@ -333,25 +104,49 @@ export default function IntroParticles() {
       }`}
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(47,104,171,0.12),transparent_34%),linear-gradient(180deg,#040a12_0%,#0A1628_100%)]" />
-      <canvas ref={canvasRef} className="relative z-10 h-full w-full" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(47,104,171,0.13),transparent_34%),linear-gradient(180deg,#040a12_0%,#0A1628_100%)]" />
 
       <div
-        ref={logoOverlayRef}
-        className={`absolute left-1/2 top-1/2 z-20 h-auto w-[220px] -translate-x-1/2 -translate-y-1/2 object-contain opacity-0 transition-opacity duration-500 sm:w-[330px] ${
-          reducedMotion ? "opacity-30" : ""
+        className={`relative z-10 flex flex-col items-center transition-all ${
+          reducedMotion
+            ? "duration-300"
+            : "duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        } ${
+          isActive && !isClosing
+            ? "translate-y-0 scale-100 opacity-100"
+            : "translate-y-2 scale-[0.92] opacity-0"
         }`}
       >
-        <NextImage
+        <Image
           src={LOGO_SRC}
           alt=""
           width={520}
           height={520}
-          className={`h-auto w-full object-contain transition duration-700 ${
-            isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-          }`}
+          priority
+          className="h-auto w-[142px] object-contain sm:w-[188px] lg:w-[214px]"
           draggable="false"
+          onError={handleImageError}
         />
+
+        <div className="mt-8 h-px w-44 overflow-hidden bg-white/10 sm:w-56">
+          <span
+            className={`block h-full origin-left bg-imesul-red transition-transform ${
+              reducedMotion
+                ? "duration-300"
+                : "duration-[1350ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            } ${isActive ? "scale-x-100" : "scale-x-0"}`}
+          />
+        </div>
+
+        <p
+          className={`mt-5 font-mono text-[10px] uppercase tracking-[0.44em] text-imesul-steel-light/78 transition-all ${
+            reducedMotion
+              ? "duration-300"
+              : "duration-700 delay-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          } ${isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
+        >
+          IMESUL
+        </p>
       </div>
     </div>
   );
