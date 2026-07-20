@@ -40,7 +40,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <div className="noise-overlay" aria-hidden="true" />
+        {children}
+      </body>
     </html>
   );
 }

@@ -203,7 +203,7 @@ export default function SalesGuidanceSection() {
                   alt="Fala comigo"
                   fill
                   sizes="(max-width: 640px) 160px, 192px"
-                  className="object-contain"
+                  className="object-contain saturate-[0.82]"
                 />
               </div>
 
@@ -213,7 +213,7 @@ export default function SalesGuidanceSection() {
                   alt="Mascote de atendimento Imesul"
                   fill
                   sizes="(max-width: 640px) 45vw, 310px"
-                  className="object-contain object-bottom drop-shadow-[0_26px_54px_rgba(0,0,0,0.52)]"
+                  className="object-contain object-bottom saturate-[0.82] drop-shadow-[0_26px_54px_rgba(0,0,0,0.52)]"
                 />
               </div>
             </div>
