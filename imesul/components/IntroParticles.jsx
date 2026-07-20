@@ -11,18 +11,19 @@ const SOURCE_HEIGHT = 446;
 const INTRO_SESSION_KEY = "imesulIntroSeen";
 
 // Resolucao usada so para decidir a posicao final de cada particula; mantida baixa por performance.
-const SAMPLE_WIDTH = 240;
+const SAMPLE_WIDTH = 300;
 const SAMPLE_HEIGHT = Math.round((SAMPLE_WIDTH * SOURCE_HEIGHT) / SOURCE_WIDTH);
 
 const PARTICLE_COLORS = ["#D42B2B", "#FF3B3B"];
 
-// Tamanho logico do estagio por breakpoint (mesmos valores das classes w-[]/h-[] do JSX).
+// Tamanho logico do estagio por breakpoint (mesmos valores das classes w-[]/h-[] do JSX), com
+// orcamento de particulas, escala do tamanho do ponto e quantidade de pontos de energia por faixa.
 // Calculado por largura de janela em vez de getBoundingClientRect, que capturaria o
 // container ainda encolhido pela transicao de entrada (scale-[0.92]) e mediria errado.
 const STAGE_SIZES = [
-  { minWidth: 1024, w: 214, h: 170 },
-  { minWidth: 640, w: 188, h: 150 },
-  { minWidth: 0, w: 142, h: 113 },
+  { minWidth: 1024, w: 380, h: 303, budget: 560, particleScale: 1.15, ambientCount: 8 },
+  { minWidth: 640, w: 276, h: 220, budget: 340, particleScale: 1.05, ambientCount: 5 },
+  { minWidth: 0, w: 196, h: 156, budget: 190, particleScale: 1, ambientCount: 0 },
 ];
 
 function resolveStageSize(windowWidth) {
@@ -31,11 +32,14 @@ function resolveStageSize(windowWidth) {
 
 const TIMING = {
   activateAt: 40,
-  reinforceAt: 1500,
-  closeAt: 2650,
-  exitDuration: 520,
-  convergeEnd: 1550,
-  hardCeiling: 4500,
+  reinforceAt: 1650,
+  closeAt: 3150,
+  exitDuration: 620,
+  convergeEnd: 1700,
+  sweepDuration: 1500,
+  ambientFadeStart: 650,
+  ambientFadeDuration: 700,
+  hardCeiling: 5200,
 };
 
 const REDUCED_TIMING = {
@@ -87,26 +91,41 @@ function sampleParticleTargets(img, budget) {
 }
 
 // Cada particula recebe um ponto de partida disperso perto do alvo, nunca espalhado pela tela toda.
-function buildParticles(targets, scaleX, scaleY) {
+// O raio de dispersao acompanha o tamanho do estagio para continuar controlado em telas maiores.
+function buildParticles(targets, scaleX, scaleY, stageWidth, particleScale) {
   return targets.map((point) => {
     const tx = (point.x - SAMPLE_WIDTH / 2) * scaleX;
     const ty = (point.y - SAMPLE_HEIGHT / 2) * scaleY;
     const angle = Math.random() * Math.PI * 2;
-    const radius = 24 + Math.random() * 64;
+    const radius = stageWidth * (0.1 + Math.random() * 0.22);
 
     return {
       tx,
       ty,
       sx: tx + Math.cos(angle) * radius,
       sy: ty + Math.sin(angle) * radius,
-      radius: 0.6 + Math.random() * 1,
+      radius: (0.6 + Math.random() * 1) * particleScale,
       color: PARTICLE_COLORS[Math.random() < 0.72 ? 0 : 1],
       baseAlpha: 0.62 + Math.random() * 0.34,
-      delay: Math.random() * 280,
-      duration: 900 + Math.random() * 380,
+      delay: Math.random() * 320,
+      duration: 950 + Math.random() * 420,
       phase: Math.random() * Math.PI * 2,
     };
   });
+}
+
+// Pequenos pontos de energia orbitando perto da marca; ficam de fora no menor breakpoint.
+function buildAmbientParticles(count, stageWidth) {
+  return Array.from({ length: count }).map(() => ({
+    baseAngle: Math.random() * Math.PI * 2,
+    angleSpeed: (0.12 + Math.random() * 0.18) * (Math.random() < 0.5 ? -1 : 1),
+    orbit: stageWidth * (0.34 + Math.random() * 0.16),
+    bobAmount: stageWidth * 0.025,
+    bobPhase: Math.random() * Math.PI * 2,
+    size: 0.7 + Math.random() * 0.8,
+    color: PARTICLE_COLORS[Math.random() < 0.5 ? 0 : 1],
+    alpha: 0.22 + Math.random() * 0.24,
+  }));
 }
 
 // Reconstroi o vermelho da marca em resolucao nativa, sem o fundo branco do arquivo fonte, e pinta o reforco final.
@@ -153,6 +172,7 @@ export default function IntroParticles() {
   const particleCanvasRef = useRef(null);
   const reinforceCanvasRef = useRef(null);
   const particlesRef = useRef([]);
+  const ambientRef = useRef([]);
   const rafIdRef = useRef(0);
 
   // Decide o modo da intro, carrega o simbolo e agenda as transicoes de estado (sem tocar em canvas ainda).
@@ -262,15 +282,22 @@ export default function IntroParticles() {
     if (!canvas || !reinforceCanvas || !img) return undefined;
 
     try {
-      const isMobile = window.innerWidth < 640;
-      const { w: cssWidth, h: cssHeight } = resolveStageSize(window.innerWidth);
-      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
-      const budget = isMobile ? 140 : 360;
+      const isNarrow = window.innerWidth < 640;
+      const stage = resolveStageSize(window.innerWidth);
+      const { w: cssWidth, h: cssHeight, budget, particleScale, ambientCount } = stage;
+      const dpr = Math.min(window.devicePixelRatio || 1, isNarrow ? 1.5 : 2);
 
       const targets = sampleParticleTargets(img, budget);
       if (targets.length === 0) throw new Error("sem pontos de particula");
 
-      particlesRef.current = buildParticles(targets, cssWidth / SAMPLE_WIDTH, cssHeight / SAMPLE_HEIGHT);
+      particlesRef.current = buildParticles(
+        targets,
+        cssWidth / SAMPLE_WIDTH,
+        cssHeight / SAMPLE_HEIGHT,
+        cssWidth,
+        particleScale
+      );
+      ambientRef.current = buildAmbientParticles(ambientCount, cssWidth);
 
       canvas.width = cssWidth * dpr;
       canvas.height = cssHeight * dpr;
@@ -287,6 +314,20 @@ export default function IntroParticles() {
         ctx.clearRect(0, 0, cssWidth, cssHeight);
         ctx.save();
         ctx.translate(cssWidth / 2, cssHeight / 2);
+
+        // Varredura horizontal discreta que atravessa o estagio uma unica vez, junto da formacao.
+        if (elapsed < TIMING.sweepDuration) {
+          const sweepT = easeOutCubic(clamp(elapsed / TIMING.sweepDuration, 0, 1));
+          const sweepY = lerp(-cssHeight * 0.65, cssHeight * 0.65, sweepT);
+          const bandHeight = Math.max(16, cssHeight * 0.12);
+          const gradient = ctx.createLinearGradient(0, sweepY - bandHeight / 2, 0, sweepY + bandHeight / 2);
+          gradient.addColorStop(0, "rgba(226,238,249,0)");
+          gradient.addColorStop(0.5, "rgba(226,238,249,0.13)");
+          gradient.addColorStop(1, "rgba(226,238,249,0)");
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = gradient;
+          ctx.fillRect(-cssWidth / 2, sweepY - bandHeight / 2, cssWidth, bandHeight);
+        }
 
         particlesRef.current.forEach((particle) => {
           const raw = clamp((elapsed - particle.delay) / particle.duration, 0, 1);
@@ -306,6 +347,23 @@ export default function IntroParticles() {
           ctx.arc(x, y, radius, 0, Math.PI * 2);
           ctx.fill();
         });
+
+        // Pontos de energia orbitando perto da marca, revelados so depois que a formacao comeca a aparecer.
+        const ambientFade = clamp((elapsed - TIMING.ambientFadeStart) / TIMING.ambientFadeDuration, 0, 1);
+        if (ambientFade > 0) {
+          ambientRef.current.forEach((amb) => {
+            const angle = amb.baseAngle + (elapsed / 1000) * amb.angleSpeed;
+            const orbit = amb.orbit + Math.sin(elapsed / 900 + amb.bobPhase) * amb.bobAmount;
+            const ax = Math.cos(angle) * orbit;
+            const ay = Math.sin(angle) * orbit;
+
+            ctx.beginPath();
+            ctx.fillStyle = amb.color;
+            ctx.globalAlpha = amb.alpha * ambientFade;
+            ctx.arc(ax, ay, amb.size, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
 
         ctx.restore();
         rafIdRef.current = window.requestAnimationFrame(draw);
@@ -327,12 +385,19 @@ export default function IntroParticles() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden bg-[#050b14] transition-opacity duration-500 ${
-        isClosing ? "pointer-events-none opacity-0" : "opacity-100"
-      }`}
+      className={`fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden bg-[#050b14] transition-[opacity,transform] ${
+        reducedMotion ? "duration-300" : "duration-[650ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+      } ${isClosing ? "pointer-events-none scale-[1.04] opacity-0" : "scale-100 opacity-100"}`}
       aria-hidden="true"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(47,104,171,0.13),transparent_34%),linear-gradient(180deg,#040a12_0%,#0A1628_100%)]" />
+
+      {/* Grade tecnica discreta no fundo, reforca a sensacao industrial sem competir com a marca. */}
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-1000 ${
+          isActive ? "opacity-[0.05]" : "opacity-0"
+        } [background-image:linear-gradient(90deg,rgba(226,238,249,0.7)_1px,transparent_1px),linear-gradient(rgba(226,238,249,0.7)_1px,transparent_1px)] [background-size:56px_56px]`}
+      />
 
       <div
         className={`relative z-10 flex flex-col items-center transition-all ${
@@ -345,55 +410,63 @@ export default function IntroParticles() {
             : "translate-y-2 scale-[0.92] opacity-0"
         }`}
       >
-        {mode === "particles" ? (
-          <div className="relative h-[113px] w-[142px] sm:h-[150px] sm:w-[188px] lg:h-[170px] lg:w-[214px]">
-            <canvas ref={particleCanvasRef} className="absolute inset-0 h-full w-full" />
-            <canvas
-              ref={reinforceCanvasRef}
-              className={`absolute inset-0 h-full w-full transition-opacity duration-[420ms] ease-out ${
-                reinforceActive ? "opacity-90" : "opacity-0"
-              }`}
-            />
-          </div>
-        ) : (
-          <Image
-            src={SYMBOL_SRC}
-            alt=""
-            width={520}
-            height={520}
-            priority
-            className="h-auto w-[142px] object-contain sm:w-[188px] lg:w-[214px]"
-            draggable="false"
-            onError={() => {
-              try {
-                window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
-              } catch {
-                // Falha de imagem nao deve impedir a abertura da pagina.
-              }
-              setIsVisible(false);
-            }}
+        <div className="relative flex items-center justify-center">
+          {/* Halo suave atras da marca: brilho quente da marca por fora, reflexo frio no centro. */}
+          <div
+            aria-hidden="true"
+            className={`pointer-events-none absolute left-1/2 top-1/2 h-[240px] w-[240px] -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-700 sm:h-[350px] sm:w-[350px] lg:h-[480px] lg:w-[480px] ${
+              isActive ? "opacity-100" : "opacity-0"
+            } bg-[radial-gradient(circle_at_50%_50%,rgba(212,43,43,0.16),transparent_58%),radial-gradient(circle_at_50%_46%,rgba(226,238,249,0.1),transparent_36%)]`}
           />
-        )}
 
-        <div className="mt-8 h-px w-44 overflow-hidden bg-white/10 sm:w-56">
-          <span
-            className={`block h-full origin-left bg-imesul-red transition-transform ${
-              reducedMotion
-                ? "duration-300"
-                : "duration-[1350ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
-            } ${isActive ? "scale-x-100" : "scale-x-0"}`}
-          />
+          {mode === "particles" ? (
+            <div className="relative h-[156px] w-[196px] sm:h-[220px] sm:w-[276px] lg:h-[303px] lg:w-[380px]">
+              <canvas ref={particleCanvasRef} className="absolute inset-0 h-full w-full" />
+              <canvas
+                ref={reinforceCanvasRef}
+                className={`absolute inset-0 h-full w-full transition-opacity duration-[420ms] ease-out [filter:drop-shadow(0_0_16px_rgba(212,43,43,0.32))] ${
+                  reinforceActive ? "opacity-90" : "opacity-0"
+                }`}
+              />
+            </div>
+          ) : (
+            <Image
+              src={SYMBOL_SRC}
+              alt=""
+              width={520}
+              height={520}
+              priority
+              className="h-auto w-[196px] object-contain sm:w-[276px] lg:w-[380px]"
+              draggable="false"
+              onError={() => {
+                try {
+                  window.sessionStorage.setItem(INTRO_SESSION_KEY, "1");
+                } catch {
+                  // Falha de imagem nao deve impedir a abertura da pagina.
+                }
+                setIsVisible(false);
+              }}
+            />
+          )}
         </div>
 
-        <p
-          className={`mt-5 font-mono text-[10px] uppercase tracking-[0.44em] text-imesul-steel-light/78 transition-all ${
-            reducedMotion
-              ? "duration-300"
-              : "duration-700 delay-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-          } ${isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
-        >
-          IMESUL
-        </p>
+        {/* Linha de energia: nasce do centro para as laterais e acende no momento do reforco final. */}
+        <div className="relative mt-10 h-[3px] w-56 sm:mt-11 sm:w-64 lg:w-72">
+          <div className="absolute inset-0 overflow-hidden rounded-full bg-white/[0.08]">
+            <span
+              className={`block h-full w-full origin-center bg-gradient-to-r from-transparent via-imesul-red to-transparent transition-transform ${
+                reducedMotion
+                  ? "duration-300"
+                  : "duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+              } ${isActive ? "scale-x-100" : "scale-x-0"}`}
+            />
+          </div>
+          <span
+            className={`pointer-events-none absolute left-1/2 top-1/2 h-2 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-imesul-red/80 blur-md transition-opacity duration-500 ${
+              reinforceActive ? "opacity-70" : "opacity-0"
+            }`}
+          />
+        </div>
       </div>
     </div>
   );
