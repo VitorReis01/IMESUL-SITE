@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import CompanyStory from "../components/CompanyStory";
 import WhyChoose from "../components/WhyChoose";
+import MaterialsShowreel from "../components/MaterialsShowreel";
 import ProductScrollExperience from "../components/ProductScrollExperience";
 import FinalCTA from "../components/FinalCTA";
 import Footer from "../components/Footer";
@@ -19,6 +20,7 @@ export default function Home() {
         <Hero />
         <CompanyStory />
         <WhyChoose />
+        <MaterialsShowreel />
         <ProductScrollExperience />
         <FinalCTA />
         {/* Ancora usada pela Navbar para levar direto as unidades de Dourados na home. */}
