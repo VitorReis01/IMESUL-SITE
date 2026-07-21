@@ -8,7 +8,6 @@ import Footer from "../components/Footer";
 import WhatsAppFloat from "../components/WhatsAppFloat";
 import MotionProvider from "../components/MotionProvider";
 import SmoothScroll from "../components/SmoothScroll";
-import IntroLogoRevealMount from "../components/IntroLogoRevealMount";
 
 // Monta a homepage na ordem em que as secoes aparecem durante a rolagem.
 // A pagina fica no servidor; apenas interacoes isoladas sao hidratadas.
@@ -16,7 +15,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-imesul-blue text-white">
       <MotionProvider>
-        <IntroLogoRevealMount />
         <Navbar />
         <Hero />
         <CompanyStory />
