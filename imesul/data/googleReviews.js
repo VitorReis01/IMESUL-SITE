@@ -1,52 +1,63 @@
-// ============================================================================
-// SUBSTITUIR POR AVALIAÇÕES REAIS DO GOOGLE ANTES DE PUBLICAR.
-// ============================================================================
-// Os itens abaixo sao PLACEHOLDERS seguros — nao sao depoimentos reais, nao tem
-// nomes de clientes reais e nao tem nota do Google inventada (rating fica null
-// de proposito). Servem apenas para validar o layout de GoogleReviews.jsx.
-//
-// Quando as avaliacoes reais chegarem, troque cada item por um objeto assim:
-// {
-//   id: "identificador-unico",
-//   name: "Nome real do cliente (como aparece no Google)",
-//   detail: "Texto real da avaliacao, sem editar o sentido.",
-//   rating: 5, // numero de 1 a 5, exatamente como no Google
-// }
+// Avaliações reais de clientes da IMESUL no Google (aprovadas pelo cliente para uso no site).
+// Nomes e notas são exatamente os que aparecem no Google. Alguns textos foram encurtados em
+// relação ao comentário original, mas sem alterar o sentido real — nada aqui foi inventado.
+// Avaliações sem comentário escrito no Google usam a nota como conteúdo ("Avaliação 5 estrelas
+// no Google."), nunca um texto de depoimento fabricado.
 export const reviews = [
   {
-    id: "placeholder-1",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "juliana-engenharia-matos",
+    name: "Juliana Engenharia Matos",
+    detail:
+      "Ótima empresa, entrega no prazo e atendimento muito atencioso. Fui atendida pelo vendedor Fábio e virei cliente.",
+    rating: 5,
   },
   {
-    id: "placeholder-2",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "kirya-arias",
+    name: "Kirya Arias",
+    detail: "Melhores preços, vendedor Thiago excelente e atencioso. Entrega rápida.",
+    rating: 5,
   },
   {
-    id: "placeholder-3",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "zeca-rodrigues",
+    name: "Zeca Rodrigues",
+    detail: "Excelente atendimento da vendedora Andressa, muito simpática e profissional.",
+    rating: 5,
   },
   {
-    id: "placeholder-4",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "jackson-amorim",
+    name: "Jackson Amorim",
+    detail:
+      "Ótimos vendedores, atendimento nota mil e referência em qualidade dos materiais para obras particulares e licitações.",
+    rating: 5,
   },
   {
-    id: "placeholder-5",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "ademilson-machado-urias",
+    name: "Ademilson Machado Urias",
+    detail: "Muito bom.",
+    rating: 5,
   },
   {
-    id: "placeholder-6",
-    name: "Cliente IMESUL",
-    detail: "Avaliação real será adicionada aqui.",
-    rating: null,
+    id: "adriazus",
+    name: "Adriazus",
+    detail: "Bom atendimento.",
+    rating: 4,
+  },
+  {
+    id: "william-rodriguez",
+    name: "William Rodriguez",
+    detail: "Avaliação 5 estrelas no Google.",
+    rating: 5,
+  },
+  {
+    id: "ademar-assis",
+    name: "Ademar Assis",
+    detail: "Avaliação 5 estrelas no Google.",
+    rating: 5,
+  },
+  {
+    id: "paulo-hessel",
+    name: "Paulo Hessel",
+    detail: "Avaliação 5 estrelas no Google.",
+    rating: 5,
   },
 ];
