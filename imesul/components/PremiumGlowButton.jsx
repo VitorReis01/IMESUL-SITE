@@ -11,16 +11,25 @@ import { useReducedMotion } from "framer-motion";
 const GLOW_BY_VARIANT = {
   whatsapp: "rgba(184,255,214,0.45)",
   secondary: "rgba(212,43,43,0.32)",
+  // Variantes adicionais usadas pelos icones da pagina /links (OfficialLinksPicker) — nao alteram
+  // as variantes acima, entao o FinalCTA continua identico.
+  maps: "rgba(234,67,53,0.38)",
+  instagram: "rgba(221,42,123,0.36)",
+  facebook: "rgba(24,119,242,0.36)",
 };
 
 const FOCUS_OUTLINE_BY_VARIANT = {
   whatsapp: "focus-visible:outline-white/80",
   secondary: "focus-visible:outline-imesul-red/70",
+  maps: "focus-visible:outline-white/80",
+  instagram: "focus-visible:outline-white/80",
+  facebook: "focus-visible:outline-white/80",
 };
 
 export default function PremiumGlowButton({
   href,
   variant = "secondary",
+  glowRadius = 160,
   className = "",
   children,
   ...anchorProps
@@ -53,7 +62,7 @@ export default function PremiumGlowButton({
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/glow:opacity-100"
           style={{
-            background: `radial-gradient(160px circle at var(--glow-x, 50%) var(--glow-y, 50%), ${glowColor}, transparent 70%)`,
+            background: `radial-gradient(${glowRadius}px circle at var(--glow-x, 50%) var(--glow-y, 50%), ${glowColor}, transparent 70%)`,
           }}
         />
       )}

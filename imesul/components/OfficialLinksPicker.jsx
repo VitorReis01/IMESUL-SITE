@@ -1,15 +1,21 @@
 "use client";
 
 // Central de links por unidade, inspirada na logica de selecao de um "avatar picker" (avatar
-// grande no centro, opcoes menores abaixo, conteudo trocando com animacao leve) mas escrita do
+// grande no centro, opcoes menores abaixo, conteudo trocando de forma simples) mas escrita do
 // zero para a IMESUL: sem shadcn, sem /components/ui, sem TypeScript. O "avatar" e o simbolo oficial
 // da IMESUL (nao uma foto/pessoa). Todos os dados (endereco, telefone, maps, instagram, facebook,
 // whatsapp) vem de data/products.js — nada aqui e inventado; se um canal nao existir para a
 // unidade, o botao correspondente simplesmente nao aparece.
-import { useState } from "react";
+//
+// Importante sobre a troca de conteudo: existe APENAS UM bloco de conteudo no DOM (nao remonta via
+// key, nao usa AnimatePresence, nao usa position:absolute). Trocar de unidade so troca o texto/links
+// renderizados a partir de "unit"; a transicao visual e um fade/slide simples via classes CSS
+// (opacity/translate-y), nunca dois blocos sobrepostos.
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { m as motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { officialUnits, officialSocialLinks, whatsapp } from "../data/products";
+import PremiumGlowButton from "./PremiumGlowButton";
 
 // Rotulo curto so para o botao seletor; o nome completo continua vindo de officialUnits.
 const SHORT_LABELS = {
@@ -81,22 +87,32 @@ function FacebookIcon(props) {
   );
 }
 
-function IconLink({ href, label, icon, accent }) {
+// Fundo de cada botao de canal usando a cor real/reconhecivel da plataforma (nao tudo branco/
+// vermelho). O glow do PremiumGlowButton usa uma variante proxima da mesma cor.
+const CHANNEL_STYLE = {
+  maps: { bg: "bg-[#EA4335]", glowVariant: "maps" },
+  phone: { bg: "bg-imesul-red", glowVariant: "secondary" },
+  whatsapp: { bg: "bg-[#25D366]", glowVariant: "whatsapp" },
+  instagram: { bg: "bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5]", glowVariant: "instagram" },
+  facebook: { bg: "bg-[#1877F2]", glowVariant: "facebook" },
+};
+
+function IconLink({ channelKey, href, label, icon }) {
   const isExternal = href.startsWith("http");
+  const style = CHANNEL_STYLE[channelKey];
+
   return (
-    <a
+    <PremiumGlowButton
       href={href}
+      variant={style.glowVariant}
+      glowRadius={70}
       {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       aria-label={label}
       title={label}
-      className={`flex h-12 w-12 flex-none items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-0.5 sm:h-14 sm:w-14 ${
-        accent === "whatsapp"
-          ? "border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] hover:border-[#25D366]/70 hover:bg-[#25D366]/15"
-          : "border-white/15 bg-white/[0.04] text-imesul-steel-light/85 hover:border-imesul-red/50 hover:bg-white/[0.08] hover:text-white"
-      }`}
+      className={`flex h-12 w-12 flex-none items-center justify-center rounded-full text-white shadow-[0_10px_26px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:scale-105 sm:h-14 sm:w-14 ${style.bg}`}
     >
       {icon}
-    </a>
+    </PremiumGlowButton>
   );
 }
 
@@ -104,12 +120,47 @@ export default function OfficialLinksPicker() {
   const shouldReduceMotion = useReducedMotion();
   const noMotion = shouldReduceMotion === true;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const targetIndexRef = useRef(0);
+  const pendingTimeoutRef = useRef(null);
+
+  // Limpa o timer pendente se o componente desmontar no meio de uma troca.
+  useEffect(() => {
+    return () => {
+      if (pendingTimeoutRef.current) window.clearTimeout(pendingTimeoutRef.current);
+    };
+  }, []);
+
   const unit = UNITS[activeIndex];
+
+  // Troca a unidade sem nunca ter dois blocos de conteudo montados ao mesmo tempo: o texto so muda
+  // depois que o bloco atual termina de ficar invisivel (ou instantaneamente, em reduced-motion).
+  function selectUnit(index) {
+    if (index === targetIndexRef.current) return;
+    targetIndexRef.current = index;
+
+    if (pendingTimeoutRef.current) {
+      window.clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
+
+    if (noMotion) {
+      setActiveIndex(index);
+      return;
+    }
+
+    setVisible(false);
+    pendingTimeoutRef.current = window.setTimeout(() => {
+      setActiveIndex(index);
+      setVisible(true);
+      pendingTimeoutRef.current = null;
+    }, 160);
+  }
 
   const channels = [
     { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon /> },
     { key: "phone", href: unit.phoneHref, label: `Ligar para ${unit.phone}`, icon: <PhoneIcon /> },
-    unit.whatsappHref && { key: "whatsapp", href: unit.whatsappHref, label: "Falar no WhatsApp", icon: <WhatsAppIcon />, accent: "whatsapp" },
+    unit.whatsappHref && { key: "whatsapp", href: unit.whatsappHref, label: "Falar no WhatsApp", icon: <WhatsAppIcon /> },
     unit.instagram && { key: "instagram", href: unit.instagram, label: "Instagram", icon: <InstagramIcon /> },
     unit.facebook && { key: "facebook", href: unit.facebook, label: "Facebook", icon: <FacebookIcon /> },
   ].filter(Boolean);
@@ -117,14 +168,12 @@ export default function OfficialLinksPicker() {
   return (
     <div className="mx-auto max-w-2xl rounded-[28px] border border-white/10 bg-[#0b1524]/85 px-6 py-10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] sm:px-12 sm:py-14">
       <div className="flex flex-col items-center text-center">
-        {/* Avatar principal: simbolo oficial da IMESUL, nunca uma foto/pessoa. Remonta (via key) a
-            cada troca de unidade, o que ja dispara initial->animate sem precisar de AnimatePresence. */}
-        <motion.div
-          key={unit.id}
-          initial={noMotion ? false : { scale: 0.86, rotate: -6, opacity: 0.55 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ duration: noMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-imesul-red/45 bg-white p-4 shadow-[0_18px_46px_rgba(212,43,43,0.16)] sm:h-32 sm:w-32 sm:p-5"
+        {/* Avatar principal: simbolo oficial da IMESUL, nunca uma foto/pessoa. Um unico elemento
+            persistente — so um leve scale acompanha a troca de unidade, sem remontar. */}
+        <div
+          className={`flex h-28 w-28 items-center justify-center rounded-full border-2 border-imesul-red/45 bg-white p-4 shadow-[0_18px_46px_rgba(212,43,43,0.16)] transition-transform duration-300 ease-out sm:h-32 sm:w-32 sm:p-5 ${
+            !noMotion && !visible ? "scale-90" : "scale-100"
+          }`}
         >
           <Image
             src="/logo/imesul-symbol.png"
@@ -134,7 +183,7 @@ export default function OfficialLinksPicker() {
             className="h-full w-full object-contain"
             priority
           />
-        </motion.div>
+        </div>
 
         {/* Seletor de unidades. */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -142,7 +191,7 @@ export default function OfficialLinksPicker() {
             <button
               key={u.id}
               type="button"
-              onClick={() => setActiveIndex(index)}
+              onClick={() => selectUnit(index)}
               aria-pressed={index === activeIndex}
               className={`rounded-full border px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 ${
                 index === activeIndex
@@ -155,13 +204,12 @@ export default function OfficialLinksPicker() {
           ))}
         </div>
 
-        {/* Conteudo da unidade selecionada — mesmo padrao de remontar por key, sem AnimatePresence. */}
-        <motion.div
-          key={unit.id}
-          initial={noMotion ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: noMotion ? 0 : 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 w-full max-w-xl"
+        {/* Conteudo da unidade selecionada — UM UNICO bloco no DOM; a troca de texto acontece
+            enquanto ele esta invisivel (opacity-0), entao nunca ha duas unidades visiveis juntas. */}
+        <div
+          className={`mt-8 w-full max-w-xl transition-all duration-300 ease-out ${
+            !noMotion && !visible ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+          }`}
         >
           <h2 className="font-display text-3xl uppercase leading-tight text-white sm:text-4xl">
             {unit.name}
@@ -171,22 +219,18 @@ export default function OfficialLinksPicker() {
           </p>
           <p className="mt-1 font-mono text-sm text-imesul-steel-light/70">Telefone: {unit.phone}</p>
 
-          <motion.div
-            variants={noMotion ? undefined : { visible: { transition: { staggerChildren: 0.08 } } }}
-            initial={noMotion ? undefined : "hidden"}
-            animate={noMotion ? undefined : "visible"}
-            className="mt-7 flex flex-wrap items-center justify-center gap-3"
-          >
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             {channels.map((channel) => (
-              <motion.div
+              <IconLink
                 key={channel.key}
-                variants={noMotion ? undefined : { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
-              >
-                <IconLink href={channel.href} label={channel.label} icon={channel.icon} accent={channel.accent} />
-              </motion.div>
+                channelKey={channel.key}
+                href={channel.href}
+                label={channel.label}
+                icon={channel.icon}
+              />
             ))}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );
