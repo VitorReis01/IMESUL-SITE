@@ -32,29 +32,6 @@ module.exports = {
         "steel-gradient": "linear-gradient(135deg, #0A1628 0%, #0D1F3C 50%, #0A1628 100%)",
         "red-glow": "radial-gradient(ellipse at center, rgba(212,43,43,0.15) 0%, transparent 70%)",
       },
-      animation: {
-        "pulse-red": "pulseRed 3s ease-in-out infinite",
-        "scan": "scan 4s linear infinite",
-        "flicker": "flicker 6s ease-in-out infinite",
-      },
-      keyframes: {
-        pulseRed: {
-          "0%, 100%": { opacity: "0.6" },
-          "50%": { opacity: "1" },
-        },
-        scan: {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100vh)" },
-        },
-        flicker: {
-          "0%, 100%": { opacity: "1" },
-          "92%": { opacity: "1" },
-          "93%": { opacity: "0.8" },
-          "94%": { opacity: "1" },
-          "96%": { opacity: "0.9" },
-          "97%": { opacity: "1" },
-        },
-      },
     },
   },
   plugins: [],
