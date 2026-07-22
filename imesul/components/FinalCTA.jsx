@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { m as motion } from "framer-motion";
 import { salesSiteUrl, whatsapp } from "../data/products";
+import PremiumGlowButton from "./PremiumGlowButton";
 
 // Encerra a apresentacao com acesso ao WhatsApp e a Area de Vendas.
 export default function FinalCTA() {
@@ -94,28 +95,30 @@ export default function FinalCTA() {
           transition={{ duration: 0.75, delay: 0.22 }}
           className="mt-10 flex flex-col gap-4 sm:flex-row"
         >
-          <a
+          <PremiumGlowButton
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative overflow-hidden rounded-[10px] bg-[#25D366] px-8 py-4 text-center transition-all duration-300 hover:bg-[#1ebe5d] hover:shadow-[0_10px_54px_rgba(37,211,102,0.36)]"
+            variant="whatsapp"
+            className="group rounded-[10px] bg-[#25D366] px-8 py-4 text-center transition-all duration-300 hover:bg-[#1ebe5d] hover:shadow-[0_10px_54px_rgba(37,211,102,0.36)]"
           >
             <span className="relative z-10 font-condensed text-sm font-bold tracking-[0.22em] text-white">
               FALAR NO WHATSAPP
             </span>
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/14 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-          </a>
+          </PremiumGlowButton>
 
-          <a
+          <PremiumGlowButton
             href={salesSiteUrl}
             target="_blank"
             rel="noopener noreferrer"
+            variant="secondary"
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >
-            <span className="font-condensed text-sm font-bold tracking-[0.22em] text-imesul-steel-light">
+            <span className="relative z-10 font-condensed text-sm font-bold tracking-[0.22em] text-imesul-steel-light">
               VER SITE DE VENDAS
             </span>
-          </a>
+          </PremiumGlowButton>
         </motion.div>
       </div>
     </section>

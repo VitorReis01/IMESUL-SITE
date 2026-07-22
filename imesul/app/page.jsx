@@ -4,6 +4,8 @@ import CompanyStory from "../components/CompanyStory";
 import WhyChoose from "../components/WhyChoose";
 import MaterialsShowreel from "../components/MaterialsShowreel";
 import ProductScrollExperience from "../components/ProductScrollExperience";
+import MoreMaterialsMorph from "../components/MoreMaterialsMorph";
+import GoogleReviews from "../components/GoogleReviews";
 import FinalCTA from "../components/FinalCTA";
 import Footer from "../components/Footer";
 import WhatsAppFloat from "../components/WhatsAppFloat";
@@ -22,6 +24,8 @@ export default function Home() {
         <WhyChoose />
         <MaterialsShowreel />
         <ProductScrollExperience />
+        <MoreMaterialsMorph />
+        <GoogleReviews />
         <FinalCTA />
         {/* Ancora usada pela Navbar para levar direto as unidades de Dourados na home. */}
         <div id="dourados">

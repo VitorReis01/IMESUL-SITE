@@ -11,8 +11,8 @@ const chapters = [
   {
     number: "01",
     eyebrow: "ARQUIVO HISTÓRICO IMESUL",
-    title: "50 anos de história",
-    text: "Há mais de 50 anos a IMESUL fornece aço e soluções para construção, indústria, serralheria e agronegócio em Mato Grosso do Sul.",
+    title: "45 anos de tradição",
+    text: "Há mais de 45 anos a IMESUL fornece aço e soluções para construção, indústria, serralheria e agronegócio em Mato Grosso do Sul.",
     image: "/images/company/historia-imesul.webp",
     imageAlt: "Registro histórico da unidade da IMESUL",
   },
@@ -47,7 +47,7 @@ const chapters = [
     eyebrow: "CREDIBILIDADE IMESUL",
     title: "Por que escolher a IMESUL",
     highlights: [
-      "50 anos de mercado",
+      "Mais de 45 anos de mercado",
       "Estoque próprio",
       "Atendimento especializado",
       "Entrega regional",
@@ -147,7 +147,7 @@ export default function CompanyStory() {
   useEffect(() => {
     let trigger;
     let cancelled = false;
-    let refreshFrame;
+    let refreshFrame = 0;
     let refreshStoryTrigger;
 
     const setup = async () => {
@@ -181,7 +181,13 @@ export default function CompanyStory() {
         }
       };
 
-      refreshStoryTrigger = () => ScrollTrigger.refresh();
+      refreshStoryTrigger = () => {
+        if (refreshFrame) return;
+        refreshFrame = window.requestAnimationFrame(() => {
+          refreshFrame = 0;
+          ScrollTrigger.refresh();
+        });
+      };
 
       trigger = ScrollTrigger.create({
         trigger: sectionRef.current,
@@ -193,7 +199,7 @@ export default function CompanyStory() {
         onRefresh: (self) => updatePosition(self.progress),
       });
 
-      refreshFrame = window.requestAnimationFrame(refreshStoryTrigger);
+      refreshStoryTrigger();
       window.addEventListener("load", refreshStoryTrigger, { once: true });
       window.addEventListener("resize", refreshStoryTrigger);
     };
@@ -277,12 +283,15 @@ export default function CompanyStory() {
                 viewport={{ once: true, amount: 0.35 }}
                 transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
               >
-                <span className="story-panel__number">06 / 06</span>
-                <p className="story-panel__eyebrow">POR DENTRO DA IMESUL</p>
-                <h2>Aço que movimenta projetos</h2>
+                {/* Oculto (nao removido) para preservar o espacamento vertical do bloco. */}
+                <span className="story-panel__number" style={{ visibility: "hidden" }} aria-hidden="true">
+                  06 / 06
+                </span>
+                <p className="story-panel__eyebrow">VEJA A ESTRUTURA DA IMESUL</p>
+                <h2>Estrutura que movimenta projetos</h2>
                 <p className="story-panel__text">
-                  Conheça de perto a estrutura da IMESUL e veja como o aço chega
-                  até quem constrói.
+                  Conheça de perto a estrutura da IMESUL e veja de onde o aço sai
+                  para chegar até quem constrói.
                 </p>
               </motion.div>
             </div>
