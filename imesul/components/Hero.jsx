@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { m as motion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
-import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
+import { VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
 
 // Video proprio do Hero (nao compartilhado com a CompanyStory, que usa institutionalVideo.desktop/
 // mobile do mesmo data/videoAssets.js); um unico par de arquivos serve todos os perfis de viewport,
@@ -12,6 +12,10 @@ import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets"
 // video e sempre muted) — webm primeiro, mp4 como fallback para navegadores sem suporte a VP9.
 const HERO_VIDEO_WEBM = "/videos/imesul-intro.webm";
 const HERO_VIDEO_MP4 = "/videos/imesul-intro.mp4";
+// Poster gerado a partir do proprio video novo (frame em ~5s, ja com o simbolo formado) — nunca usar
+// o poster antigo (fabrica-dourados-poster.webp), que e de um video diferente e causava um flash
+// de imagem incoerente antes do video novo carregar.
+const HERO_VIDEO_POSTER = "/videos/imesul-intro-poster.webp";
 
 // Apresenta a mensagem principal sobre o video da fabrica e controla seu fallback.
 export default function Hero() {
@@ -79,7 +83,7 @@ export default function Hero() {
 
   return (
     <section id="inicio" ref={heroRef} className="relative min-h-screen overflow-hidden bg-[#050b14]">
-      <div ref={visualRef} className="absolute inset-x-0 top-[-6%] h-[112%] w-full">
+      <div ref={visualRef} className="absolute inset-x-0 top-[-6%] h-[112%] w-full bg-[#050b14]">
         <video
           ref={videoRef}
           className="h-full w-full object-cover"
@@ -88,7 +92,7 @@ export default function Hero() {
           loop
           playsInline
           preload="auto"
-          poster={institutionalVideo.poster}
+          poster={HERO_VIDEO_POSTER}
           aria-hidden="true"
         >
           {videoSources?.webm && <source src={videoSources.webm} type="video/webm" />}
