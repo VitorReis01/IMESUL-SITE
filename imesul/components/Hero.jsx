@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { m as motion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
-import { getInstitutionalVideoSources, institutionalVideo } from "../data/videoAssets";
+import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
+
+// Video proprio do Hero (nao compartilhado com a CompanyStory, que usa institutionalVideo.desktop/
+// mobile do mesmo data/videoAssets.js); um unico par de arquivos serve todos os perfis de viewport,
+// mas o profile "poster" (reduced-motion/save-data) continua desativando-o, igual ao comportamento
+// antigo. Otimizado de 20,5 MB/1080p/~17 Mbps para ~1,4 MB (webm) / ~1,9 MB (mp4), sem audio (o
+// video e sempre muted) — webm primeiro, mp4 como fallback para navegadores sem suporte a VP9.
+const HERO_VIDEO_WEBM = "/videos/imesul-intro.webm";
+const HERO_VIDEO_MP4 = "/videos/imesul-intro.mp4";
 
 // Apresenta a mensagem principal sobre o video da fabrica e controla seu fallback.
 export default function Hero() {
@@ -11,7 +19,13 @@ export default function Hero() {
   const visualRef = useRef(null);
   const videoRef = useRef(null);
   const videoProfile = useAdaptiveVideoProfile();
-  const videoSources = getInstitutionalVideoSources(videoProfile);
+  const videoSources = useMemo(
+    () =>
+      videoProfile === VIDEO_DISABLED_PROFILE
+        ? null
+        : { webm: HERO_VIDEO_WEBM, mp4: HERO_VIDEO_MP4 },
+    [videoProfile]
+  );
 
   // Aplica parallax enquanto o Hero sai da viewport e limpa o ScrollTrigger no final.
   useEffect(() => {
@@ -73,17 +87,12 @@ export default function Hero() {
           muted
           loop
           playsInline
-          preload="none"
+          preload="auto"
           poster={institutionalVideo.poster}
           aria-hidden="true"
         >
-          {videoSources?.mp4 && videoSources?.webm && (
-            <>
-              {/* Prioriza MP4 porque a comparacao visual preservou melhor os detalhes da fabrica. */}
-              <source src={videoSources.mp4} type="video/mp4" />
-              <source src={videoSources.webm} type="video/webm" />
-            </>
-          )}
+          {videoSources?.webm && <source src={videoSources.webm} type="video/webm" />}
+          {videoSources?.mp4 && <source src={videoSources.mp4} type="video/mp4" />}
         </video>
       </div>
 

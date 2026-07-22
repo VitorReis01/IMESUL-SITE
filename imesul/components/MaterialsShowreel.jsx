@@ -14,9 +14,12 @@ import { m as motion, useReducedMotion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
 import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
 
-// Video proprio do showreel (nao compartilhado com o Hero); um unico arquivo serve todos os
-// perfis de viewport, mas o profile "poster" (reduced-motion/save-data) continua desativando-o.
-const SHOWREEL_VIDEO_SRC = "/videos/estoque-showreel.mp4";
+// Video proprio do showreel (nao compartilhado com o Hero); um unico par de arquivos serve todos
+// os perfis de viewport, mas o profile "poster" (reduced-motion/save-data) continua desativando-o.
+// Otimizado de 16,06 MB/1080p/~19,6 Mbps para ~2,1 MB (webm) / ~1,9 MB (mp4), sem audio (o video e
+// sempre muted) — webm primeiro, mp4 como fallback para navegadores sem suporte a VP9.
+const SHOWREEL_VIDEO_WEBM = "/videos/estoque-showreel.webm";
+const SHOWREEL_VIDEO_MP4 = "/videos/estoque-showreel.mp4";
 
 // Fundo amplo decorativo atras do video/card principal (nao e o poster do video, que continua
 // vindo de institutionalVideo.poster para o fallback do <video>).
@@ -39,7 +42,10 @@ export default function MaterialsShowreel() {
   const [isNear, setIsNear] = useState(false);
   const videoProfile = useAdaptiveVideoProfile({ enabled: isNear });
   const videoSources = useMemo(
-    () => (videoProfile === VIDEO_DISABLED_PROFILE ? null : { mp4: SHOWREEL_VIDEO_SRC }),
+    () =>
+      videoProfile === VIDEO_DISABLED_PROFILE
+        ? null
+        : { webm: SHOWREEL_VIDEO_WEBM, mp4: SHOWREEL_VIDEO_MP4 },
     [videoProfile]
   );
 
@@ -243,6 +249,7 @@ export default function MaterialsShowreel() {
               poster={institutionalVideo.poster}
               aria-label="Movimentação de materiais e estrutura da fábrica da IMESUL"
             >
+              {videoSources?.webm && <source src={videoSources.webm} type="video/webm" />}
               {videoSources?.mp4 && <source src={videoSources.mp4} type="video/mp4" />}
             </video>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,18,0.18)_0%,transparent_30%,transparent_65%,rgba(2,8,18,0.6)_100%)]" />
