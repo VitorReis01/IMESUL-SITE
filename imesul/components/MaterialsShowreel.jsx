@@ -9,10 +9,18 @@
 // antes (nao usar os dois juntos) — cleanup via gsap.context().revert(), sem preventDefault, sem
 // bloquear wheel/touch, sem window.scrollTo.
 // Mobile e reduced-motion caem para um card grande estatico, sem pin e sem scrub.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
-import { getInstitutionalVideoSources, institutionalVideo } from "../data/videoAssets";
+import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
+
+// Video proprio do showreel (nao compartilhado com o Hero); um unico arquivo serve todos os
+// perfis de viewport, mas o profile "poster" (reduced-motion/save-data) continua desativando-o.
+const SHOWREEL_VIDEO_SRC = "/videos/estoque-showreel.mp4";
+
+// Fundo amplo decorativo atras do video/card principal (nao e o poster do video, que continua
+// vindo de institutionalVideo.poster para o fallback do <video>).
+const SHOWREEL_BACKGROUND_SRC = "/images/company/estrutura-estoque.webp";
 
 export default function MaterialsShowreel() {
   // Decide o layout em JS (nao via variante CSS) para nunca deixar a legenda presa em opacidade 0:
@@ -30,7 +38,10 @@ export default function MaterialsShowreel() {
   const videoRef = useRef(null);
   const [isNear, setIsNear] = useState(false);
   const videoProfile = useAdaptiveVideoProfile({ enabled: isNear });
-  const videoSources = getInstitutionalVideoSources(videoProfile);
+  const videoSources = useMemo(
+    () => (videoProfile === VIDEO_DISABLED_PROFILE ? null : { mp4: SHOWREEL_VIDEO_SRC }),
+    [videoProfile]
+  );
 
   // Adia a escolha da fonte de video ate a secao se aproximar da viewport.
   useEffect(() => {
@@ -175,7 +186,7 @@ export default function MaterialsShowreel() {
         <div ref={bgRef} aria-hidden="true" className="absolute inset-0 opacity-40 lg:opacity-55">
           {/* eslint-disable-next-line @next/next/no-img-element -- fundo decorativo animado via ref/GSAP, sem necessidade de otimizacao responsiva do next/image. */}
           <img
-            src={institutionalVideo.poster}
+            src={SHOWREEL_BACKGROUND_SRC}
             alt=""
             className="h-full w-full object-cover"
             draggable="false"
@@ -232,13 +243,7 @@ export default function MaterialsShowreel() {
               poster={institutionalVideo.poster}
               aria-label="Movimentação de materiais e estrutura da fábrica da IMESUL"
             >
-              {videoSources?.mp4 && videoSources?.webm && (
-                <>
-                  {/* Mesma politica de fontes do Hero, para manter qualidade e cache consistentes. */}
-                  <source src={videoSources.mp4} type="video/mp4" />
-                  <source src={videoSources.webm} type="video/webm" />
-                </>
-              )}
+              {videoSources?.mp4 && <source src={videoSources.mp4} type="video/mp4" />}
             </video>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,18,0.18)_0%,transparent_30%,transparent_65%,rgba(2,8,18,0.6)_100%)]" />
           </div>
