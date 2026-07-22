@@ -7,10 +7,11 @@
 // whatsapp) vem de data/products.js — nada aqui e inventado; se um canal nao existir para a
 // unidade, o botao correspondente simplesmente nao aparece.
 //
-// Importante sobre a troca de conteudo: existe APENAS UM bloco de conteudo no DOM (nao remonta via
-// key, nao usa AnimatePresence, nao usa position:absolute). Trocar de unidade so troca o texto/links
-// renderizados a partir de "unit"; a transicao visual e um fade/slide simples via classes CSS
-// (opacity/translate-y), nunca dois blocos sobrepostos.
+// Estrutura: dois cards separados — Dourados (com seletor Matriz/Loja de Fábrica) e Campo Grande
+// (unidade unica, sem seletor, conteudo estatico). Cada card com seletor usa a mesma logica segura
+// de troca: existe APENAS UM bloco de conteudo no DOM (nao remonta via key, nao usa AnimatePresence,
+// nao usa position:absolute); o texto so muda enquanto o bloco esta invisivel, entao nunca ha duas
+// unidades sobrepostas.
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useReducedMotion } from "framer-motion";
@@ -42,6 +43,19 @@ const UNITS = officialUnits.map((unit) => {
     whatsappHref: unitDigits === WHATSAPP_DIGITS ? WHATSAPP_HREF : null,
   };
 });
+
+const DOURADOS_UNITS = UNITS.filter((unit) => unit.id.startsWith("dourados"));
+const CAMPO_GRANDE_UNIT = UNITS.find((unit) => unit.id === "campo-grande");
+
+function buildChannels(unit) {
+  return [
+    { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon /> },
+    { key: "phone", href: unit.phoneHref, label: `Ligar para ${unit.phone}`, icon: <PhoneIcon /> },
+    unit.whatsappHref && { key: "whatsapp", href: unit.whatsappHref, label: "Falar no WhatsApp", icon: <WhatsAppIcon /> },
+    unit.instagram && { key: "instagram", href: unit.instagram, label: "Instagram", icon: <InstagramIcon /> },
+    unit.facebook && { key: "facebook", href: unit.facebook, label: "Facebook", icon: <FacebookIcon /> },
+  ].filter(Boolean);
+}
 
 function MapsIcon(props) {
   return (
@@ -116,7 +130,39 @@ function IconLink({ channelKey, href, label, icon }) {
   );
 }
 
-export default function OfficialLinksPicker() {
+// Avatar principal, compartilhado pelos dois cards: simbolo oficial da IMESUL, nunca uma foto/
+// pessoa. "pulsing" controla o leve scale ao trocar de unidade (so usado no card com seletor).
+function UnitAvatar({ pulsing }) {
+  return (
+    <div
+      className={`flex h-28 w-28 items-center justify-center rounded-full border-2 border-imesul-red/45 bg-white p-4 shadow-[0_18px_46px_rgba(212,43,43,0.16)] transition-transform duration-300 ease-out sm:h-32 sm:w-32 sm:p-5 ${
+        pulsing ? "scale-90" : "scale-100"
+      }`}
+    >
+      <Image
+        src="/logo/imesul-symbol.png"
+        alt="Símbolo IMESUL"
+        width={200}
+        height={160}
+        className="h-full w-full object-contain"
+        priority
+      />
+    </div>
+  );
+}
+
+function CardShell({ eyebrow, children }) {
+  return (
+    <div className="flex h-full flex-col items-center rounded-[28px] border border-white/10 bg-[#0b1524]/85 px-6 py-10 text-center shadow-[0_30px_90px_rgba(0,0,0,0.35)] sm:px-10 sm:py-12">
+      <span className="font-mono text-[11px] uppercase tracking-[0.4em] text-imesul-red">{eyebrow}</span>
+      {children}
+    </div>
+  );
+}
+
+// Card com seletor (Dourados: Matriz / Loja de Fábrica) — troca segura, um unico bloco de
+// conteudo no DOM, texto so muda enquanto o bloco esta invisivel.
+function DouradosCard() {
   const shouldReduceMotion = useReducedMotion();
   const noMotion = shouldReduceMotion === true;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -124,17 +170,14 @@ export default function OfficialLinksPicker() {
   const targetIndexRef = useRef(0);
   const pendingTimeoutRef = useRef(null);
 
-  // Limpa o timer pendente se o componente desmontar no meio de uma troca.
   useEffect(() => {
     return () => {
       if (pendingTimeoutRef.current) window.clearTimeout(pendingTimeoutRef.current);
     };
   }, []);
 
-  const unit = UNITS[activeIndex];
+  const unit = DOURADOS_UNITS[activeIndex];
 
-  // Troca a unidade sem nunca ter dois blocos de conteudo montados ao mesmo tempo: o texto so muda
-  // depois que o bloco atual termina de ficar invisivel (ou instantaneamente, em reduced-motion).
   function selectUnit(index) {
     if (index === targetIndexRef.current) return;
     targetIndexRef.current = index;
@@ -157,81 +200,93 @@ export default function OfficialLinksPicker() {
     }, 160);
   }
 
-  const channels = [
-    { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon /> },
-    { key: "phone", href: unit.phoneHref, label: `Ligar para ${unit.phone}`, icon: <PhoneIcon /> },
-    unit.whatsappHref && { key: "whatsapp", href: unit.whatsappHref, label: "Falar no WhatsApp", icon: <WhatsAppIcon /> },
-    unit.instagram && { key: "instagram", href: unit.instagram, label: "Instagram", icon: <InstagramIcon /> },
-    unit.facebook && { key: "facebook", href: unit.facebook, label: "Facebook", icon: <FacebookIcon /> },
-  ].filter(Boolean);
+  const channels = buildChannels(unit);
 
   return (
-    <div className="mx-auto max-w-2xl rounded-[28px] border border-white/10 bg-[#0b1524]/85 px-6 py-10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] sm:px-12 sm:py-14">
-      <div className="flex flex-col items-center text-center">
-        {/* Avatar principal: simbolo oficial da IMESUL, nunca uma foto/pessoa. Um unico elemento
-            persistente — so um leve scale acompanha a troca de unidade, sem remontar. */}
-        <div
-          className={`flex h-28 w-28 items-center justify-center rounded-full border-2 border-imesul-red/45 bg-white p-4 shadow-[0_18px_46px_rgba(212,43,43,0.16)] transition-transform duration-300 ease-out sm:h-32 sm:w-32 sm:p-5 ${
-            !noMotion && !visible ? "scale-90" : "scale-100"
-          }`}
-        >
-          <Image
-            src="/logo/imesul-symbol.png"
-            alt="Símbolo IMESUL"
-            width={200}
-            height={160}
-            className="h-full w-full object-contain"
-            priority
-          />
-        </div>
+    <CardShell eyebrow="Dourados">
+      <div className="mt-6">
+        <UnitAvatar pulsing={!noMotion && !visible} />
+      </div>
 
-        {/* Seletor de unidades. */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {UNITS.map((u, index) => (
-            <button
-              key={u.id}
-              type="button"
-              onClick={() => selectUnit(index)}
-              aria-pressed={index === activeIndex}
-              className={`rounded-full border px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 ${
-                index === activeIndex
-                  ? "border-imesul-red bg-imesul-red text-white shadow-[0_12px_30px_rgba(212,43,43,0.28)]"
-                  : "border-white/15 bg-white/[0.03] text-imesul-steel-light/75 hover:border-white/30 hover:text-white"
-              }`}
-            >
-              {u.shortLabel}
-            </button>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        {DOURADOS_UNITS.map((u, index) => (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => selectUnit(index)}
+            aria-pressed={index === activeIndex}
+            className={`rounded-full border px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 ${
+              index === activeIndex
+                ? "border-imesul-red bg-imesul-red text-white shadow-[0_12px_30px_rgba(212,43,43,0.28)]"
+                : "border-white/15 bg-white/[0.03] text-imesul-steel-light/75 hover:border-white/30 hover:text-white"
+            }`}
+          >
+            {u.shortLabel}
+          </button>
+        ))}
+      </div>
+
+      {/* Conteudo da unidade selecionada — UM UNICO bloco no DOM. */}
+      <div
+        className={`mt-8 w-full max-w-xl transition-all duration-300 ease-out ${
+          !noMotion && !visible ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
+        <h2 className="font-display text-3xl uppercase leading-tight text-white sm:text-4xl">
+          {unit.name}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-imesul-steel-light/80 sm:text-base">
+          {unit.address}
+        </p>
+        <p className="mt-1 font-mono text-sm text-imesul-steel-light/70">Telefone: {unit.phone}</p>
+
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          {channels.map((channel) => (
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} />
           ))}
         </div>
+      </div>
+    </CardShell>
+  );
+}
 
-        {/* Conteudo da unidade selecionada — UM UNICO bloco no DOM; a troca de texto acontece
-            enquanto ele esta invisivel (opacity-0), entao nunca ha duas unidades visiveis juntas. */}
-        <div
-          className={`mt-8 w-full max-w-xl transition-all duration-300 ease-out ${
-            !noMotion && !visible ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
-          }`}
-        >
-          <h2 className="font-display text-3xl uppercase leading-tight text-white sm:text-4xl">
-            {unit.name}
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-imesul-steel-light/80 sm:text-base">
-            {unit.address}
-          </p>
-          <p className="mt-1 font-mono text-sm text-imesul-steel-light/70">Telefone: {unit.phone}</p>
+// Card estatico da unidade unica (Campo Grande) — sem seletor, sem transicao.
+function CampoGrandeCard() {
+  if (!CAMPO_GRANDE_UNIT) return null;
+  const channels = buildChannels(CAMPO_GRANDE_UNIT);
 
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            {channels.map((channel) => (
-              <IconLink
-                key={channel.key}
-                channelKey={channel.key}
-                href={channel.href}
-                label={channel.label}
-                icon={channel.icon}
-              />
-            ))}
-          </div>
+  return (
+    <CardShell eyebrow="Campo Grande">
+      <div className="mt-6">
+        <UnitAvatar pulsing={false} />
+      </div>
+
+      <div className="mt-8 w-full max-w-xl">
+        <h2 className="font-display text-3xl uppercase leading-tight text-white sm:text-4xl">
+          {CAMPO_GRANDE_UNIT.name}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-imesul-steel-light/80 sm:text-base">
+          {CAMPO_GRANDE_UNIT.address}
+        </p>
+        <p className="mt-1 font-mono text-sm text-imesul-steel-light/70">
+          Telefone: {CAMPO_GRANDE_UNIT.phone}
+        </p>
+
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          {channels.map((channel) => (
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} />
+          ))}
         </div>
       </div>
+    </CardShell>
+  );
+}
+
+export default function OfficialLinksPicker() {
+  return (
+    <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-2 lg:items-stretch">
+      <DouradosCard />
+      <CampoGrandeCard />
     </div>
   );
 }
