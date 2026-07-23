@@ -8,7 +8,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob:",
-  `connect-src 'self' https://accounts.google.com https:${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' blob: https://accounts.google.com https:${isDevelopment ? " ws: wss:" : ""}`,
   "frame-src 'self' https://accounts.google.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",

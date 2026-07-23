@@ -8,8 +8,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { scroll3dObjects } from "../data/scroll3dObjects";
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const transparentTextureDataUri =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
 const hasWebGLSupport = () => {
   try {
@@ -150,10 +148,8 @@ export default function SteelScrollObject() {
     blueRim.position.set(4.2, -1.2, 3);
     scene.add(ambient, keyLight, redRim, blueRim);
 
-    // Ignora texturas embutidas em blob porque o site aplica material metalico proprio aos GLBs.
-    const loadingManager = new THREE.LoadingManager();
-    loadingManager.setURLModifier((url) => (url.startsWith("blob:") ? transparentTextureDataUri : url));
-    const loader = new GLTFLoader(loadingManager);
+    // O material carregado do GLB e sempre substituido por createProductionMetalMaterial logo abaixo.
+    const loader = new GLTFLoader();
     const loadControllers = [];
 
     scroll3dObjects.forEach((item) => {
