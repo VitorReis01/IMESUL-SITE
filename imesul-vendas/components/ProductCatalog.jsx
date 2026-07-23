@@ -11,42 +11,42 @@ const materialShowcaseCards = [
   {
     categoryId: "tubos-metalicos",
     title: "Tubos e Metalons",
-    image: "/images/vendas/materiais/tubos-e-metalons.png",
+    image: "/images/vendas/materiais/tubos-e-metalons.webp",
   },
   {
     categoryId: "perfis-estruturais",
     title: "Perfis Estruturais",
-    image: "/images/vendas/materiais/perfis-estruturais.png",
+    image: "/images/vendas/materiais/perfis-estruturais.webp",
   },
   {
     categoryId: "chapas",
     title: "Chapas",
-    image: "/images/vendas/materiais/chapas.png",
+    image: "/images/vendas/materiais/chapas.webp",
   },
   {
     categoryId: "telhas-metalicas",
     title: "Telhas Metálicas",
-    image: "/images/vendas/materiais/telhas-e-tercas.png",
+    image: "/images/vendas/materiais/telhas-e-tercas.webp",
   },
   {
     categoryId: "laminados",
     title: "Barras",
-    image: "/images/vendas/materiais/barras-e-vergalhoes.png",
+    image: "/images/vendas/materiais/barras-e-vergalhoes.webp",
   },
   {
     categoryId: "acessorios-serralheria",
     title: "Acessórios",
-    image: "/images/vendas/materiais/acessorios-e-fixadores.png",
+    image: "/images/vendas/materiais/acessorios-e-fixadores.webp",
   },
   {
     categoryId: "thinner-fixadores",
     title: "Thinner e Solventes",
-    image: "/images/vendas/materiais/acessorios-e-fixadores.png",
+    image: "/images/vendas/materiais/acessorios-e-fixadores.webp",
   },
   {
     categoryId: "perfis-serralheria",
     title: "Serralheria e Acabamentos",
-    image: "/images/vendas/materiais/serralheria-e-acabamentos.png",
+    image: "/images/vendas/materiais/serralheria-e-acabamentos.webp",
   },
 ];
 

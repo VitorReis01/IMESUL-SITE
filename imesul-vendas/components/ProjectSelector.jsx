@@ -169,7 +169,7 @@ const projectShowcaseCards = [
     projectId: "estrutura-metalica",
     title: "Estruturas Metálicas",
     description: "Perfis, tubos e chapas usados em bases, reforços e montagens metálicas.",
-    image: "/images/vendas/projetos/estruturas-metalicas.png",
+    image: "/images/vendas/projetos/estruturas-metalicas.webp",
     recommendedCategoryIds: [
       "perfis-estruturais",
       "tubos-metalicos",
@@ -181,7 +181,7 @@ const projectShowcaseCards = [
     projectId: "cobertura",
     title: "Coberturas e Telhados",
     description: "Telhas, perfis e fixadores para montar ou reformar coberturas.",
-    image: "/images/vendas/projetos/cobertimento-e-telhados.png",
+    image: "/images/vendas/projetos/cobertimento-e-telhados.webp",
     recommendedCategoryIds: [
       "telhas-metalicas",
       "perfis-estruturais",
@@ -193,7 +193,7 @@ const projectShowcaseCards = [
     projectId: "serralheria",
     title: "Serralheria e Acabamentos",
     description: "Itens usados em portões, grades, esquadrias e serviços de acabamento.",
-    image: "/images/vendas/projetos/serralheria-e-acabamentos.png",
+    image: "/images/vendas/projetos/serralheria-e-acabamentos.webp",
     recommendedCategoryIds: [
       "perfis-serralheria",
       "tubos-metalicos",
@@ -205,7 +205,7 @@ const projectShowcaseCards = [
     projectId: "galpao",
     title: "Indústria e Manutenção",
     description: "Chapas, tubos, perfis e acessórios para manutenção e reforços.",
-    image: "/images/vendas/projetos/industria-e-manutencao.png",
+    image: "/images/vendas/projetos/industria-e-manutencao.webp",
     recommendedCategoryIds: [
       "chapas",
       "tubos-metalicos",
@@ -218,7 +218,7 @@ const projectShowcaseCards = [
     projectId: "rural",
     title: "Linha Rural e Campo",
     description: "Produtos para barracões, cercas, currais e manutenção no campo.",
-    image: "/images/vendas/projetos/linha-rural-e-campo.png",
+    image: "/images/vendas/projetos/linha-rural-e-campo.webp",
     recommendedCategoryIds: [
       "tubos-metalicos",
       "telhas-metalicas",
