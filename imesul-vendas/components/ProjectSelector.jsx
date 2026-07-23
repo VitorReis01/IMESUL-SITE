@@ -473,11 +473,11 @@ export default function ProjectSelector() {
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [heroIntroReady, heroReduceMotion]);
 
-  // Revela os blocos abaixo da hero quando entram na viewport e oculta ao sair.
+  // Revela os blocos abaixo da hero uma vez e mantém o conteúdo estável durante o scroll.
   useEffect(() => {
     document.body.classList.add("reveal-motion-ready");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       const revealElements = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
       revealElements.forEach((element) => element.classList.add("is-visible"));
       return () => document.body.classList.remove("reveal-motion-ready");
@@ -487,8 +487,10 @@ export default function ProjectSelector() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) visibleCount += 1;
-          entry.target.classList.toggle("is-visible", entry.isIntersecting);
+          if (!entry.isIntersecting) return;
+          visibleCount += 1;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
         });
       },
       { threshold: 0.16, rootMargin: "0px 0px -8% 0px" }
@@ -983,15 +985,20 @@ export default function ProjectSelector() {
       </header>
 
       <section className="relative z-10 overflow-hidden border-b border-white/[0.08]">
-        <video
-          className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:block motion-reduce:hidden"
-          src="/videos/fundo-animado-hero.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden="true"
-        />
+        {!heroReduceMotion && (
+          <video
+            className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover motion-safe:block motion-reduce:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+          >
+            <source src="/videos/fundo-animado-hero.webm" type="video/webm" />
+            <source src="/videos/fundo-animado-hero.mp4" type="video/mp4" />
+          </video>
+        )}
         <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(5,11,20,0.9)_0%,rgba(5,11,20,0.68)_44%,rgba(5,11,20,0.55)_100%)] motion-safe:block motion-reduce:hidden" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(212,43,43,0.14),transparent_28%),radial-gradient(circle_at_78%_32%,rgba(42,92,151,0.15),transparent_36%),linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.46))]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#06101d] via-[#06101d]/52 to-transparent" />
