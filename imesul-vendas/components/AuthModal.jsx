@@ -28,6 +28,7 @@ function TextField({
   value,
   onChange,
   autoComplete,
+  hint,
 }) {
   return (
     <label className="block">
@@ -44,6 +45,11 @@ function TextField({
         className={inputClassName}
         autoComplete={autoComplete || (type === "password" ? "current-password" : "off")}
       />
+      {hint && (
+        <span className="mt-1.5 block text-xs leading-5 text-imesul-steel-light/55">
+          {hint}
+        </span>
+      )}
     </label>
   );
 }
@@ -149,25 +155,29 @@ function ActionButton({ children, variant = "primary", type = "button", disabled
   );
 }
 
-// Controla apenas a interface de acesso; autenticacao real entra em fase posterior.
+// Controla apenas a interface de acesso; autenticacao real de cliente entra em fase posterior (ver plano tecnico separado).
 export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthenticated }) {
   const [mode, setMode] = useState("start");
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [adminCredentials, setAdminCredentials] = useState({ user: "", password: "" });
   const [adminError, setAdminError] = useState("");
+  // So a tela de cadastro usa esse aviso: reforca que o envio nao cria login ativo, antes de fechar.
+  const [registrationNotice, setRegistrationNotice] = useState(false);
 
   const closeModal = useCallback(() => {
     setMode("start");
     setAcceptedPrivacy(false);
     setAdminCredentials({ user: "", password: "" });
     setAdminError("");
+    setRegistrationNotice(false);
     onClose();
   }, [onClose]);
 
   const completeVisualAuth = (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const client = mode === "client-register"
+    const isRegister = mode === "client-register";
+    const client = isRegister
       ? {
           name: String(formData.get("name") || ""),
           phone: String(formData.get("phone") || ""),
@@ -178,13 +188,20 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
 
     trackLocalEvent({
       type: "login",
-      label: mode === "client-register" ? "Cadastro visual cliente" : "Login visual cliente",
+      label: isRegister ? "Cadastro visual cliente" : "Login visual cliente",
       section: "Modal de login",
       detail: "Fluxo demonstrativo sem autenticação real",
       client,
       isLoggedIn: true,
     });
     onAuthenticated();
+
+    // No cadastro, mostra o aviso de implantacao antes de fechar; o login segue fechando direto.
+    if (isRegister) {
+      setRegistrationNotice(true);
+      return;
+    }
+
     closeModal();
   };
 
@@ -214,6 +231,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
     setMode("start");
     setAdminCredentials({ user: "", password: "" });
     setAdminError("");
+    setRegistrationNotice(false);
   };
 
   const completeAdminVisualAuth = async (event) => {
@@ -308,7 +326,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                   Já tenho conta
                 </strong>
                 <span className="mt-2 block text-sm leading-6 text-imesul-steel-light/68">
-                  Entre como cliente para acompanhar visualmente seu atendimento.
+                  Login em fase de implantação. Por enquanto não é necessário para enviar seu orçamento.
                 </span>
               </button>
               <button
@@ -321,7 +339,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                   Criar conta
                 </strong>
                 <span className="mt-2 block text-sm leading-6 text-imesul-steel-light/68">
-                  Cadastro opcional para facilitar próximos atendimentos.
+                  Cadastro em fase de implantação. Em breve vai facilitar próximos atendimentos.
                 </span>
               </button>
             </div>
@@ -336,7 +354,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                 Manter conectado neste dispositivo
               </label>
               <p className="rounded-[8px] border border-white/[0.09] bg-white/[0.035] p-4 text-sm leading-6 text-imesul-steel-light/72">
-                Por segurança, não salvamos sua senha no site. Você também pode enviar seu orçamento sem fazer login.
+                Login em fase de implantação: os dados enviados aqui ainda não criam uma conta ativa. Você pode enviar seu orçamento sem fazer login.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <ActionButton type="submit">
@@ -349,44 +367,66 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
           )}
 
           {mode === "client-register" && (
-            <form onSubmit={completeVisualAuth} className="space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <TextField label="Nome completo" name="name" required />
-                <TextField label="Número de telefone" name="phone" required />
-                <TextField label="E-mail opcional" name="email" type="email" />
-                <TextField label="CPF" required />
-                <TextField label="Criar senha" type="password" required />
-                <TextField label="Confirmar senha" type="password" required />
-              </div>
-              <p className="rounded-[8px] border border-imesul-red/25 bg-imesul-red/[0.08] p-4 text-sm leading-6 text-imesul-steel-light/78">
-                Cadastro opcional para facilitar próximos atendimentos. O orçamento também pode ser enviado sem login.
-              </p>
-              <label className="flex items-start gap-3 text-sm leading-6 text-imesul-steel-light/72">
-                <input
-                  type="checkbox"
-                  checked={acceptedPrivacy}
-                  onChange={(event) => setAcceptedPrivacy(event.target.checked)}
-                  className="mt-1 accent-imesul-red"
-                  required
-                />
-                <span>
-                  Li e aceito a{" "}
-                  <a href="/politica-de-privacidade" className="text-imesul-red underline decoration-imesul-red/40 underline-offset-4">
-                    Política de Privacidade
-                  </a>.
-                </span>
-              </label>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <ActionButton type="submit" disabled={!acceptedPrivacy}>
-                  Criar conta
+            registrationNotice ? (
+              <div className="space-y-5">
+                <div className="rounded-[8px] border border-imesul-red/25 bg-imesul-red/[0.08] p-4 text-sm leading-6 text-white">
+                  Solicitação registrada para implantação/atendimento. Este envio não cria login
+                  ativo neste momento.
+                </div>
+                <ActionButton type="button" onClick={closeModal}>
+                  Entendi
                 </ActionButton>
-                <GoogleIdentityButton
-                  onCredential={completeGoogleVisualAuth}
-                  text="signup_with"
-                  disabled={!acceptedPrivacy}
-                />
               </div>
-            </form>
+            ) : (
+              <form onSubmit={completeVisualAuth} className="space-y-5">
+                <div className="rounded-[8px] border border-imesul-red/25 bg-imesul-red/[0.08] p-4 text-sm leading-6 text-imesul-steel-light/78">
+                  Área em implantação. O envio deste formulário ainda não cria uma conta ativa. O
+                  orçamento também pode ser enviado sem cadastro.
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <TextField label="Nome completo" name="name" required />
+                  <TextField label="Número de telefone" name="phone" required />
+                  <TextField label="E-mail opcional" name="email" type="email" />
+                  <TextField
+                    label="CPF"
+                    required
+                    hint="Informe apenas se necessário para atendimento comercial."
+                  />
+                  <TextField
+                    label="Criar senha"
+                    type="password"
+                    required
+                    hint="Não utilize senhas que você usa em outros serviços."
+                  />
+                  <TextField label="Confirmar senha" type="password" required />
+                </div>
+                <label className="flex items-start gap-3 text-sm leading-6 text-imesul-steel-light/72">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPrivacy}
+                    onChange={(event) => setAcceptedPrivacy(event.target.checked)}
+                    className="mt-1 accent-imesul-red"
+                    required
+                  />
+                  <span>
+                    Li e aceito a{" "}
+                    <a href="/politica-de-privacidade" className="text-imesul-red underline decoration-imesul-red/40 underline-offset-4">
+                      Política de Privacidade
+                    </a>.
+                  </span>
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <ActionButton type="submit" disabled={!acceptedPrivacy}>
+                    Enviar solicitação
+                  </ActionButton>
+                  <GoogleIdentityButton
+                    onCredential={completeGoogleVisualAuth}
+                    text="signup_with"
+                    disabled={!acceptedPrivacy}
+                  />
+                </div>
+              </form>
+            )
           )}
 
           {mode === "admin-login" && (
