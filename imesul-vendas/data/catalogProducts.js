@@ -33,7 +33,7 @@ export const catalogProducts = [
     name: "Tubo Retangular",
     description: "Usado em portões, grades, estruturas leves e serviços de serralheria.",
     usage: ["Portões", "Estruturas", "Serralheria"],
-    image: "/catalog-products/tubo-retangular.webp",
+    image: "/catalog-products/atualizadas/tubo-retangular.webp",
     specifications: catalogSpecifications.tubosMetalicos.retangular,
   }),
   product({
@@ -42,7 +42,7 @@ export const catalogProducts = [
     name: "Tubo Quadrado",
     description: "Indicado para grades, móveis metálicos, estruturas e acabamentos retos.",
     usage: ["Grades", "Móveis metálicos", "Estruturas"],
-    image: "/catalog-products/tubo-quadrado.webp",
+    image: "/catalog-products/atualizadas/tubo-quadrado.webp",
     specifications: catalogSpecifications.tubosMetalicos.quadrado,
   }),
   product({
@@ -61,7 +61,7 @@ export const catalogProducts = [
     name: "Perfil U Enrijecido",
     description: "Usado em coberturas, galpões, terças e estruturas que exigem reforço.",
     usage: ["Galpões", "Coberturas", "Estruturas"],
-    image: "/catalog-products/perfil-u-enrijecido.webp",
+    image: "/catalog-products/atualizadas/perfil-u-enrijecido.webp",
     specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
   }),
   product({
@@ -70,7 +70,7 @@ export const catalogProducts = [
     name: "Perfil U Simples",
     description: "Usado em suportes, travamentos, coberturas e estruturas metálicas.",
     usage: ["Suportes", "Reforços", "Coberturas"],
-    image: "/catalog-products/perfil-u-simples.webp",
+    image: "/catalog-products/atualizadas/perfil-u-simples.webp",
     specifications: catalogSpecifications.perfisEstruturais.uSimples,
   }),
 
@@ -80,7 +80,7 @@ export const catalogProducts = [
     name: "Telha Trapezoidal 40",
     description: "Indicada para galpões, barracões e coberturas com maior vão.",
     usage: ["Galpões", "Coberturas industriais", "Barracões"],
-    image: "/catalog-products/telha-trapezoidal-40.webp",
+    image: "/catalog-products/atualizadas/telha-trapezoidal-40.webp",
     specifications: catalogSpecifications.telhasMetalicas.trapezoidal40,
   }),
   product({
@@ -89,7 +89,7 @@ export const catalogProducts = [
     name: "Telha Trapezoidal 25",
     description: "Usada em garagens, comércios, residências e coberturas leves.",
     usage: ["Garagens", "Comércio", "Residências"],
-    image: "/catalog-products/telha-trapezoidal-25.webp",
+    image: "/catalog-products/atualizadas/telha-trapezoidal-25.webp",
     specifications: catalogSpecifications.telhasMetalicas.trapezoidal25,
   }),
   product({
@@ -98,7 +98,7 @@ export const catalogProducts = [
     name: "Telha Ondulada",
     description: "Usada em coberturas, fechamentos laterais e estruturas rurais.",
     usage: ["Coberturas", "Fechamentos", "Área rural"],
-    image: "/catalog-products/telha-ondulada.webp",
+    image: "/catalog-products/atualizadas/telha-ondulada.webp",
     specifications: catalogSpecifications.telhasMetalicas.ondulada,
   }),
   product({
@@ -107,7 +107,7 @@ export const catalogProducts = [
     name: "Cumeeiras",
     description: "Peça usada no acabamento superior e vedação de telhados metálicos.",
     usage: ["Coberturas", "Arremates", "Vedação superior"],
-    image: "/catalog-products/cumeeiras.webp",
+    image: "/catalog-products/atualizadas/cumeeiras.webp",
     specifications: catalogSpecifications.telhasMetalicas.cumeeiras,
   }),
 
@@ -117,7 +117,7 @@ export const catalogProducts = [
     name: "Cantoneiras de Abas Iguais",
     description: "Usada em reforços, suportes, travamentos e montagens metálicas.",
     usage: ["Travamentos", "Suportes", "Estruturas"],
-    image: "/catalog-products/cantoneiras.webp",
+    image: "/catalog-products/atualizadas/cantoneiras.webp",
     specifications: catalogSpecifications.laminados.cantoneirasAbasIguais,
   }),
   product({
@@ -154,7 +154,7 @@ export const catalogProducts = [
     name: "Chapas Planas",
     description: "Usadas para corte, dobra, fechamento e fabricação de peças.",
     usage: ["Corte", "Dobra", "Fabricação"],
-    image: "/catalog-products/chapas-planas.webp",
+    image: "/catalog-products/atualizadas/chapas-planas.webp",
     specifications: catalogSpecifications.chapas.planas.generica,
   }),
   product({
@@ -163,7 +163,7 @@ export const catalogProducts = [
     name: "Chapas Grossas",
     description: "Usadas em bases, reforços, peças estruturais e manutenção pesada.",
     usage: ["Bases", "Reforços", "Indústria"],
-    image: "/catalog-products/chapas-planas.webp",
+    image: "/catalog-products/atualizadas/chapas-planas.webp",
     specifications: catalogSpecifications.chapas.planas.grossa,
   }),
   product({
@@ -172,7 +172,7 @@ export const catalogProducts = [
     name: "Chapas Finas a Frio",
     description: "Usadas em peças dobradas, acabamentos e aplicações com melhor superfície.",
     usage: ["Peças", "Dobras", "Acabamento"],
-    image: "/catalog-products/chapas-planas.webp",
+    image: "/catalog-products/atualizadas/chapas-planas.webp",
     specifications: catalogSpecifications.chapas.planas.finaFrio,
   }),
   product({
@@ -181,7 +181,7 @@ export const catalogProducts = [
     name: "Chapas Finas a Quente",
     description: "Usadas em fabricação, reforços, estruturas e peças de uso geral.",
     usage: ["Estruturas", "Fabricação", "Reforços"],
-    image: "/catalog-products/chapas-planas.webp",
+    image: "/catalog-products/atualizadas/chapas-planas.webp",
     specifications: catalogSpecifications.chapas.planas.finaQuente,
   }),
   product({
@@ -190,7 +190,7 @@ export const catalogProducts = [
     name: "Chapas de Piso",
     description: "Usadas em pisos, passarelas, rampas e áreas de circulação.",
     usage: ["Pisos", "Passarelas", "Acessos"],
-    image: "/catalog-products/chapas-planas.webp",
+    image: "/catalog-products/atualizadas/chapas-planas.webp",
     specifications: catalogSpecifications.chapas.planas.piso,
   }),
 
@@ -200,7 +200,7 @@ export const catalogProducts = [
     name: "Chapas Frisadas em U",
     description: "Usada em portões, fechamentos, fachadas e painéis metálicos.",
     usage: ["Portões", "Fechamentos", "Fachadas"],
-    image: "/catalog-products/chapas-frisadas.webp",
+    image: "/catalog-products/atualizadas/chapas-frisadas.webp",
     specifications: catalogSpecifications.chapas.frisadasELambris.frisadaU,
   }),
   product({
@@ -227,7 +227,7 @@ export const catalogProducts = [
     name: "Lambris",
     description: "Usado em revestimentos, portões, fachadas e fechamentos de serralheria.",
     usage: ["Revestimentos", "Portões", "Fachadas"],
-    image: "/catalog-products/chapas-frisadas.webp",
+    image: "/catalog-products/atualizadas/chapas-frisadas.webp",
     specifications: catalogSpecifications.chapas.frisadasELambris.lambris,
   }),
 
@@ -260,7 +260,7 @@ export const catalogProducts = [
   }),
 
   ...[
-    ["roldanas", "Roldanas", "Movimentação de portões e estruturas móveis.", "/catalog-products/roldanas.webp"],
+    ["roldanas", "Roldanas", "Movimentação de portões e estruturas móveis.", "/catalog-products/atualizadas/roldanas.webp"],
     ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
     ["fechos", "Fechos", "Travamento e fechamento de portas e portões.", "/catalog-products/fechos.webp"],
     ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/dobradicas.webp"],
