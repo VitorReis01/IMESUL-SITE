@@ -624,7 +624,9 @@ export default function ProjectSelector() {
     setSelectedProjectId(null);
     setRecommendedProject(null);
     triggerSelectionFeedback({ categoryId });
-    scrollToFlow("catalog-products");
+    // Rola ate o topo da secao (nao ate a lista de produtos) para a grade de categorias
+    // nunca sair da tela ao trocar de categoria, permitindo alternar livremente entre elas.
+    scrollToFlow("material-path");
   };
 
   // Entrega o produto ao formulario tecnico e desloca a pagina ate ele.
