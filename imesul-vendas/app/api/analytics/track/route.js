@@ -77,13 +77,19 @@ const sanitizePayload = (payload = {}) => ({
 });
 
 export async function POST(request) {
-  try {
-    const contentLength = Number(request.headers.get("content-length") || 0);
-    if (contentLength > 12_000) {
-      return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 413 });
-    }
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 12_000) {
+    return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 413 });
+  }
 
-    const payload = await request.json();
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
+  }
+
+  try {
     // IP e localização são dados pessoais; usar apenas para segurança e estatísticas internas.
     await addAnalyticsEvent({
       ...sanitizePayload(payload),
@@ -100,7 +106,8 @@ export async function POST(request) {
 
     return noStoreJson({ ok: true });
   } catch {
-    return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
+    // Falha ao registrar o evento (ex.: armazenamento indisponivel) nao e payload invalido.
+    return noStoreJson({ ok: false, error: "Não foi possível registrar o evento." }, { status: 500 });
   }
 }
 

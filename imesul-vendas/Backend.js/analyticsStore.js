@@ -1,10 +1,13 @@
 import { promises as fs } from "node:fs";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import os from "node:os";
 import path from "node:path";
 
 // Armazena eventos locais do analytics e prepara os dados exibidos no painel admin.
 // As rotas em app/api/analytics usam este módulo como backend simples de desenvolvimento.
-const eventsPath = path.join(process.cwd(), "Backend.js", "analytics-events.json");
+// Usa o diretorio temporario do SO (gravavel mesmo em runtimes serverless como a Vercel,
+// onde o diretorio do projeto e somente leitura); os dados nao persistem entre deploys/instancias.
+const eventsPath = path.join(os.tmpdir(), "imesul-vendas-analytics-events.json");
 const maxEvents = 2000;
 const allowedTypes = new Set(["visit", "click", "whatsapp", "search", "login"]);
 const staticPathPattern = /(?:^|\/)(?:_next|images|videos|models|fonts|favicon|catalogo)(?:\/|$)|\.(?:png|jpe?g|webp|gif|svg|ico|mp4|webm|glb|woff2?|ttf|otf|pdf)$/i;
