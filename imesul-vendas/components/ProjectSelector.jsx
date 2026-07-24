@@ -624,9 +624,20 @@ export default function ProjectSelector() {
     setSelectedProjectId(null);
     setRecommendedProject(null);
     triggerSelectionFeedback({ categoryId });
-    // Rola ate o topo da secao (nao ate a lista de produtos) para a grade de categorias
-    // nunca sair da tela ao trocar de categoria, permitindo alternar livremente entre elas.
-    scrollToFlow("material-path");
+
+    // Clicar num card so e possivel com a grade de categorias ja visivel na tela, entao
+    // nesse caso nunca rolamos a pagina: a troca fica so no estado/destaque selecionado.
+    // So rolamos quando a selecao vem de fora da tela (ex.: sugestao da busca do topo),
+    // caso em que a grade ainda nao esta visivel para o usuario.
+    const anyCategoryCard = document.querySelector('[data-testid^="category-"]');
+    const cardRect = anyCategoryCard?.getBoundingClientRect();
+    const gridAlreadyVisible = Boolean(
+      cardRect && cardRect.bottom > 0 && cardRect.top < window.innerHeight
+    );
+
+    if (!gridAlreadyVisible) {
+      scrollToFlow("material-path");
+    }
   };
 
   // Entrega o produto ao formulario tecnico e desloca a pagina ate ele.
