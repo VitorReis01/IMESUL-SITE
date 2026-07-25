@@ -264,13 +264,13 @@ export const catalogProducts = [
     ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
     ["fechos", "Fechos", "Travamento e fechamento de portas e portões.", "/catalog-products/fechos.webp"],
     ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/dobradicas.webp"],
-    ["guias", "Guias", "Condução e alinhamento de sistemas móveis.", "/catalog-products/guias.webp"],
+    ["guias", "Guias", "Condução e alinhamento de sistemas móveis.", "/catalog-products/atualizadas/guias.webp"],
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
-    ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/fechaduras.webp"],
+    ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/atualizadas/fechaduras.webp"],
     ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/fechos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
-    ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/consumiveis.webp"],
+    ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/atualizadas/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
     product({
       id,
@@ -286,7 +286,7 @@ export const catalogProducts = [
   ...[
     ["primers", "Primers", "Preparação de superfícies metálicas antes do acabamento.", "/catalog-products/tintas-solventes.webp"],
     ["galvanizantes-frio", "Galvanizantes a Frio", "Proteção de áreas metálicas e pontos de manutenção.", "/catalog-products/tintas-solventes.webp"],
-    ["consumiveis-acabamento", "Consumíveis para Acabamento e Proteção", "Itens de apoio para acabamento e proteção de estruturas metálicas.", "/catalog-products/consumiveis.webp"],
+    ["consumiveis-acabamento", "Consumíveis para Acabamento e Proteção", "Itens de apoio para acabamento e proteção de estruturas metálicas.", "/catalog-products/atualizadas/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
     product({
       id,
