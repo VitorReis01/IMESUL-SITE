@@ -110,6 +110,14 @@ export const catalogProducts = [
     image: "/catalog-products/atualizadas/cumeeiras.webp",
     specifications: catalogSpecifications.telhasMetalicas.cumeeiras,
   }),
+  product({
+    id: "telha-sanduiche",
+    categoryId: "telhas-metalicas",
+    name: "Telha Sanduíche",
+    description: "Telha termoacústica com núcleo isolante, indicada para coberturas com conforto térmico e acústico.",
+    usage: ["Cobertura", "Termoacústica", "Isolamento"],
+    image: "/catalog-products/atualizadas/telha-sanduiche.webp",
+  }),
 
   product({
     id: "cantoneiras-abas-iguais",
@@ -300,8 +308,8 @@ export const catalogProducts = [
   ),
 
   ...[
-    ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/tintas-solventes.webp", catalogSpecifications.tintasSolventes],
-    ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/tintas-solventes.webp", catalogSpecifications.tintasSolventes],
+    ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/atualizadas/solventes.webp", catalogSpecifications.tintasSolventes],
+    ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/atualizadas/thinner.webp", catalogSpecifications.tintasSolventes],
   ].map(([id, name, description, image, specifications]) =>
     product({
       id,
