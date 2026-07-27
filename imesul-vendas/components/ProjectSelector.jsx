@@ -610,7 +610,8 @@ export default function ProjectSelector() {
     scrollToFlow("material-path");
   };
 
-  // Abre os produtos da categoria e encerra qualquer fluxo de projeto anterior.
+  // Troca a grade de categorias pelos produtos da categoria escolhida, sem rolar a pagina:
+  // a propria secao alterna de conteudo, entao a grade nunca fica fora da tela.
   const selectCategory = (categoryId) => {
     const category = catalogCategories.find((item) => item.id === categoryId);
     trackInteraction({
@@ -624,20 +625,17 @@ export default function ProjectSelector() {
     setSelectedProjectId(null);
     setRecommendedProject(null);
     triggerSelectionFeedback({ categoryId });
+  };
 
-    // Clicar num card so e possivel com a grade de categorias ja visivel na tela, entao
-    // nesse caso nunca rolamos a pagina: a troca fica so no estado/destaque selecionado.
-    // So rolamos quando a selecao vem de fora da tela (ex.: sugestao da busca do topo),
-    // caso em que a grade ainda nao esta visivel para o usuario.
-    const anyCategoryCard = document.querySelector('[data-testid^="category-"]');
-    const cardRect = anyCategoryCard?.getBoundingClientRect();
-    const gridAlreadyVisible = Boolean(
-      cardRect && cardRect.bottom > 0 && cardRect.top < window.innerHeight
-    );
-
-    if (!gridAlreadyVisible) {
-      scrollToFlow("material-path");
-    }
+  // Volta do modo produtos para a grade completa de categorias, sem rolar a pagina.
+  const backToCategories = () => {
+    trackInteraction({
+      type: "click",
+      label: "Voltar para categorias",
+      section: "Materiais",
+    });
+    setSelectedCategoryId(null);
+    setSelectedProductId(null);
   };
 
   // Entrega o produto ao formulario tecnico e desloca a pagina ate ele.
@@ -1266,6 +1264,7 @@ export default function ProjectSelector() {
               recommendedCategoryIds={recommendedProject?.categoryIds || []}
               onSelectCategory={selectCategory}
               onSelectProduct={selectProduct}
+              onBackToCategories={backToCategories}
             />
           </div>
 

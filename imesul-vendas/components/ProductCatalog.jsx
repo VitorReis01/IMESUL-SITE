@@ -3,7 +3,7 @@
 // Catalogo de materiais da area de vendas.
 // Recebe selecoes vindas da busca, projetos e carrossel para abrir o produto correto.
 import Image from "next/image";
-import { ArrowRight, Check, Database, ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Database, ImageIcon } from "lucide-react";
 import { catalogCategories } from "../data/catalogCategories";
 import { getCatalogProductsByCategory } from "../data/catalogProducts";
 
@@ -61,6 +61,7 @@ export default function ProductCatalog({
   recommendedCategoryIds = [],
   onSelectCategory,
   onSelectProduct,
+  onBackToCategories,
 }) {
   const products = selectedCategoryId
     ? getCatalogProductsByCategory(selectedCategoryId)
@@ -72,7 +73,7 @@ export default function ProductCatalog({
 
   return (
     <div className="mt-12 lg:mt-14">
-      {hasRecommendations && (
+      {!selectedCategory && hasRecommendations && (
         <div className="mb-7 flex flex-col gap-4 rounded-[8px] border border-imesul-red/55 bg-[linear-gradient(135deg,rgba(212,43,43,0.16),rgba(7,19,33,0.92)_58%)] px-5 py-5 shadow-[0_22px_70px_rgba(212,43,43,0.14)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="font-condensed text-2xl font-semibold uppercase leading-tight tracking-[0.065em] text-white sm:text-[1.7rem]">
             Materiais indicados para:{" "}
@@ -86,6 +87,7 @@ export default function ProductCatalog({
         </div>
       )}
 
+      {!selectedCategory && (
       <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {materialShowcaseCards.map((card, index) => {
           const category = catalogCategories.find((item) => item.id === card.categoryId);
@@ -159,9 +161,19 @@ export default function ProductCatalog({
           );
         })}
       </div>
+      )}
 
       {selectedCategory && (
-        <section className="mt-12 scroll-mt-24" id="catalog-products">
+        <section className="scroll-mt-24" id="catalog-products">
+          <button
+            type="button"
+            onClick={onBackToCategories}
+            className="mb-7 inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-white/[0.14] bg-white/[0.04] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all hover:-translate-y-0.5 hover:border-imesul-red/45 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+          >
+            <ArrowLeft size={15} aria-hidden="true" />
+            Voltar para categorias
+          </button>
+
           <div className="flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end">
             <div>
               <p className="font-mono text-[10px] tracking-[0.32em] text-imesul-red">
@@ -170,6 +182,9 @@ export default function ProductCatalog({
               <h3 className="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">
                 {selectedCategory.name}
               </h3>
+              <p className="mt-2 text-xs uppercase tracking-[0.14em] text-imesul-steel-light/60">
+                {products.length} {products.length === 1 ? "produto" : "produtos"}
+              </p>
             </div>
             <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
               Selecione um produto para consultar as opções técnicas publicadas no catálogo IMESUL.
