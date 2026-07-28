@@ -560,6 +560,17 @@ export default function ProjectSelector() {
     });
   };
 
+  // Verifica se o elemento ja esta visivel (abaixo do cabecalho fixo) antes de decidir rolar:
+  // evita que a lista de produtos e o botao "Voltar para categorias" saiam da tela quando a
+  // pessoa clica em um card que ja esta na propria grade visivel.
+  const isElementInViewport = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const headerOffset = 80;
+    return rect.top >= headerOffset && rect.bottom <= window.innerHeight;
+  };
+
   // Mostra confirmacao visual curta quando uma categoria ou produto e escolhido.
   const triggerSelectionFeedback = ({ projectId = null, categoryId = null, productId = null }) => {
     if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
@@ -640,11 +651,13 @@ export default function ProjectSelector() {
     scrollToFlow("material-path");
   };
 
-  // Entrega o produto ao formulario tecnico. Rola so ate o topo da secao "Navegue pelos
-  // materiais" (nao ate o formulario) para a grade de produtos e o botao "Voltar para
-  // categorias" nunca ficarem escondidos acima da tela.
+  // Entrega o produto ao formulario tecnico. So rola a tela quando o card clicado ainda nao
+  // esta visivel (ex: vindo da busca do topo); se a pessoa ja esta olhando a grade de
+  // produtos e clica em um card dela, a grade e o botao "Voltar para categorias" permanecem
+  // exatamente onde estao, sem nenhum salto de rolagem.
   const selectProduct = (productId) => {
     const product = getCatalogProduct(productId);
+    const cardAlreadyVisible = isElementInViewport(`catalog-product-${productId}`);
     trackInteraction({
       type: "click",
       label: "Produto selecionado",
@@ -658,7 +671,9 @@ export default function ProjectSelector() {
     setSelectedProjectId(null);
     setRecommendedProject(null);
     triggerSelectionFeedback({ categoryId: product?.categoryId || null, productId });
-    scrollToFlow("material-path");
+    if (!cardAlreadyVisible) {
+      scrollToFlow("material-path");
+    }
   };
 
   // O carrossel entrega categoria e produto validados para evitar clique sem destino.
@@ -1241,7 +1256,7 @@ export default function ProjectSelector() {
 
       <section
         id="material-path"
-        className="relative scroll-mt-0 bg-[#091727]/58"
+        className="relative scroll-mt-20 bg-[#091727]/58"
       >
         <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
