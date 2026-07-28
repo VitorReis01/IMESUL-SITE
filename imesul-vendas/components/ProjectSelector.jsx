@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -23,11 +24,12 @@ import {
 import { projects } from "../data/projects";
 import { catalogCategories } from "../data/catalogCategories";
 import { catalogProducts, getCatalogProduct } from "../data/catalogProducts";
+import { getCatalogCategoryPath } from "../data/catalogRoutes";
 import { createWhatsAppUrl } from "../lib/whatsapp";
 import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
 import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
-import { MaterialQuoteFlow, ProjectQuoteFlow } from "./QuoteBuilder";
+import { ProjectQuoteFlow } from "./QuoteBuilder";
 import ProductCatalog from "./ProductCatalog";
 import ProductShowcaseCarousel from "./ProductShowcaseCarousel";
 import SalesGuidanceSection from "./SalesGuidanceSection";
@@ -232,11 +234,10 @@ const projectShowcaseCards = [
 // Coordena os caminhos "Tenho um Projeto" e "Ja Sei o Material" na mesma pagina.
 // Apenas um caminho permanece selecionado para evitar dois orcamentos concorrentes.
 export default function ProjectSelector() {
+  const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [recommendedProject, setRecommendedProject] = useState(null);
   const [highlightedProjectId, setHighlightedProjectId] = useState(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [selectedProductId, setSelectedProductId] = useState(null);
   const [highlightedCategoryId, setHighlightedCategoryId] = useState(null);
   const [highlightedProductId, setHighlightedProductId] = useState(null);
   const [originUnit, setOriginUnit] = useState("");
@@ -257,7 +258,6 @@ export default function ProjectSelector() {
   const carouselScrollTimeoutRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
-  const selectedProduct = getCatalogProduct(selectedProductId);
   const sellerWhatsAppUrl = createWhatsAppUrl(sellerMessage);
 
   const isUserVisuallyLoggedIn = authVisualActive || adminVisualActive;
@@ -560,17 +560,6 @@ export default function ProjectSelector() {
     });
   };
 
-  // Verifica se o elemento ja esta visivel (abaixo do cabecalho fixo) antes de decidir rolar:
-  // evita que a lista de produtos e o botao "Voltar para categorias" saiam da tela quando a
-  // pessoa clica em um card que ja esta na propria grade visivel.
-  const isElementInViewport = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return false;
-    const rect = el.getBoundingClientRect();
-    const headerOffset = 80;
-    return rect.top >= headerOffset && rect.bottom <= window.innerHeight;
-  };
-
   // Mostra confirmacao visual curta quando uma categoria ou produto e escolhido.
   const triggerSelectionFeedback = ({ projectId = null, categoryId = null, productId = null }) => {
     if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
@@ -595,8 +584,6 @@ export default function ProjectSelector() {
     });
     setSelectedProjectId(projectId);
     setRecommendedProject(null);
-    setSelectedCategoryId(null);
-    setSelectedProductId(null);
     triggerSelectionFeedback({ projectId });
     scrollToFlow("project-quote-flow");
   };
@@ -615,14 +602,11 @@ export default function ProjectSelector() {
       title: card.title,
       categoryIds: card.recommendedCategoryIds,
     });
-    setSelectedCategoryId(null);
-    setSelectedProductId(null);
     triggerSelectionFeedback({ projectId: card.projectId });
     scrollToFlow("material-path");
   };
 
-  // Troca a grade de categorias pelos produtos da categoria escolhida, sem rolar a pagina:
-  // a propria secao alterna de conteudo, entao a grade nunca fica fora da tela.
+  // Abre a pagina propria da categoria em rota limpa do catalogo.
   const selectCategory = (categoryId) => {
     const category = catalogCategories.find((item) => item.id === categoryId);
     trackInteraction({
@@ -631,33 +615,12 @@ export default function ProjectSelector() {
       section: "Materiais",
       detail: category?.name || categoryId,
     });
-    setSelectedCategoryId(categoryId);
-    setSelectedProductId(null);
-    setSelectedProjectId(null);
-    setRecommendedProject(null);
-    triggerSelectionFeedback({ categoryId });
+    router.push(getCatalogCategoryPath(categoryId));
   };
 
-  // Volta do modo produtos para a grade completa de categorias e garante que a grade
-  // fique visivel de verdade, mesmo se a pessoa estava rolada fundo perto do formulario.
-  const backToCategories = () => {
-    trackInteraction({
-      type: "click",
-      label: "Voltar para categorias",
-      section: "Materiais",
-    });
-    setSelectedCategoryId(null);
-    setSelectedProductId(null);
-    scrollToFlow("material-path");
-  };
-
-  // Entrega o produto ao formulario tecnico. So rola a tela quando o card clicado ainda nao
-  // esta visivel (ex: vindo da busca do topo); se a pessoa ja esta olhando a grade de
-  // produtos e clica em um card dela, a grade e o botao "Voltar para categorias" permanecem
-  // exatamente onde estao, sem nenhum salto de rolagem.
+  // Produtos vindos da busca abrem a categoria correspondente; a escolha final fica na pagina.
   const selectProduct = (productId) => {
     const product = getCatalogProduct(productId);
-    const cardAlreadyVisible = isElementInViewport(`catalog-product-${productId}`);
     trackInteraction({
       type: "click",
       label: "Produto selecionado",
@@ -665,14 +628,7 @@ export default function ProjectSelector() {
       detail: product?.name || productId,
     });
     if (product?.categoryId) {
-      setSelectedCategoryId(product.categoryId);
-    }
-    setSelectedProductId(productId);
-    setSelectedProjectId(null);
-    setRecommendedProject(null);
-    triggerSelectionFeedback({ categoryId: product?.categoryId || null, productId });
-    if (!cardAlreadyVisible) {
-      scrollToFlow("material-path");
+      router.push(getCatalogCategoryPath(product.categoryId));
     }
   };
 
@@ -691,17 +647,7 @@ export default function ProjectSelector() {
       section: "Produtos do catálogo IMESUL",
       detail: `${category.name} / ${target.productName || product.name} / ${exactProduct ? "produto exato" : "fallback de categoria"}`,
     });
-    setSelectedCategoryId(targetCategoryId);
-    setSelectedProductId(exactProduct ? exactProduct.id : null);
-    triggerSelectionFeedback({
-      categoryId: targetCategoryId,
-      productId: exactProduct ? exactProduct.id : null,
-    });
-    setSelectedProjectId(null);
-    setRecommendedProject(null);
-    // Rola so ate o topo da secao de materiais: mantem a grade/lista de produtos e o
-    // botao "Voltar para categorias" visiveis, em vez de pular direto para o formulario.
-    scrollToFlow("material-path");
+    router.push(getCatalogCategoryPath(targetCategoryId));
   };
 
   // Usa a mesma selecao dos cards para levar a sugestao ate o fluxo correto.
@@ -719,7 +665,6 @@ export default function ProjectSelector() {
       return;
     }
 
-    setSelectedCategoryId(suggestion.categoryId);
     selectProduct(suggestion.productId);
   };
 
@@ -1273,28 +1218,13 @@ export default function ProjectSelector() {
 
           <div>
             <ProductCatalog
-              selectedCategoryId={selectedCategoryId}
-              selectedProductId={selectedProductId}
               highlightedCategoryId={highlightedCategoryId}
               highlightedProductId={highlightedProductId}
               recommendedProjectTitle={recommendedProject?.title}
               recommendedCategoryIds={recommendedProject?.categoryIds || []}
-              onSelectCategory={selectCategory}
               onSelectProduct={selectProduct}
-              onBackToCategories={backToCategories}
             />
           </div>
-
-          {selectedProduct && (
-            <div className={`mt-10 rounded-[10px] ${highlightedProductId === selectedProduct.id ? "selection-feedback-pulse" : ""}`}>
-              <MaterialQuoteFlow
-                key={selectedProduct.id}
-                product={selectedProduct}
-                originUnit={originUnit}
-                isLoggedIn={isUserVisuallyLoggedIn}
-              />
-            </div>
-          )}
         </div>
       </section>
 

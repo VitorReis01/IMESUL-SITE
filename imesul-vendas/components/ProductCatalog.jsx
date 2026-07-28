@@ -3,9 +3,11 @@
 // Catalogo de materiais da area de vendas.
 // Recebe selecoes vindas da busca, projetos e carrossel para abrir o produto correto.
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Database, ImageIcon } from "lucide-react";
 import { catalogCategories } from "../data/catalogCategories";
 import { getCatalogProductsByCategory } from "../data/catalogProducts";
+import { getCatalogCategoryPath } from "../data/catalogRoutes";
 
 const materialShowcaseCards = [
   {
@@ -62,6 +64,7 @@ export default function ProductCatalog({
   onSelectCategory,
   onSelectProduct,
   onBackToCategories,
+  backHref,
 }) {
   const products = selectedCategoryId
     ? getCatalogProductsByCategory(selectedCategoryId)
@@ -89,7 +92,7 @@ export default function ProductCatalog({
 
       {!selectedCategory && (
       <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {materialShowcaseCards.map((card, index) => {
+        {materialShowcaseCards.map((card) => {
           const category = catalogCategories.find((item) => item.id === card.categoryId);
           if (!category) return null;
 
@@ -99,24 +102,17 @@ export default function ProductCatalog({
           const isRecommended = recommendedCategoryIds.includes(category.id);
           const productCount = getCatalogProductsByCategory(category.id).length;
 
-          return (
-            <button
-              key={category.id}
-              type="button"
-              data-testid={`category-${category.id}`}
-              aria-pressed={isSelected}
-              aria-label={`Ver materiais da categoria ${card.title}`}
-              onClick={() => onSelectCategory(category.id)}
-              className={`group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.18)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
-                isSelected
-                  ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
-                  : isRecommended
-                    ? "border-imesul-red/55 shadow-[0_22px_62px_rgba(212,43,43,0.1)] hover:-translate-y-0.5 hover:border-imesul-red/75 hover:shadow-[0_24px_68px_rgba(212,43,43,0.12)]"
-                    : hasRecommendations
-                      ? "border-white/[0.08] opacity-55 hover:-translate-y-0.5 hover:border-white/[0.16] hover:opacity-100 hover:shadow-[0_22px_64px_rgba(255,255,255,0.045)]"
-                      : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_66px_rgba(212,43,43,0.08)]"
-              } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`}
-            >
+          const categoryCardClassName = `group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.18)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+            isSelected
+              ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
+              : isRecommended
+                ? "border-imesul-red/55 shadow-[0_22px_62px_rgba(212,43,43,0.1)] hover:-translate-y-0.5 hover:border-imesul-red/75 hover:shadow-[0_24px_68px_rgba(212,43,43,0.12)]"
+                : hasRecommendations
+                  ? "border-white/[0.08] opacity-55 hover:-translate-y-0.5 hover:border-white/[0.16] hover:opacity-100 hover:shadow-[0_22px_64px_rgba(255,255,255,0.045)]"
+                  : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_66px_rgba(212,43,43,0.08)]"
+          } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`;
+          const categoryCardContent = (
+            <>
               <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
                 <Image
                   src={card.image}
@@ -155,7 +151,31 @@ export default function ProductCatalog({
                   <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                 </span>
               </span>
+            </>
+          );
+
+          return onSelectCategory ? (
+            <button
+              key={category.id}
+              type="button"
+              data-testid={`category-${category.id}`}
+              aria-pressed={isSelected}
+              aria-label={`Ver materiais da categoria ${card.title}`}
+              onClick={() => onSelectCategory(category.id)}
+              className={categoryCardClassName}
+            >
+              {categoryCardContent}
             </button>
+          ) : (
+            <Link
+              key={category.id}
+              href={getCatalogCategoryPath(category.id)}
+              data-testid={`category-${category.id}`}
+              aria-label={`Ver materiais da categoria ${card.title}`}
+              className={categoryCardClassName}
+            >
+              {categoryCardContent}
+            </Link>
           );
         })}
       </div>
@@ -163,22 +183,43 @@ export default function ProductCatalog({
 
       {selectedCategory && (
         <section className="scroll-mt-24" id="catalog-products">
-          <button
-            type="button"
-            onClick={onBackToCategories}
-            className="mb-7 inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-white/[0.14] bg-white/[0.04] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all hover:-translate-y-0.5 hover:border-imesul-red/45 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
-          >
-            <ArrowLeft size={15} aria-hidden="true" />
-            Voltar para categorias
-          </button>
-          <button
-            type="button"
-            onClick={onBackToCategories}
-            className="fixed bottom-4 left-4 z-50 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-[8px] border border-imesul-red/45 bg-[#071321]/95 px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-imesul-red/70 hover:bg-[#0a1a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
-          >
-            <ArrowLeft size={15} aria-hidden="true" />
-            Voltar para categorias
-          </button>
+          {backHref ? (
+            <>
+              <Link
+                href={backHref}
+                className="mb-7 inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-white/[0.14] bg-white/[0.04] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all hover:-translate-y-0.5 hover:border-imesul-red/45 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                Voltar para categorias
+              </Link>
+              <Link
+                href={backHref}
+                className="fixed bottom-4 left-4 z-50 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-[8px] border border-imesul-red/45 bg-[#071321]/95 px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-imesul-red/70 hover:bg-[#0a1a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                Voltar para categorias
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onBackToCategories}
+                className="mb-7 inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-white/[0.14] bg-white/[0.04] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all hover:-translate-y-0.5 hover:border-imesul-red/45 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                Voltar para categorias
+              </button>
+              <button
+                type="button"
+                onClick={onBackToCategories}
+                className="fixed bottom-4 left-4 z-50 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-[8px] border border-imesul-red/45 bg-[#071321]/95 px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-imesul-red/70 hover:bg-[#0a1a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+              >
+                <ArrowLeft size={15} aria-hidden="true" />
+                Voltar para categorias
+              </button>
+            </>
+          )}
 
           <div className="flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end">
             <div>
