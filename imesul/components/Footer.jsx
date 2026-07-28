@@ -62,11 +62,10 @@ export default function Footer() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const nextVisible = entry.isIntersecting;
-        if (footerVisibleRef.current !== nextVisible) {
-          footerVisibleRef.current = nextVisible;
-          setFooterVisible(nextVisible);
-        }
+        if (!entry.isIntersecting || footerVisibleRef.current) return;
+        footerVisibleRef.current = true;
+        setFooterVisible(true);
+        observer.disconnect();
       },
       { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
     );
@@ -116,8 +115,6 @@ export default function Footer() {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    target={link.external ? "_blank" : undefined}
-                    rel={link.external ? "noopener noreferrer" : undefined}
                     className="group inline-flex items-center gap-2 font-condensed text-sm font-semibold uppercase tracking-[0.13em] text-slate-700 transition-colors hover:text-imesul-red"
                   >
                     {link.label}

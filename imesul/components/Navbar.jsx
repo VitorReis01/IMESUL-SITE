@@ -86,8 +86,6 @@ export default function Navbar() {
                 <a
                   key={link.label}
                   href={link.href}
-                  target={link.external ? "_blank" : undefined}
-                  rel={link.external ? "noopener noreferrer" : undefined}
                   className="group relative px-3 py-2"
                 >
                   <span className="font-condensed text-[12px] font-bold tracking-[0.18em] text-slate-800 transition-colors duration-300 group-hover:text-imesul-red">
@@ -124,8 +122,6 @@ export default function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                target={link.external ? "_blank" : undefined}
-                rel={link.external ? "noopener noreferrer" : undefined}
                 onClick={closeMenu}
                 className="flex items-center gap-3 border-b border-slate-200 py-3"
               >
