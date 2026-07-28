@@ -1271,7 +1271,7 @@ export default function ProjectSelector() {
             </p>
           </header>
 
-          <div data-scroll-reveal style={{ "--reveal-delay": "90ms" }}>
+          <div>
             <ProductCatalog
               selectedCategoryId={selectedCategoryId}
               selectedProductId={selectedProductId}

@@ -103,9 +103,7 @@ export default function ProductCatalog({
             <button
               key={category.id}
               type="button"
-              data-scroll-reveal
               data-testid={`category-${category.id}`}
-              style={{ "--reveal-delay": `${index * 45}ms` }}
               aria-pressed={isSelected}
               aria-label={`Ver materiais da categoria ${card.title}`}
               onClick={() => onSelectCategory(category.id)}
@@ -173,6 +171,14 @@ export default function ProductCatalog({
             <ArrowLeft size={15} aria-hidden="true" />
             Voltar para categorias
           </button>
+          <button
+            type="button"
+            onClick={onBackToCategories}
+            className="fixed bottom-4 left-4 z-50 inline-flex min-h-11 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-[8px] border border-imesul-red/45 bg-[#071321]/95 px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_50px_rgba(0,0,0,0.38)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-imesul-red/70 hover:bg-[#0a1a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+          >
+            <ArrowLeft size={15} aria-hidden="true" />
+            Voltar para categorias
+          </button>
 
           <div className="flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end">
             <div>
@@ -197,7 +203,7 @@ export default function ProductCatalog({
           </p>
 
           <div className="mt-7 grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((item, index) => {
+            {products.map((item) => {
               const isSelected = item.id === selectedProductId;
               const isHighlighted = item.id === highlightedProductId;
 
@@ -206,9 +212,7 @@ export default function ProductCatalog({
                   key={item.id}
                   id={`catalog-product-${item.id}`}
                   type="button"
-                  data-scroll-reveal
                   data-testid={`product-${item.id}`}
-                  style={{ "--reveal-delay": `${index * 45}ms` }}
                   aria-pressed={isSelected}
                   aria-label={`${isSelected ? "Material escolhido" : "Escolher"} ${item.name}`}
                   onClick={() => onSelectProduct(item.id)}
