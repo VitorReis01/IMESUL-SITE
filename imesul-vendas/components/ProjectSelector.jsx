@@ -627,7 +627,8 @@ export default function ProjectSelector() {
     triggerSelectionFeedback({ categoryId });
   };
 
-  // Volta do modo produtos para a grade completa de categorias, sem rolar a pagina.
+  // Volta do modo produtos para a grade completa de categorias e garante que a grade
+  // fique visivel de verdade, mesmo se a pessoa estava rolada fundo perto do formulario.
   const backToCategories = () => {
     trackInteraction({
       type: "click",
@@ -636,9 +637,12 @@ export default function ProjectSelector() {
     });
     setSelectedCategoryId(null);
     setSelectedProductId(null);
+    scrollToFlow("material-path");
   };
 
-  // Entrega o produto ao formulario tecnico e desloca a pagina ate ele.
+  // Entrega o produto ao formulario tecnico. Rola so ate o topo da secao "Navegue pelos
+  // materiais" (nao ate o formulario) para a grade de produtos e o botao "Voltar para
+  // categorias" nunca ficarem escondidos acima da tela.
   const selectProduct = (productId) => {
     const product = getCatalogProduct(productId);
     trackInteraction({
@@ -654,7 +658,7 @@ export default function ProjectSelector() {
     setSelectedProjectId(null);
     setRecommendedProject(null);
     triggerSelectionFeedback({ categoryId: product?.categoryId || null, productId });
-    scrollToFlow("material-quote-flow");
+    scrollToFlow("material-path");
   };
 
   // O carrossel entrega categoria e produto validados para evitar clique sem destino.
@@ -680,11 +684,9 @@ export default function ProjectSelector() {
     });
     setSelectedProjectId(null);
     setRecommendedProject(null);
+    // Rola so ate o topo da secao de materiais: mantem a grade/lista de produtos e o
+    // botao "Voltar para categorias" visiveis, em vez de pular direto para o formulario.
     scrollToFlow("material-path");
-    if (carouselScrollTimeoutRef.current) window.clearTimeout(carouselScrollTimeoutRef.current);
-    carouselScrollTimeoutRef.current = window.setTimeout(() => {
-      scrollToFlow(exactProduct ? "material-quote-flow" : "catalog-products");
-    }, 260);
   };
 
   // Usa a mesma selecao dos cards para levar a sugestao ate o fluxo correto.
