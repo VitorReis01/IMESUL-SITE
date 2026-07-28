@@ -722,8 +722,6 @@ export default function ProjectSelector() {
             </a>
             <a
               href="/catalogo/catalogo-imesul.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => trackInteraction({ type: "click", label: "Catálogo", section: "Navbar", detail: "PDF catálogo IMESUL" })}
               className={navLinkClassName}
             >
@@ -731,8 +729,6 @@ export default function ProjectSelector() {
             </a>
             <a
               href={institutionalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar", detail: institutionalUrl })}
               className={navLinkClassName}
             >
@@ -882,8 +878,6 @@ export default function ProjectSelector() {
             </a>
             <a
               href="/catalogo/catalogo-imesul.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => {
                 trackInteraction({ type: "click", label: "Catálogo", section: "Navbar mobile", detail: "PDF catálogo IMESUL" });
                 closeMobileMenu();
@@ -895,8 +889,6 @@ export default function ProjectSelector() {
             </a>
             <a
               href={institutionalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => {
                 trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar mobile", detail: institutionalUrl });
                 closeMobileMenu();

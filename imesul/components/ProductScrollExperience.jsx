@@ -46,8 +46,6 @@ function SalesLink({ compact = false }) {
   return (
     <a
       href={salesSiteUrl}
-      target="_blank"
-      rel="noopener noreferrer"
       className={`group/link inline-flex min-h-12 items-center justify-between gap-5 border border-imesul-red bg-imesul-red font-condensed font-bold text-white uppercase transition duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_16px_34px_rgba(212,43,43,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red ${
         compact
           ? "mt-auto w-full px-5 py-3 text-xs tracking-[0.12em]"
@@ -137,6 +135,7 @@ export default function ProductScrollExperience() {
   const sectionRef = useRef(null);
   const visualRefs = useRef([]);
   const progressRef = useRef(null);
+  const activeRef = useRef(0);
   const [active, setActive] = useState(0);
 
   // No desktop, transforma o progresso da secao em trocas de produto com foco e escala.
@@ -144,7 +143,7 @@ export default function ProductScrollExperience() {
   useEffect(() => {
     let media;
     let cancelled = false;
-    let refreshFrame;
+    let refreshFrame = 0;
     let refreshProductScroll;
 
     const setup = async () => {
@@ -155,7 +154,13 @@ export default function ProductScrollExperience() {
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
       media = gsap.matchMedia();
-      refreshProductScroll = () => ScrollTrigger.refresh();
+      refreshProductScroll = () => {
+        if (refreshFrame) return;
+        refreshFrame = window.requestAnimationFrame(() => {
+          refreshFrame = 0;
+          ScrollTrigger.refresh();
+        });
+      };
 
       media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
@@ -184,7 +189,10 @@ export default function ProductScrollExperience() {
               invalidateOnRefresh: true,
               onUpdate: ({ progress }) => {
                 const next = Math.min(products.length - 1, Math.floor(progress * products.length));
-                setActive(next);
+                if (activeRef.current !== next) {
+                  activeRef.current = next;
+                  setActive(next);
+                }
                 gsap.set(progressRef.current, { scaleY: progress });
               },
             },
@@ -228,7 +236,7 @@ export default function ProductScrollExperience() {
           });
         }, sectionRef);
 
-        refreshFrame = window.requestAnimationFrame(refreshProductScroll);
+        refreshProductScroll();
         window.addEventListener("load", refreshProductScroll, { once: true });
         window.addEventListener("resize", refreshProductScroll);
 

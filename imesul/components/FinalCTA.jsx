@@ -110,8 +110,6 @@ export default function FinalCTA() {
 
           <PremiumGlowButton
             href={salesSiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             variant="secondary"
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >

@@ -7,13 +7,15 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 
 const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL || "/";
+  process.env.NEXT_PUBLIC_INSTITUTIONAL_URL ||
+  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL ||
+  "https://imesul-site.vercel.app/";
 
 const navigationLinks = [
   { label: "Projetos", href: "#project-path" },
   { label: "Materiais", href: "#material-path" },
-  { label: "Catálogo", href: "/catalogo/catalogo-imesul.pdf", external: true },
-  { label: "Site Institucional", href: institutionalUrl, external: true },
+  { label: "Catálogo", href: "/catalogo/catalogo-imesul.pdf" },
+  { label: "Site Institucional", href: institutionalUrl },
 ];
 
 const units = [
@@ -98,11 +100,10 @@ export default function SalesFooter() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const nextVisible = entry.isIntersecting;
-        if (footerVisibleRef.current !== nextVisible) {
-          footerVisibleRef.current = nextVisible;
-          setFooterVisible(nextVisible);
-        }
+        if (!entry.isIntersecting || footerVisibleRef.current) return;
+        footerVisibleRef.current = true;
+        setFooterVisible(true);
+        observer.disconnect();
       },
       { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
     );

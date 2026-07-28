@@ -14,11 +14,11 @@ const resumeDelay = 420;
 const inertiaFriction = 0.935;
 const maxDragVelocity = 22;
 const carouselDisplayNames = {
-  "consumiveis-acabamento": "ConsumÃ­veis",
+  "consumiveis-acabamento": "Consumíveis",
 };
 
 const carouselDisplayCategories = {
-  "consumiveis-acabamento": "Acabamento e ProteÃ§Ã£o",
+  "consumiveis-acabamento": "Acabamento e Proteção",
 };
 
 const carouselFallbackTargets = {
@@ -267,7 +267,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
         type: "click",
         label: "Arraste no carrossel de produtos",
         section: "Produtos em destaque",
-        detail: "UsuÃ¡rio explorou produtos por drag/swipe",
+        detail: "Usuário explorou produtos por drag/swipe",
       });
     }
 
