@@ -191,8 +191,8 @@ export const navLinks = [
     label: "CATÁLOGO",
     href: "/catalogo/catalogo-imesul.pdf",
   },
-  { label: "DOURADOS", href: "/#dourados" },
-  { label: "CAMPO GRANDE", href: "/#dourados" },
+  { label: "DOURADOS", href: salesSiteUrl },
+  { label: "CAMPO GRANDE", href: salesSiteUrl },
   { label: "LINKS", href: "/links" },
 ];
 
