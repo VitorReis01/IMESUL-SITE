@@ -41,10 +41,7 @@ export default function MaterialCategoryPage({ category }) {
 
           <header className="mt-12 grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.32em] text-imesul-red">
-                Materiais IMESUL
-              </p>
-              <h1 className="mt-4 font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
+              <h1 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
                 {category.name}
               </h1>
             </div>
@@ -58,6 +55,7 @@ export default function MaterialCategoryPage({ category }) {
             selectedProductId={selectedProductId}
             onSelectProduct={selectProduct}
             backHref="/#material-path"
+            compactCategoryHeader
           />
 
           {selectedProduct && (

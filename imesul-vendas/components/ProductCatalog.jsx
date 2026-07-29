@@ -65,6 +65,7 @@ export default function ProductCatalog({
   onSelectProduct,
   onBackToCategories,
   backHref,
+  compactCategoryHeader = false,
 }) {
   const products = selectedCategoryId
     ? getCatalogProductsByCategory(selectedCategoryId)
@@ -183,7 +184,7 @@ export default function ProductCatalog({
 
       {selectedCategory && (
         <section className="scroll-mt-24" id="catalog-products">
-          {backHref ? (
+          {!compactCategoryHeader && backHref ? (
             <>
               <Link
                 href={backHref}
@@ -200,7 +201,7 @@ export default function ProductCatalog({
                 Voltar para categorias
               </Link>
             </>
-          ) : (
+          ) : !compactCategoryHeader ? (
             <>
               <button
                 type="button"
@@ -219,21 +220,21 @@ export default function ProductCatalog({
                 Voltar para categorias
               </button>
             </>
-          )}
+          ) : null}
 
-          <div className="flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end">
+          <div className={`${compactCategoryHeader ? "flex items-center justify-between gap-4 border-b border-white/[0.1] pb-5" : "flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end"}`}>
             <div>
-              <p className="font-mono text-[10px] tracking-[0.32em] text-imesul-red">
+              <p className={`${compactCategoryHeader ? "hidden" : "font-mono text-[10px] tracking-[0.32em] text-imesul-red"}`}>
                 PRODUTOS DA CATEGORIA
               </p>
-              <h3 className="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">
+              <h3 className={`${compactCategoryHeader ? "hidden" : "mt-3 font-display text-5xl leading-none text-white sm:text-6xl"}`}>
                 {selectedCategory.name}
               </h3>
-              <p className="mt-2 text-xs uppercase tracking-[0.14em] text-imesul-steel-light/60">
+              <p className={`${compactCategoryHeader ? "text-xs uppercase tracking-[0.14em] text-imesul-steel-light/68" : "mt-2 text-xs uppercase tracking-[0.14em] text-imesul-steel-light/60"}`}>
                 {products.length} {products.length === 1 ? "produto" : "produtos"}
               </p>
             </div>
-            <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
+            <p className={`${compactCategoryHeader ? "hidden" : "max-w-md text-sm leading-6 text-imesul-steel-light/68"}`}>
               Selecione um produto para consultar as opções técnicas publicadas no catálogo IMESUL.
             </p>
           </div>
