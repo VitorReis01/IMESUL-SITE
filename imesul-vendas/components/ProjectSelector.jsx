@@ -1049,11 +1049,10 @@ export default function ProjectSelector() {
                 NÃO SEI QUAL MATERIAL
               </span>
               <strong className="relative mt-1 font-display text-[1.68rem] font-normal leading-[0.96] text-imesul-red sm:text-[1.82rem]">
-                POR TIPO DE APLICAÇÃO
+                COMEÇAR PELA APLICAÇÃO
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Veja materiais indicados para cobertura, estrutura, serralheria,
-                manutenção e campo.
+                Escolha onde o material será usado e veja opções indicadas.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                 VER APLICAÇÕES
@@ -1082,7 +1081,7 @@ export default function ProjectSelector() {
                 JÁ SEI O QUE PRECISO
               </span>
               <strong className="relative mt-1 font-display text-[1.78rem] font-normal leading-[0.96] text-white sm:text-[1.95rem]">
-                CATÁLOGO DE MATERIAIS
+                CATÁLOGO DIRETO
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
                 Acesse categorias, produtos e medidas disponíveis para solicitar orçamento.
