@@ -86,7 +86,7 @@ export default function ProductCatalog({
             </span>
           </p>
           <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[10px] uppercase leading-5 tracking-[0.18em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:text-[11px]">
-            Clique em uma categoria abaixo para ver os produtos.
+            Selecione uma categoria para ver os produtos.
           </span>
         </div>
       )}
@@ -148,7 +148,7 @@ export default function ProductCatalog({
                   {productCount} {productCount === 1 ? "produto" : "produtos"}
                 </span>
                 <span className="mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.13em] text-white">
-                  Ver materiais
+                  Ver produtos
                   <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                 </span>
               </span>
@@ -235,7 +235,7 @@ export default function ProductCatalog({
               </p>
             </div>
             <p className={`${compactCategoryHeader ? "hidden" : "max-w-md text-sm leading-6 text-imesul-steel-light/68"}`}>
-              Selecione um produto para consultar as opções técnicas publicadas no catálogo IMESUL.
+              Escolha um produto para consultar medidas e solicitar orçamento.
             </p>
           </div>
           <p className="mt-4 inline-flex rounded-full border border-[#f0c776]/28 bg-[#f0c776]/8 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#f0c776]">
@@ -314,7 +314,7 @@ export default function ProductCatalog({
                         )}
                         {item.hasStructuredOptions
                           ? `${item.specifications.variacoes.length} opções`
-                          : "Detalhes livres"}
+                          : "Sob consulta"}
                       </span>
                       <span
                         className={`inline-flex min-h-11 items-center gap-2 rounded-[8px] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white transition-all ${
@@ -323,7 +323,7 @@ export default function ProductCatalog({
                             : "bg-imesul-red hover:-translate-y-0.5 hover:bg-[#ef3434]"
                         }`}
                       >
-                        {isSelected ? "Material escolhido" : "Escolher este material"}
+                        {isSelected ? "Material escolhido" : "Escolher material"}
                         {isSelected ? <Check size={15} /> : <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />}
                       </span>
                     </div>

@@ -144,7 +144,7 @@ export default function ProductOptionSelector({ product, form, setForm }) {
         <div className="flex items-start gap-3 rounded-[7px] border border-[#e0a43b]/20 bg-[#e0a43b]/[0.07] p-4 text-sm leading-6 text-[#f0c776]">
           <AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
           <p>
-            {product.specifications?.observacao || "Produto sem tabela técnica completa no catálogo. A equipe comercial confirmará as características pelo WhatsApp."}
+            {product.specifications?.observacao || "Item sob consulta. Informe os detalhes para atendimento comercial."}
           </p>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function ProductOptionSelector({ product, form, setForm }) {
           <p className="mt-1 text-lg font-semibold text-white">
             {selectedVariation?.peso !== undefined
               ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-              : "Escolha uma opção para continuar"}
+              : "Selecione uma opção para continuar"}
           </p>
         </div>
       </div>

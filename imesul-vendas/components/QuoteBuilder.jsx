@@ -200,7 +200,7 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
       >
         <MessageCircle size={19} strokeWidth={2} aria-hidden="true" />
         <span className="relative z-10 font-condensed text-sm font-bold uppercase tracking-[0.1em] text-white">
-          Enviar solicitação pelo WhatsApp
+          Solicitar orçamento pelo WhatsApp
         </span>
         <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
         {!disabled && <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />}
@@ -235,9 +235,9 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
     ? buildProjectMessage({ project, subtype, materials: recommendationNames, form })
     : "";
   const disabledReason = !subtype
-    ? "Escolha uma opção para continuar."
+    ? "Selecione uma opção para continuar."
     : !isLocationReady(form)
-      ? "Complete as informações do pedido antes de enviar para o WhatsApp."
+      ? "Complete os dados para enviar a solicitação."
       : "";
 
   return (
@@ -246,9 +246,9 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
       className="scroll-mt-6 overflow-hidden rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.96),rgba(6,16,29,0.98))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
     >
       <StepHeader
-        eyebrow="PRÉ-ORÇAMENTO GUIADO"
-        title={`Vamos detalhar seu ${project.name}`}
-        description="Escolha as opções principais. A equipe confirma medida, disponibilidade e valor pelo WhatsApp."
+        eyebrow="ORÇAMENTO GUIADO"
+        title={`Dados para orçamento de ${project.name}`}
+        description="Preencha as informações do pedido e envie pelo WhatsApp."
         steps={["Projeto", "Subtipo", "Seleções", "Resumo"]}
         activeStep={subtype ? 3 : 1}
       />
@@ -290,7 +290,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               </h3>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-              Não é necessário digitar medidas. A equipe confirma medida, disponibilidade e valor pelo WhatsApp.
+              Preencha as informações básicas para a equipe comercial dar continuidade pelo WhatsApp.
             </p>
 
             <div className="mt-7 space-y-7">
@@ -327,10 +327,10 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
             <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
             <div className="flex items-center gap-3">
               <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
-              <h3 className="font-display text-4xl leading-none text-white">Resumo da Solicitação</h3>
+              <h3 className="font-display text-4xl leading-none text-white">Resumo do orçamento</h3>
             </div>
             <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
-              Esta é uma solicitação de orçamento. A compra não é finalizada automaticamente pelo site.
+              Você será direcionado ao WhatsApp para continuar o atendimento. A compra não é finalizada pelo site.
             </p>
             <dl className="mt-6">
               <SummaryRow label="Tipo" value="Projeto" />
@@ -381,9 +381,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
-    ? "Escolha uma opção do catálogo para continuar."
+    ? "Selecione uma opção disponível para continuar."
     : !isLocationReady(form)
-        ? "Complete as informações do pedido antes de enviar para o WhatsApp."
+        ? "Complete os dados para enviar a solicitação."
         : "";
 
   return (
@@ -392,11 +392,11 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
       className="scroll-mt-6 overflow-visible rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(6,16,29,0.99))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
     >
       <StepHeader
-        eyebrow="SELEÇÃO TÉCNICA"
+        eyebrow="DADOS DO MATERIAL"
         title={product.name}
         description={product.hasStructuredOptions
-          ? "Escolha somente combinações publicadas no catálogo oficial da IMESUL. A equipe confirma medida, disponibilidade e valor pelo WhatsApp."
-          : "Este item não possui tabela técnica completa no catálogo. Informe as características desejadas e a equipe confirma medida, disponibilidade e valor pelo WhatsApp."}
+          ? "Selecione as medidas disponíveis e envie sua solicitação para atendimento."
+          : "Informe as características desejadas e solicite atendimento comercial pelo WhatsApp."}
         steps={["Categoria", "Produto", "Opções", "Resumo"]}
         activeStep={3}
       />
@@ -411,8 +411,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           </div>
           <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
             {product.hasStructuredOptions
-              ? `Dados extraídos da página ${product.specifications.paginaFonte} do catálogo 2024.`
-              : "Seleção guiada com base no cadastro comercial do produto."}
+              ? `Opções disponíveis no catálogo IMESUL 2024, página ${product.specifications.paginaFonte}.`
+              : "Informe os detalhes do material para consulta comercial."}
           </p>
 
           <div className="mt-8">

@@ -303,7 +303,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
       type: "click",
       label: "CTA do produto no carrossel",
       section: "Produtos em destaque",
-      detail: `Clique para orçar: ${product.name}`,
+      detail: `Ver opções: ${product.name}`,
     });
     onSelectProduct?.({
       ...product,
@@ -353,7 +353,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
               key={`${product.id}-${index}`}
               type="button"
               data-carousel-product-id={product.id}
-              aria-label={`Clique para orçar ${product.name}`}
+              aria-label={`Ver opções de ${product.name}`}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -381,7 +381,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
                   {product.showcaseName}
                 </strong>
                 <span className="mt-auto inline-flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                  Clique para orçar!
+                  Ver opções
                   <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                 </span>
               </span>
@@ -393,4 +393,3 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
     </section>
   );
 }
-

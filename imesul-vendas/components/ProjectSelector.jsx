@@ -978,17 +978,16 @@ export default function ProjectSelector() {
             </div>
 
             <h1 className="mt-4 max-w-[640px] text-balance font-display text-[clamp(2.55rem,4.75vw,5.35rem)] leading-[0.9] tracking-[0.02em] text-white drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
-              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(220)}>ENCONTRE O</span>
-              <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>MATERIAL CERTO</span>
-              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>PARA SUA OBRA.</span>
+              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(220)}>MATERIAIS EM AÇO</span>
+              <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>PARA OBRA E</span>
+              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>SERRALHERIA.</span>
             </h1>
             <p className={`mt-5 max-w-[560px] text-[0.98rem] leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(620)}>
-              Tubos, metalons, perfis, chapas, telhas e acessórios com qualidade
-              garantida, entrega rápida e o suporte técnico de quem entende do assunto.
+              Tubos, metalons, chapas, telhas, perfis e acessórios para
+              obra, serralheria, indústria e campo.
             </p>
             <p className={`mt-3 max-w-[560px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(760)}>
-              Mais de 45 anos fornecendo materiais em aço para construção,
-              serralheria, indústria e campo.
+              Consulte medidas disponíveis e envie sua solicitação pelo WhatsApp.
             </p>
 
             <div className="mt-7 grid max-w-[640px] gap-x-5 gap-y-4 sm:grid-cols-2 xl:max-w-[760px] xl:grid-cols-4">
@@ -1050,10 +1049,10 @@ export default function ProjectSelector() {
                 PRECISO DE
               </span>
               <strong className="relative mt-1 font-display text-[1.68rem] font-normal leading-[0.96] text-imesul-red sm:text-[1.82rem]">
-                AJUDA PARA ESCOLHER
+                PRECISO DE ORIENTAÇÃO
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Conte com nossa equipe técnica para indicar materiais para seu projeto.
+                Fale com a equipe para definir o material do seu pedido.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                 FALAR COM A EQUIPE
@@ -1082,13 +1081,13 @@ export default function ProjectSelector() {
                 JÁ SEI
               </span>
               <strong className="relative mt-1 font-display text-[1.78rem] font-normal leading-[0.96] text-white sm:text-[1.95rem]">
-                O QUE PRECISO
+                JÁ SEI O MATERIAL
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Encontre rapidamente materiais por categoria e produto.
+                Veja categorias, produtos e medidas disponíveis para orçamento.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                IR PARA MATERIAIS
+                ABRIR CATÁLOGO
                 <ArrowDownRight
                   size={16}
                   className="transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1"
@@ -1110,12 +1109,12 @@ export default function ProjectSelector() {
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
-                Encontre materiais para o seu projeto
+                Escolha pelo tipo de aplicação
               </h2>
             </div>
             <p className="max-w-2xl text-base leading-relaxed text-imesul-steel-light/75 sm:text-lg">
-              Seja qual for o seu desafio, temos os materiais e o suporte certo
-              para tornar seu projeto mais rápido, seguro e eficiente.
+              Veja materiais usados em coberturas, estruturas, serralheria,
+              manutenção e campo.
             </p>
           </header>
 
@@ -1164,7 +1163,7 @@ export default function ProjectSelector() {
                       {card.description}
                     </span>
                     <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                      VER MATERIAIS
+                      VER MATERIAIS INDICADOS
                       <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                     </span>
                   </span>
@@ -1199,12 +1198,11 @@ export default function ProjectSelector() {
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
-                Navegue pelos materiais
+                Catálogo de materiais
               </h2>
             </div>
             <p className="max-w-2xl text-base leading-relaxed text-imesul-steel-light/75 sm:text-lg">
-              Uma linha completa em aço para atender todas as etapas da sua obra
-              ou fabricação.
+              Escolha uma categoria, veja os produtos e envie sua solicitação de orçamento.
             </p>
           </header>
 

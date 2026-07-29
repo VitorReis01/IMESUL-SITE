@@ -17,20 +17,20 @@ const howItWorks = [
   {
     number: "1",
     icon: ClipboardList,
-    title: "CONTE SEU PROJETO",
-    description: "Informe o que está construindo ou qual material precisa.",
+    title: "ESCOLHA O MATERIAL",
+    description: "Escolha o tipo de aplicação ou vá direto ao material.",
   },
   {
     number: "2",
     icon: PackageCheck,
-    title: "VEJA MATERIAIS INDICADOS",
-    description: "Escolha os itens indicados e avance para montar o pedido.",
+    title: "CONFIRA AS OPÇÕES",
+    description: "Veja categorias, produtos e opções disponíveis para orçamento.",
   },
   {
     number: "3",
     icon: MessageCircle,
-    title: "ENVIE NO WHATSAPP",
-    description: "Medidas, estoque e valores são confirmados no atendimento.",
+    title: "ENVIE A SOLICITAÇÃO",
+    description: "Finalize pelo WhatsApp e continue com atendimento comercial.",
   },
 ];
 
@@ -75,10 +75,10 @@ export default function SalesGuidanceSection() {
       <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
         <div data-scroll-reveal>
           <h2 className="font-display text-[clamp(2.8rem,5vw,5.4rem)] leading-[0.92] text-white">
-            COMO FUNCIONA O PRÉ-ORÇAMENTO?
+            COMO SOLICITAR ORÇAMENTO?
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-imesul-steel-light/72">
-            Você monta sua solicitação em poucos passos. A equipe confirma medidas, estoque e valores pelo WhatsApp.
+            Escolha os materiais, informe os dados do pedido e envie a solicitação pelo WhatsApp.
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export default function SalesGuidanceSection() {
 
         <div data-scroll-reveal className="mt-20">
           <h2 className="max-w-5xl font-display text-[clamp(3rem,5.7vw,6.2rem)] leading-[0.9] text-white">
-            SOLUÇÕES PARA OBRA, SERRALHERIA, CAMPO E INDÚSTRIA
+            ATENDIMENTO PARA OBRA, SERRALHERIA, CAMPO E INDÚSTRIA
           </h2>
         </div>
 
@@ -176,7 +176,7 @@ export default function SalesGuidanceSection() {
                 Precisa de ajuda?
               </h3>
               <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
-                Não sabe qual medida pedir? Fale com a equipe IMESUL e envie sua dúvida pelo WhatsApp.
+                Não sabe qual medida pedir? Envie sua dúvida e fale com a equipe comercial da IMESUL.
               </p>
               <a
                 href={whatsappUrl}
