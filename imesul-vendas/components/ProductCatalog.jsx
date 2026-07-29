@@ -43,7 +43,7 @@ const materialShowcaseCards = [
   {
     categoryId: "thinner-fixadores",
     title: "Thinner e Solventes",
-    image: "/images/vendas/materiais/acessorios-e-fixadores.webp",
+    image: "/images/vendas/materiais/thinner-e-solventes.webp",
   },
   {
     categoryId: "perfis-serralheria",
