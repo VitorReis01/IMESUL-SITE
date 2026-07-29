@@ -1,20 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { ArrowLeft, Home } from "lucide-react";
-import { getCatalogProduct } from "../data/catalogProducts";
-import { MaterialQuoteFlow } from "./QuoteBuilder";
 import ProductCatalog from "./ProductCatalog";
 
 export default function MaterialCategoryPage({ category }) {
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const selectedProduct = getCatalogProduct(selectedProductId);
-
-  const selectProduct = (productId) => {
-    setSelectedProductId(productId);
-  };
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#06101d] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
@@ -52,20 +42,10 @@ export default function MaterialCategoryPage({ category }) {
 
           <ProductCatalog
             selectedCategoryId={category.id}
-            selectedProductId={selectedProductId}
-            onSelectProduct={selectProduct}
             backHref="/#material-path"
             compactCategoryHeader
+            linkProductsToPages
           />
-
-          {selectedProduct && (
-            <div className="mt-10 rounded-[10px]">
-              <MaterialQuoteFlow
-                key={selectedProduct.id}
-                product={selectedProduct}
-              />
-            </div>
-          )}
         </div>
       </section>
     </main>

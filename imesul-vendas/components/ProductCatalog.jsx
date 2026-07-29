@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Database, ImageIcon } from "lucide-react";
 import { catalogCategories } from "../data/catalogCategories";
 import { getCatalogProductsByCategory } from "../data/catalogProducts";
-import { getCatalogCategoryPath } from "../data/catalogRoutes";
+import { getCatalogCategoryPath, getCatalogProductPath } from "../data/catalogRoutes";
 
 const materialShowcaseCards = [
   {
@@ -66,6 +66,7 @@ export default function ProductCatalog({
   onBackToCategories,
   backHref,
   compactCategoryHeader = false,
+  linkProductsToPages = false,
 }) {
   const products = selectedCategoryId
     ? getCatalogProductsByCategory(selectedCategoryId)
@@ -248,22 +249,13 @@ export default function ProductCatalog({
             {products.map((item) => {
               const isSelected = item.id === selectedProductId;
               const isHighlighted = item.id === highlightedProductId;
-
-              return (
-                <button
-                  key={item.id}
-                  id={`catalog-product-${item.id}`}
-                  type="button"
-                  data-testid={`product-${item.id}`}
-                  aria-pressed={isSelected}
-                  aria-label={`${isSelected ? "Material escolhido" : "Escolher"} ${item.name}`}
-                  onClick={() => onSelectProduct(item.id)}
-                  className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
-                    isSelected
-                      ? "border-[#f0c776]/80 shadow-[0_22px_62px_rgba(240,199,118,0.12)]"
-                      : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_64px_rgba(212,43,43,0.08),inset_0_1px_0_rgba(255,255,255,0.045)]"
-                  } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`}
-                >
+              const productCardClassName = `group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#0a1829] text-left shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+                isSelected
+                  ? "border-[#f0c776]/80 shadow-[0_22px_62px_rgba(240,199,118,0.12)]"
+                  : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_64px_rgba(212,43,43,0.08),inset_0_1px_0_rgba(255,255,255,0.045)]"
+              } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`;
+              const productCardContent = (
+                <>
                   <div className="relative h-60 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6]">
                     <Image
                       src={item.image}
@@ -328,6 +320,36 @@ export default function ProductCatalog({
                       </span>
                     </div>
                   </div>
+                </>
+              );
+
+              if (linkProductsToPages) {
+                return (
+                  <Link
+                    key={item.id}
+                    id={`catalog-product-${item.id}`}
+                    href={getCatalogProductPath(item)}
+                    data-testid={`product-${item.id}`}
+                    aria-label={`Escolher ${item.name}`}
+                    className={productCardClassName}
+                  >
+                    {productCardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  id={`catalog-product-${item.id}`}
+                  type="button"
+                  data-testid={`product-${item.id}`}
+                  aria-pressed={isSelected}
+                  aria-label={`${isSelected ? "Material escolhido" : "Escolher"} ${item.name}`}
+                  onClick={() => onSelectProduct(item.id)}
+                  className={productCardClassName}
+                >
+                  {productCardContent}
                 </button>
               );
             })}
