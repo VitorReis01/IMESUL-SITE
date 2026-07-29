@@ -979,12 +979,12 @@ export default function ProjectSelector() {
 
             <h1 className="mt-4 max-w-[640px] text-balance font-display text-[clamp(2.55rem,4.75vw,5.35rem)] leading-[0.9] tracking-[0.02em] text-white drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
               <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(220)}>MATERIAIS EM AÇO</span>
-              <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>PARA OBRA E</span>
-              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>SERRALHERIA.</span>
+              <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>PARA OBRA,</span>
+              <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>SERRALHERIA E INDÚSTRIA.</span>
             </h1>
             <p className={`mt-5 max-w-[560px] text-[0.98rem] leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(620)}>
               Tubos, metalons, chapas, telhas, perfis e acessórios para
-              obra, serralheria, indústria e campo.
+              construção, serralheria, indústria e campo.
             </p>
             <p className={`mt-3 max-w-[560px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(760)}>
               Consulte medidas disponíveis e envie sua solicitação pelo WhatsApp.
@@ -1046,16 +1046,17 @@ export default function ProjectSelector() {
                 <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
               <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-red sm:text-[12px]">
-                PRECISO DE
+                NÃO SEI QUAL MATERIAL
               </span>
               <strong className="relative mt-1 font-display text-[1.68rem] font-normal leading-[0.96] text-imesul-red sm:text-[1.82rem]">
-                PRECISO DE ORIENTAÇÃO
+                POR TIPO DE APLICAÇÃO
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Fale com a equipe para definir o material do seu pedido.
+                Veja materiais indicados para cobertura, estrutura, serralheria,
+                manutenção e campo.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                FALAR COM A EQUIPE
+                VER APLICAÇÕES
                 <ArrowDownRight
                   size={16}
                   className="transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1"
@@ -1078,16 +1079,16 @@ export default function ProjectSelector() {
                 <PackageSearch size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
               <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-steel sm:text-[12px]">
-                JÁ SEI
+                JÁ SEI O QUE PRECISO
               </span>
               <strong className="relative mt-1 font-display text-[1.78rem] font-normal leading-[0.96] text-white sm:text-[1.95rem]">
-                JÁ SEI O MATERIAL
+                CATÁLOGO DE MATERIAIS
               </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
-                Veja categorias, produtos e medidas disponíveis para orçamento.
+                Acesse categorias, produtos e medidas disponíveis para solicitar orçamento.
               </span>
               <span className="relative mt-auto flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                ABRIR CATÁLOGO
+                VER CATEGORIAS
                 <ArrowDownRight
                   size={16}
                   className="transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1"
