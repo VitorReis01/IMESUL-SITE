@@ -13,42 +13,42 @@ const materialShowcaseCards = [
   {
     categoryId: "tubos-metalicos",
     title: "Tubos e Metalons",
-    image: "/images/vendas/materiais/tubos-e-metalons.webp",
+    image: "/images/vendas/materiais/categoria-tubos-metalons.webp",
   },
   {
     categoryId: "perfis-estruturais",
     title: "Perfis Estruturais",
-    image: "/images/vendas/materiais/perfis-estruturais.webp",
+    image: "/images/vendas/materiais/categoria-perfis-estruturais.webp",
   },
   {
     categoryId: "chapas",
     title: "Chapas",
-    image: "/images/vendas/materiais/chapas.webp",
+    image: "/images/vendas/materiais/categoria-chapas.webp",
   },
   {
     categoryId: "telhas-metalicas",
     title: "Telhas Metálicas",
-    image: "/images/vendas/materiais/telhas-e-tercas.webp",
+    image: "/images/vendas/materiais/categoria-telhas-metalicas.webp",
   },
   {
     categoryId: "laminados",
     title: "Barras",
-    image: "/images/vendas/materiais/barras-e-vergalhoes.webp",
+    image: "/images/vendas/materiais/categoria-barras.webp",
   },
   {
     categoryId: "acessorios-serralheria",
     title: "Acessórios",
-    image: "/images/vendas/materiais/acessorios-e-fixadores.webp",
+    image: "/images/vendas/materiais/categoria-acessorios.webp",
   },
   {
     categoryId: "thinner-fixadores",
     title: "Thinner e Solventes",
-    image: "/images/vendas/materiais/thinner-e-solventes.webp",
+    image: "/images/vendas/materiais/categoria-thinner-solventes-premium.webp",
   },
   {
     categoryId: "perfis-serralheria",
     title: "Serralheria e Acabamentos",
-    image: "/images/vendas/materiais/serralheria-e-acabamentos.webp",
+    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
   },
 ];
 
