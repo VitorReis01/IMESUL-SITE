@@ -48,7 +48,7 @@ export function buildProjectMessage({ project, subtype, materials, form }) {
 }
 
 // Monta a mensagem tecnica e inclui peso somente quando a linha selecionada o informa.
-export function buildProductMessage({ category, product, form, selectedVariation }) {
+export function buildProductMessage({ category, product, form, selectedVariation, hideTechnicalRows = false }) {
   const weight = selectedVariation?.peso !== undefined
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
     : "Não informado";
@@ -64,10 +64,10 @@ export function buildProductMessage({ category, product, form, selectedVariation
     "Tipo de solicitação:\nMaterial",
     `Categoria:\n${category?.name || "Não informado"}`,
     `Produto:\n${product.name}`,
-    `Medida:\n${formatTechnicalValue(form.measure, "measure")}`,
-    thickness,
+    hideTechnicalRows ? "" : `Medida:\n${formatTechnicalValue(form.measure, "measure")}`,
+    hideTechnicalRows ? "" : thickness,
     details,
-    `Peso informado no catálogo:\n${weight}`,
+    hideTechnicalRows ? "" : `Peso informado no catálogo:\n${weight}`,
     `Quantidade:\n${valueOrFallback(form.quantity)}`,
     `Cidade/UF:\n${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}`,
     notes,

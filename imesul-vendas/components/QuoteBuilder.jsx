@@ -2,8 +2,9 @@
 
 // Fluxos de pre-orcamento por projeto e por material.
 // Monta formularios, resumo e envio ao WhatsApp sem finalizar compra no site.
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler } from "lucide-react";
+import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler, ShoppingCart } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
 import { getCatalogCategory } from "../data/catalogCategories";
 import {
@@ -18,6 +19,9 @@ import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../
 import { trackLocalEvent } from "../lib/localAnalytics";
 import ProductOptionSelector, { findSelectedVariation } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
+
+const customQuantityValue = "__custom_quantity__";
+const roldanasCartStorageKey = "imesul-vendas-cart";
 
 // Campos do caminho por projeto; medidas tecnicas sao confirmadas pela equipe comercial.
 const projectInitialForm = {
@@ -45,6 +49,33 @@ const selectClassName =
 
 const textareaClassName =
   "min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[15px] leading-relaxed text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
+
+const inputClassName =
+  "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[15px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
+
+function isPositiveInteger(value) {
+  return /^[1-9]\d*$/.test(String(value ?? "").trim());
+}
+
+function formatCustomQuantity(value) {
+  return `${value} ${value === "1" ? "unidade" : "unidades"}`;
+}
+
+function getStoredCart() {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const stored = window.localStorage.getItem(roldanasCartStorageKey);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(items) {
+  window.localStorage.setItem(roldanasCartStorageKey, JSON.stringify(items));
+}
 
 // Mantem labels e indicacao de obrigatoriedade iguais em todos os controles.
 function Field({ label, children, required = false }) {
@@ -168,11 +199,11 @@ function SummaryRow({ label, value }) {
 }
 
 // Gera o link somente quando as regras minimas do fluxo foram atendidas.
-function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false }) {
+function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8" }) {
   const disabled = Boolean(disabledReason);
 
   return (
-    <div className="mt-8">
+    <div className={className}>
       <a
         href={disabled ? undefined : createWhatsAppUrl(message)}
         target="_blank"
@@ -207,6 +238,60 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
       </a>
       {disabledReason && (
         <p className="mt-3 text-sm leading-6 text-[#f0c776]">{disabledReason}</p>
+      )}
+    </div>
+  );
+}
+
+function AddToCartButton({ product, quantity, disabledReason = "" }) {
+  const [added, setAdded] = useState(false);
+  const disabled = Boolean(disabledReason);
+
+  const addToCart = () => {
+    if (disabled) return;
+
+    const slug = product.slug || product.id;
+    const nextItem = {
+      name: product.name,
+      slug,
+      quantity,
+    };
+    const currentCart = getStoredCart();
+    const itemIndex = currentCart.findIndex((item) => item.slug === slug);
+    const nextCart = itemIndex >= 0
+      ? currentCart.map((item, index) => (index === itemIndex ? { ...item, ...nextItem } : item))
+      : [...currentCart, nextItem];
+
+    saveCart(nextCart);
+    setAdded(true);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={addToCart}
+        className={`group relative flex min-h-[62px] w-full items-center justify-center gap-3 overflow-hidden rounded-[10px] border px-5 py-4 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 sm:px-6 ${
+          disabled
+            ? "cursor-not-allowed border-white/[0.08] bg-white/[0.06] text-imesul-steel/55"
+            : added
+              ? "border-white/[0.12] bg-[#1f9d55] text-white shadow-[0_16px_48px_rgba(31,157,85,0.26)] focus-visible:ring-[#1f9d55]/25"
+              : "border-white/[0.12] bg-white/[0.08] text-white hover:-translate-y-0.5 hover:border-[#1f9d55]/60 hover:bg-[#1f9d55]/18 focus-visible:ring-[#1f9d55]/25"
+        }`}
+      >
+        {added ? <Check size={19} strokeWidth={2.4} aria-hidden="true" /> : <ShoppingCart size={19} strokeWidth={2} aria-hidden="true" />}
+        <span className="relative z-10 font-condensed text-sm font-bold uppercase tracking-[0.1em] text-white">
+          {added ? "Adicionado ao carrinho" : "Adicionar ao carrinho"}
+        </span>
+      </button>
+      {added && (
+        <Link
+          href="/#material-path"
+          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-[8px] border border-white/[0.12] bg-white/[0.035] px-4 py-2.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] text-white/82 transition-all hover:-translate-y-0.5 hover:border-white/[0.22] hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
+        >
+          Voltar ao Catálogo de Materiais
+        </Link>
       )}
     </div>
   );
@@ -360,13 +445,52 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
 // Monta o fluxo direto e valida combinacoes tecnicas antes de abrir o WhatsApp.
 export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   const [form, setForm] = useState(materialInitialForm);
+  const [customQuantity, setCustomQuantity] = useState("");
+  const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
+  const isRoldanaQuote = product.group === "Roldanas";
+  const materialQuantityOptions = isRoldanaQuote
+    ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
+    : quantityOptions;
+  const customQuantityInvalid = isRoldanaQuote && isCustomQuantity && !isPositiveInteger(customQuantity);
   // A variacao exata fornece peso e confirma que a combinacao existe no catalogo.
   const selectedVariation = findSelectedVariation(product, form);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+  const updateQuantity = (event) => {
+    const quantity = event.target.value;
+    const customSelected = quantity === customQuantityValue;
+
+    setIsCustomQuantity(customSelected);
+    setForm((current) => ({ ...current, quantity: customSelected ? "" : quantity }));
+
+    if (!customSelected) {
+      setCustomQuantity("");
+    }
+  };
+  const updateCustomQuantity = (event) => {
+    const value = event.target.value;
+    if (value && !isPositiveInteger(value)) return;
+
+    setCustomQuantity(value);
+    setForm((current) => ({
+      ...current,
+      quantity: isPositiveInteger(value) ? formatCustomQuantity(value) : "",
+    }));
+  };
+  const blockInvalidQuantityInput = (event) => {
+    if (["e", "E", "+", "-", ".", ",", "/"].includes(event.key)) {
+      event.preventDefault();
+    }
+  };
+  const blockInvalidQuantityPaste = (event) => {
+    const pastedValue = event.clipboardData.getData("text");
+    if (!isPositiveInteger(pastedValue)) {
+      event.preventDefault();
+    }
   };
   const updateState = (event) => {
     const state = event.target.value;
@@ -378,10 +502,13 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     product,
     form,
     selectedVariation,
+    hideTechnicalRows: isRoldanaQuote,
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
     ? "Selecione uma opção disponível para continuar."
+    : customQuantityInvalid
+      ? "Digite uma quantidade inteira maior que zero."
     : !isLocationReady(form)
         ? "Complete os dados para enviar a solicitação."
         : "";
@@ -420,10 +547,40 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           </div>
 
           <div className="mt-9 grid gap-5 border-t border-white/[0.08] pt-8 sm:grid-cols-3">
-            <SelectField label="Quantidade" value={form.quantity} onChange={updateField("quantity")} options={quantityOptions} placeholder="Selecione" required />
+            <SelectField
+              label="Quantidade"
+              value={isCustomQuantity ? customQuantityValue : form.quantity}
+              onChange={updateQuantity}
+              options={materialQuantityOptions}
+              placeholder="Selecione"
+              required
+            />
             <SelectField label="Estado" value={form.state} onChange={updateState} options={brazilianStates} placeholder="Selecione" required />
             <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={cityOptions} placeholder={form.state ? "Selecione" : "Selecione o estado"} required disabled={!form.state} />
           </div>
+          {isRoldanaQuote && isCustomQuantity && (
+            <div className="mt-5 max-w-sm">
+              <Field label="Digitar quantidade" required>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={customQuantity}
+                  onChange={updateCustomQuantity}
+                  onKeyDown={blockInvalidQuantityInput}
+                  onPaste={blockInvalidQuantityPaste}
+                  placeholder="Ex.: 12"
+                  aria-invalid={customQuantityInvalid}
+                  className={inputClassName}
+                />
+              </Field>
+              {customQuantityInvalid && (
+                <p className="mt-2 text-sm leading-6 text-[#f0c776]">
+                  Use apenas números inteiros maiores que zero.
+                </p>
+              )}
+            </div>
+          )}
           <div className="mt-5">
             <Field label="Observações">
               <textarea
@@ -442,13 +599,31 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           product={product}
           form={form}
           selectedVariation={selectedVariation}
+          hideTechnicalRows={isRoldanaQuote}
         >
-          <WhatsAppButton
-            message={message}
-            disabledReason={disabledReason}
-            trackingDetail={`Material: ${product.name}`}
-            isLoggedIn={isLoggedIn}
-          />
+          {isRoldanaQuote ? (
+            <div className="mt-8 grid gap-3 xl:grid-cols-2">
+              <AddToCartButton
+                product={product}
+                quantity={form.quantity}
+                disabledReason={disabledReason}
+              />
+              <WhatsAppButton
+                message={message}
+                disabledReason={disabledReason}
+                trackingDetail={`Material: ${product.name}`}
+                isLoggedIn={isLoggedIn}
+                className="mt-0"
+              />
+            </div>
+          ) : (
+            <WhatsAppButton
+              message={message}
+              disabledReason={disabledReason}
+              trackingDetail={`Material: ${product.name}`}
+              isLoggedIn={isLoggedIn}
+            />
+          )}
         </ProductSummary>
       </div>
     </section>

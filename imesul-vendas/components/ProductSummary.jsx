@@ -18,7 +18,7 @@ function SummaryRow({ label, value }) {
 }
 
 // Reune produto, opcoes tecnicas e localidade antes do envio.
-export default function ProductSummary({ category, product, form, selectedVariation, children }) {
+export default function ProductSummary({ category, product, form, selectedVariation, hideTechnicalRows = false, children }) {
   const weight = selectedVariation?.peso !== undefined
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
     : "Não informado";
@@ -38,12 +38,18 @@ export default function ProductSummary({ category, product, form, selectedVariat
         <SummaryRow label="Tipo de solicitação" value="Material" />
         <SummaryRow label="Categoria" value={category?.name} />
         <SummaryRow label="Produto" value={product.name} />
-        <SummaryRow label="Medida" value={formatOptionValue(form.measure, "measure")} />
-        <SummaryRow label="Espessura" value={formatOptionValue(form.thickness, "thickness")} />
+        {!hideTechnicalRows && (
+          <>
+            <SummaryRow label="Medida" value={formatOptionValue(form.measure, "measure")} />
+            <SummaryRow label="Espessura" value={formatOptionValue(form.thickness, "thickness")} />
+          </>
+        )}
         {!product.hasStructuredOptions && (
           <SummaryRow label="Características" value={form.details} />
         )}
-        <SummaryRow label="Peso informado no catálogo" value={weight} />
+        {!hideTechnicalRows && (
+          <SummaryRow label="Peso informado no catálogo" value={weight} />
+        )}
         <SummaryRow label="Quantidade" value={form.quantity} />
         <SummaryRow label="Cidade" value={form.city} />
         <SummaryRow label="Estado" value={form.state} />
