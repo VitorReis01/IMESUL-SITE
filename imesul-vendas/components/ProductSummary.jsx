@@ -44,7 +44,7 @@ export default function ProductSummary({ category, product, form, selectedVariat
             <SummaryRow label="Espessura" value={formatOptionValue(form.thickness, "thickness")} />
           </>
         )}
-        {!product.hasStructuredOptions && (
+        {!hideTechnicalRows && !product.hasStructuredOptions && (
           <SummaryRow label="Características" value={form.details} />
         )}
         {!hideTechnicalRows && (

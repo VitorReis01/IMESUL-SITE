@@ -36,6 +36,7 @@ export default async function MaterialVariantRoutePage({ params }) {
   const variantProduct = {
     ...match.product,
     ...match.variant,
+    id: match.product.id,
     categoryId: match.product.categoryId,
     specifications: match.product.specifications,
     technicalNote: match.product.technicalNote,

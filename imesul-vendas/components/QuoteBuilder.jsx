@@ -449,7 +449,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
-  const isRoldanaQuote = product.group === "Roldanas";
+  const isRoldanaQuote = product.id === "roldanas";
   const materialQuantityOptions = isRoldanaQuote
     ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
     : quantityOptions;
@@ -542,11 +542,13 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
               : "Informe os detalhes do material para consulta comercial."}
           </p>
 
-          <div className="mt-8">
-            <ProductOptionSelector product={product} form={form} setForm={setForm} />
-          </div>
+          {!isRoldanaQuote && (
+            <div className="mt-8">
+              <ProductOptionSelector product={product} form={form} setForm={setForm} />
+            </div>
+          )}
 
-          <div className="mt-9 grid gap-5 border-t border-white/[0.08] pt-8 sm:grid-cols-3">
+          <div className={`${isRoldanaQuote ? "mt-8" : "mt-9 border-t border-white/[0.08] pt-8"} grid gap-5 sm:grid-cols-3`}>
             <SelectField
               label="Quantidade"
               value={isCustomQuantity ? customQuantityValue : form.quantity}
