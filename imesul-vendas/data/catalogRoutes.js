@@ -41,6 +41,10 @@ export function getCatalogProductPath(product) {
   return `${getCatalogCategoryPath(product.categoryId)}/${getCatalogProductSlug(product)}`;
 }
 
+export function getCatalogVariantPath(product, variant) {
+  return `${getCatalogProductPath(product)}/${variant.slug}`;
+}
+
 export function getCatalogCategoryBySlug(slug) {
   const categoryId = catalogCategoryIdsBySlug[slug];
   if (!categoryId) return null;
@@ -63,6 +67,16 @@ export function getCatalogProductBySlugs(categorySlug, productSlug) {
   return { category, product };
 }
 
+export function getCatalogVariantBySlugs(categorySlug, productSlug, variantSlug) {
+  const match = getCatalogProductBySlugs(categorySlug, productSlug);
+  if (!match) return null;
+
+  const variant = (match.product.variants || []).find((item) => item.slug === variantSlug);
+  if (!variant) return null;
+
+  return { ...match, variant };
+}
+
 export function getRoutedCatalogProducts() {
   return catalogProducts
     .filter((product) => catalogCategorySlugs[product.categoryId])
@@ -70,4 +84,16 @@ export function getRoutedCatalogProducts() {
       categorySlug: getCatalogCategorySlug(product.categoryId),
       productSlug: getCatalogProductSlug(product),
     }));
+}
+
+export function getRoutedCatalogVariants() {
+  return catalogProducts
+    .filter((product) => catalogCategorySlugs[product.categoryId])
+    .flatMap((product) =>
+      (product.variants || []).map((variant) => ({
+        categorySlug: getCatalogCategorySlug(product.categoryId),
+        productSlug: getCatalogProductSlug(product),
+        variantSlug: variant.slug,
+      }))
+    );
 }
