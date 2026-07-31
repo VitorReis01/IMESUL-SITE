@@ -10,6 +10,7 @@ import { MaterialQuoteFlow } from "./QuoteBuilder";
 export default function MaterialProductPage({ category, product }) {
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
+  const isRoldanasSection = product.id === "roldanas";
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const selectedVariant = variants.find((variant) => variant.id === selectedVariantId);
   const displayProduct = selectedVariant
@@ -49,6 +50,7 @@ export default function MaterialProductPage({ category, product }) {
             </Link>
           </div>
 
+          {!isRoldanasSection && (
           <div className="mt-12 grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
             <div className="relative overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#f4f5f6] shadow-[0_22px_70px_rgba(0,0,0,0.24)]">
               <div className="relative aspect-[4/3]">
@@ -108,6 +110,7 @@ export default function MaterialProductPage({ category, product }) {
               </div>
             </header>
           </div>
+          )}
 
           {hasVariants && (
             <section className="mt-10 rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.92),rgba(6,16,29,0.96))] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.22)] sm:p-7">
