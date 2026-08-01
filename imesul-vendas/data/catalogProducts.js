@@ -451,6 +451,15 @@ export const catalogProducts = [
         usage: ["Portões", "Serralheria", "Fechamento"],
         image: "/catalog-products/atualizadas/fecho-80.webp",
       },
+      {
+        id: "fecho-145",
+        name: "Fecho 145",
+        slug: "fecho-145",
+        group: "Fechos",
+        description: "Fecho 145 para travamento e fechamento de portas e portões.",
+        usage: ["Portões", "Serralheria", "Fechamento"],
+        image: "/catalog-products/atualizadas/fecho-145.webp",
+      },
     ],
   }),
 
