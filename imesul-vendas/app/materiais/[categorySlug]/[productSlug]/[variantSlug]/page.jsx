@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import MaterialProductPage from "../../../../../components/MaterialProductPage";
 import SalesFooter from "../../../../../components/SalesFooter";
 import {
+  getCatalogCategoryPath,
   getCatalogProductPath,
   getCatalogVariantBySlugs,
   getRoutedCatalogVariants,
@@ -44,6 +45,7 @@ export default async function MaterialVariantRoutePage({ params }) {
     hasStructuredOptions: match.product.hasStructuredOptions,
     hasCompleteData: match.product.hasCompleteData,
   };
+  const hasSingleVariant = match.product.variants.length === 1;
 
   return (
     <>
@@ -55,7 +57,7 @@ export default async function MaterialVariantRoutePage({ params }) {
         }}
         product={variantProduct}
         backLink={{
-          href: getCatalogProductPath(match.product),
+          href: hasSingleVariant ? getCatalogCategoryPath(match.category.id) : getCatalogProductPath(match.product),
           label: `Voltar para ${match.product.name}`,
         }}
       />

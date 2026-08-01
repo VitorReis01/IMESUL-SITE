@@ -4,6 +4,7 @@ import { catalogSpecifications } from "./catalogSpecifications";
 // Especificacoes e nota tecnica sao opcionais; os demais campos sao obrigatorios.
 const product = ({
   id,
+  slug = "",
   categoryId,
   name,
   description,
@@ -14,6 +15,7 @@ const product = ({
   variants = [],
 }) => ({
   id,
+  slug,
   categoryId,
   name,
   description,
@@ -490,10 +492,31 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "guias",
+    slug: "guias",
+    categoryId: "acessorios-serralheria",
+    name: "Guia Duplo NY Longo com Rolete",
+    description: "Condução e alinhamento de sistemas móveis.",
+    usage: ["Portões", "Serralheria", "Movimentação"],
+    image: "/catalog-products/atualizadas/guia-duplo-ny-longo-com-rolete.webp",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "guia-duplo-ny-longo-com-rolete",
+        name: "Guia Duplo NY Longo com Rolete",
+        slug: "guia-duplo-ny-longo-com-rolete",
+        group: "Guias",
+        description: "Guia duplo NY longo com rolete para condução e alinhamento de sistemas móveis.",
+        usage: ["Portões", "Serralheria", "Movimentação"],
+        image: "/catalog-products/atualizadas/guia-duplo-ny-longo-com-rolete.webp",
+      },
+    ],
+  }),
+
   ...[
     ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
     ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/dobradicas.webp"],
-    ["guias", "Guias", "Condução e alinhamento de sistemas móveis.", "/catalog-products/atualizadas/guias.webp"],
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
     ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/atualizadas/fechaduras.webp"],

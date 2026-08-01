@@ -34,15 +34,19 @@ export function createCatalogSlug(value) {
 }
 
 export function getCatalogProductSlug(product) {
-  return createCatalogSlug(product?.name || product?.id || "");
+  return product?.slug || createCatalogSlug(product?.name || product?.id || "");
 }
 
 export function getCatalogProductPath(product) {
+  if (product?.variants?.length === 1) {
+    return getCatalogVariantPath(product, product.variants[0]);
+  }
+
   return `${getCatalogCategoryPath(product.categoryId)}/${getCatalogProductSlug(product)}`;
 }
 
 export function getCatalogVariantPath(product, variant) {
-  return `${getCatalogProductPath(product)}/${variant.slug}`;
+  return `${getCatalogCategoryPath(product.categoryId)}/${getCatalogProductSlug(product)}/${variant.slug}`;
 }
 
 export function getCatalogCategoryBySlug(slug) {
