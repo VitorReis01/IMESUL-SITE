@@ -11,7 +11,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const hasVariants = variants.length > 0;
   const isRoldanasSection = product.id === "roldanas";
   const isFechosSection = product.id === "fechos";
-  const isModelSelectionSection = isRoldanasSection || isFechosSection;
+  const isDobradicasSection = product.id === "dobradicas";
+  const isModelSelectionSection = isRoldanasSection || isFechosSection || isDobradicasSection;
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -111,11 +112,17 @@ export default function MaterialProductPage({ category, product, backLink = null
                     Selecione o modelo
                   </p>
                   <h2 className="mt-3 font-display text-4xl leading-none text-white">
-                    {isFechosSection ? "FECHOS DISPONÍVEIS" : "Roldanas disponíveis"}
+                    {isFechosSection
+                      ? "FECHOS DISPONÍVEIS"
+                      : isDobradicasSection
+                        ? "DOBRADIÇAS DISPONÍVEIS"
+                        : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
-                  Escolha um modelo para continuar com o orçamento.
+                  {isDobradicasSection
+                    ? "Escolha uma dobradiça para continuar com o orçamento."
+                    : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 
@@ -149,7 +156,13 @@ export default function MaterialProductPage({ category, product, backLink = null
                           {variant.name}
                         </strong>
                         <span className="mt-2 text-sm leading-6 text-imesul-steel-light/68">
-                          Acabamento: {variant.finish}
+                          {variant.finish
+                            ? `Acabamento: ${variant.finish}`
+                            : variant.model
+                              ? `Modelo: ${variant.model}`
+                              : variant.type
+                                ? variant.type
+                                : "Sob consulta"}
                         </span>
                         <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                           Selecionar modelo
