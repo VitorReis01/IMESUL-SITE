@@ -469,6 +469,15 @@ export const catalogProducts = [
         usage: ["Portões", "Serralheria", "Fechamento"],
         image: "/catalog-products/atualizadas/fecho-122.webp",
       },
+      {
+        id: "fecho-180",
+        name: "Fecho 180",
+        slug: "fecho-180",
+        group: "Fechos",
+        description: "Fecho 180 para travamento e fechamento de portas e portões.",
+        usage: ["Portões", "Serralheria", "Fechamento"],
+        image: "/catalog-products/atualizadas/fecho-180.webp",
+      },
     ],
   }),
 
