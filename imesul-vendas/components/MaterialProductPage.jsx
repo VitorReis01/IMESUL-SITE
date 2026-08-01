@@ -12,7 +12,7 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isRoldanasSection = product.id === "roldanas";
   const isFechosSection = product.id === "fechos";
   const isDobradicasSection = product.id === "dobradicas";
-  const isModelSelectionSection = isRoldanasSection || isFechosSection || isDobradicasSection;
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
