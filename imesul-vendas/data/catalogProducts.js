@@ -583,6 +583,15 @@ export const catalogProducts = [
         usage: ["Portões", "Serralheria", "Montagem"],
         image: "/catalog-products/atualizadas/catalogo-dobradica.webp",
       },
+      {
+        id: "dobradica-com-aba",
+        name: "Dobradiça com Aba",
+        slug: "dobradica-com-aba",
+        group: "Dobradiças",
+        description: "Dobradiça com aba para articulação de portas, portões e painéis.",
+        usage: ["Portões", "Serralheria", "Montagem"],
+        image: "/catalog-products/atualizadas/dobradica-com-aba.webp",
+      },
     ],
   }),
 
