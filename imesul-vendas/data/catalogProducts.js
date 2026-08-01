@@ -516,7 +516,7 @@ export const catalogProducts = [
 
   ...[
     ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
-    ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/dobradicas.webp"],
+    ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/atualizadas/catalogo-dobradica.webp"],
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
     ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/atualizadas/fechaduras.webp"],
