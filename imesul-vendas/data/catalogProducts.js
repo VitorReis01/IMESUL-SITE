@@ -592,6 +592,16 @@ export const catalogProducts = [
         usage: ["Portões", "Serralheria", "Montagem"],
         image: "/catalog-products/atualizadas/dobradica-com-aba.webp",
       },
+      {
+        id: "dobradica-cilindrica-tripla-7-8",
+        name: "Dobradiça Cilíndrica Tripla 7/8",
+        slug: "dobradica-cilindrica-tripla-7-8",
+        model: "7/8",
+        group: "Dobradiças",
+        description: "Dobradiça cilíndrica tripla 7/8 para articulação de portas, portões e painéis.",
+        usage: ["Portões", "Serralheria", "Montagem"],
+        image: "/catalog-products/atualizadas/dobradica-cilindrica-tripla-7-8.webp",
+      },
     ],
   }),
 
