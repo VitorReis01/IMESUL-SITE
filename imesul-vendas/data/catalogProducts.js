@@ -133,6 +133,15 @@ export const catalogProducts = [
     specifications: catalogSpecifications.laminados.cantoneirasAbasIguais,
   }),
   product({
+    id: "trilhos",
+    categoryId: "perfis-estruturais",
+    name: "Trilhos",
+    description: "Guiamento de portões e sistemas deslizantes.",
+    usage: ["Serralheria", "Montagem", "Manutenção"],
+    image: "/catalog-products/acessorios-serralheria.webp",
+    specifications: catalogSpecifications.acessorios,
+  }),
+  product({
     id: "barras-chatas",
     categoryId: "laminados",
     name: "Barras Chatas",
@@ -606,7 +615,6 @@ export const catalogProducts = [
   }),
 
   ...[
-    ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
     ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/atualizadas/fechaduras.webp"],
