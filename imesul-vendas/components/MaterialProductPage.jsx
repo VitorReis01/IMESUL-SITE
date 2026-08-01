@@ -10,6 +10,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
   const isRoldanasSection = product.id === "roldanas";
+  const isFechosSection = product.id === "fechos";
+  const isModelSelectionSection = isRoldanasSection || isFechosSection;
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -39,7 +41,7 @@ export default function MaterialProductPage({ category, product, backLink = null
             </Link>
           </div>
 
-          {!isRoldanasSection && (
+          {!isModelSelectionSection && (
           <div className="mt-12 grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
             <div className="relative overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#f4f5f6] shadow-[0_22px_70px_rgba(0,0,0,0.24)]">
               <div className="relative aspect-[4/3]">
@@ -109,11 +111,11 @@ export default function MaterialProductPage({ category, product, backLink = null
                     Selecione o modelo
                   </p>
                   <h2 className="mt-3 font-display text-4xl leading-none text-white">
-                    Roldanas disponíveis
+                    {isFechosSection ? "FECHOS DISPONÍVEIS" : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
-                  Escolha uma roldana para continuar com o orçamento.
+                  Escolha um modelo para continuar com o orçamento.
                 </p>
               </div>
 

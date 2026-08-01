@@ -449,11 +449,11 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
-  const isRoldanaQuote = product.id === "roldanas";
-  const materialQuantityOptions = isRoldanaQuote
+  const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos";
+  const materialQuantityOptions = usesSimplifiedModelQuote
     ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
     : quantityOptions;
-  const customQuantityInvalid = isRoldanaQuote && isCustomQuantity && !isPositiveInteger(customQuantity);
+  const customQuantityInvalid = usesSimplifiedModelQuote && isCustomQuantity && !isPositiveInteger(customQuantity);
   // A variacao exata fornece peso e confirma que a combinacao existe no catalogo.
   const selectedVariation = findSelectedVariation(product, form);
 
@@ -502,7 +502,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     product,
     form,
     selectedVariation,
-    hideTechnicalRows: isRoldanaQuote,
+    hideTechnicalRows: usesSimplifiedModelQuote,
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
@@ -542,13 +542,13 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
               : "Informe os detalhes do material para consulta comercial."}
           </p>
 
-          {!isRoldanaQuote && (
+          {!usesSimplifiedModelQuote && (
             <div className="mt-8">
               <ProductOptionSelector product={product} form={form} setForm={setForm} />
             </div>
           )}
 
-          <div className={`${isRoldanaQuote ? "mt-8" : "mt-9 border-t border-white/[0.08] pt-8"} grid gap-5 sm:grid-cols-3`}>
+          <div className={`${usesSimplifiedModelQuote ? "mt-8" : "mt-9 border-t border-white/[0.08] pt-8"} grid gap-5 sm:grid-cols-3`}>
             <SelectField
               label="Quantidade"
               value={isCustomQuantity ? customQuantityValue : form.quantity}
@@ -560,7 +560,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
             <SelectField label="Estado" value={form.state} onChange={updateState} options={brazilianStates} placeholder="Selecione" required />
             <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={cityOptions} placeholder={form.state ? "Selecione" : "Selecione o estado"} required disabled={!form.state} />
           </div>
-          {isRoldanaQuote && isCustomQuantity && (
+          {usesSimplifiedModelQuote && isCustomQuantity && (
             <div className="mt-5 max-w-sm">
               <Field label="Digitar quantidade" required>
                 <input
@@ -601,9 +601,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           product={product}
           form={form}
           selectedVariation={selectedVariation}
-          hideTechnicalRows={isRoldanaQuote}
+          hideTechnicalRows={usesSimplifiedModelQuote}
         >
-          {isRoldanaQuote ? (
+          {usesSimplifiedModelQuote ? (
             <div className="mt-8 grid gap-3 xl:grid-cols-2">
               <AddToCartButton
                 product={product}

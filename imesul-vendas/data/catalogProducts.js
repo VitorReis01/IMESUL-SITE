@@ -433,9 +433,29 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "fechos",
+    categoryId: "acessorios-serralheria",
+    name: "Fechos",
+    description: "Travamento e fechamento de portas e portões.",
+    usage: ["Portões", "Serralheria", "Fechamento"],
+    image: "/catalog-products/atualizadas/catalogo-fecho.webp",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "fecho-80",
+        name: "Fecho 80",
+        slug: "fecho-80",
+        group: "Fechos",
+        description: "Fecho 80 para travamento e fechamento de portas e portões.",
+        usage: ["Portões", "Serralheria", "Fechamento"],
+        image: "/catalog-products/atualizadas/fecho-80.webp",
+      },
+    ],
+  }),
+
   ...[
     ["trilhos", "Trilhos", "Guiamento de portões e sistemas deslizantes.", "/catalog-products/acessorios-serralheria.webp"],
-    ["fechos", "Fechos", "Travamento e fechamento de portas e portões.", "/catalog-products/fechos.webp"],
     ["dobradicas", "Dobradiças", "Articulação de portas, portões e painéis.", "/catalog-products/dobradicas.webp"],
     ["guias", "Guias", "Condução e alinhamento de sistemas móveis.", "/catalog-products/atualizadas/guias.webp"],
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],

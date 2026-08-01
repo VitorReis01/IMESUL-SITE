@@ -56,7 +56,7 @@ export default async function MaterialVariantRoutePage({ params }) {
         product={variantProduct}
         backLink={{
           href: getCatalogProductPath(match.product),
-          label: "Voltar para Roldanas",
+          label: `Voltar para ${match.product.name}`,
         }}
       />
       <SalesFooter />
