@@ -104,7 +104,7 @@ export default function ProductCatalog({
           const isRecommended = recommendedCategoryIds.includes(category.id);
           const productCount = getCatalogProductsByCategory(category.id).length;
 
-          const categoryCardClassName = `group relative flex min-h-[285px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.18)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+          const categoryCardClassName = `group relative flex min-h-[246px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.18)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue sm:min-h-[285px] ${
             isSelected
               ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
               : isRecommended
@@ -115,7 +115,7 @@ export default function ProductCatalog({
           } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`;
           const categoryCardContent = (
             <>
-              <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
+              <span className="relative block h-36 overflow-hidden bg-[#0b192b] sm:h-44">
                 <Image
                   src={card.image}
                   alt={card.title}
@@ -136,13 +136,13 @@ export default function ProductCatalog({
                 )}
               </span>
 
-              <span className="flex min-w-0 flex-1 flex-col p-5">
+              <span className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
                 <span className="flex items-start justify-between gap-2">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.05] text-imesul-steel-light">
                     <Icon size={20} strokeWidth={1.7} aria-hidden="true" />
                   </span>
                 </span>
-                <strong className="mt-5 font-condensed text-xl font-semibold leading-tight text-white">
+                <strong className="mt-4 font-condensed text-xl font-semibold leading-tight text-white sm:mt-5">
                   {card.title}
                 </strong>
                 <span className="mt-2 text-xs leading-5 text-imesul-steel-light/62">
@@ -245,7 +245,7 @@ export default function ProductCatalog({
               : "Categoria selecionada. Escolha um produto para continuar."}
           </p>
 
-          <div className="mt-7 grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
             {products.map((item) => {
               const isSelected = item.id === selectedProductId;
               const isHighlighted = item.id === highlightedProductId;
@@ -256,7 +256,7 @@ export default function ProductCatalog({
               } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`;
               const productCardContent = (
                 <>
-                  <div className="relative h-60 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6]">
+                  <div className="relative h-48 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6] sm:h-60">
                     <Image
                       src={item.image}
                       alt={item.name}
@@ -275,7 +275,7 @@ export default function ProductCatalog({
                     </span>
                   </div>
 
-                  <div className="flex flex-1 flex-col p-6">
+                  <div className="flex flex-1 flex-col p-5 sm:p-6">
                     <p className="font-mono text-[11px] tracking-[0.14em] text-imesul-red">
                       {selectedCategory.name.toUpperCase()}
                     </p>

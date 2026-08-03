@@ -11,7 +11,7 @@ export default function MaterialCategoryPage({ category }) {
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
       <section className="relative z-10 bg-[#091727]/58">
-        <div className="mx-auto max-w-[1480px] px-6 py-12 sm:px-8 sm:py-16 lg:px-12">
+        <div className="mx-auto max-w-[1480px] px-5 py-10 sm:px-8 sm:py-16 lg:px-12">
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/#material-path"

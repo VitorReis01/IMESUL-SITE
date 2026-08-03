@@ -315,10 +315,10 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
     <section
       id="catalog-showcase"
       ref={sectionRef}
-      className="relative overflow-hidden border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(6,16,29,0.92),rgba(7,19,33,0.82))] py-16 sm:py-20"
+      className="relative overflow-hidden border-b border-white/[0.08] bg-[linear-gradient(180deg,rgba(6,16,29,0.92),rgba(7,19,33,0.82))] py-12 sm:py-20"
       aria-label="Carrossel de produtos do catálogo Imesul"
     >
-      <div className="relative z-20 mx-auto max-w-[1480px] px-6 sm:px-8 lg:px-12">
+      <div className="relative z-20 mx-auto max-w-[1480px] px-5 sm:px-8 lg:px-12">
         <header data-scroll-reveal className="max-w-4xl">
           <h2 className="font-display text-[clamp(2.8rem,4.6vw,5.2rem)] leading-[0.9] text-white">
             Produtos do catálogo <span className="imesul-title-word">IMESUL</span>
@@ -330,7 +330,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
       </div>
 
       <div
-        className="relative z-20 mt-10 cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing"
+        className="relative z-20 mt-8 cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing sm:mt-10"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -347,7 +347,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
       >
         <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[clamp(42px,10vw,170px)] bg-gradient-to-r from-[#06101d] via-[#06101d]/82 to-transparent" />
         <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-[clamp(42px,10vw,170px)] bg-gradient-to-l from-[#06101d] via-[#06101d]/82 to-transparent" />
-        <div ref={trackRef} className="flex w-max gap-4 pl-6 will-change-transform sm:gap-5 sm:pl-8 lg:pl-12">
+        <div ref={trackRef} className="flex w-max gap-4 pl-5 will-change-transform sm:gap-5 sm:pl-8 lg:pl-12">
           {loopProducts.map((product, index) => (
             <button
               key={`${product.id}-${index}`}
@@ -360,9 +360,9 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
                   handleProductClick(product);
                 }
               }}
-              className="premium-soft-sheen group relative flex h-[285px] w-[235px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[10px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(10,24,41,0.94),rgba(4,11,20,0.98))] text-left shadow-[0_22px_62px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow,transform] duration-300 will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[#f0c776]/42 hover:shadow-[0_24px_70px_rgba(240,199,118,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0c776] focus-visible:ring-offset-2 focus-visible:ring-offset-[#06101d] sm:h-[315px] sm:w-[270px]"
+              className="premium-soft-sheen group relative flex h-[260px] w-[218px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[10px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(10,24,41,0.94),rgba(4,11,20,0.98))] text-left shadow-[0_22px_62px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow,transform] duration-300 will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[#f0c776]/42 hover:shadow-[0_24px_70px_rgba(240,199,118,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0c776] focus-visible:ring-offset-2 focus-visible:ring-offset-[#06101d] sm:h-[315px] sm:w-[270px]"
             >
-              <span className="relative h-40 overflow-hidden border-b border-white/[0.08] bg-[#eef1f4] sm:h-44">
+              <span className="relative h-36 overflow-hidden border-b border-white/[0.08] bg-[#eef1f4] sm:h-44">
                 <Image
                   src={product.image}
                   alt={product.name}

@@ -968,7 +968,7 @@ export default function ProjectSelector() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(212,43,43,0.14),transparent_28%),radial-gradient(circle_at_78%_32%,rgba(42,92,151,0.15),transparent_36%),linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.46))]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#06101d] via-[#06101d]/52 to-transparent" />
 
-        <div className="relative z-10 mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-8 px-6 py-10 sm:px-8 sm:py-12 lg:grid-cols-[0.93fr_1.07fr] lg:px-12 lg:py-12">
+        <div className="relative z-10 mx-auto grid max-w-[1480px] items-center gap-7 px-5 py-8 sm:px-8 sm:py-12 lg:min-h-[calc(100vh-64px)] lg:grid-cols-[0.93fr_1.07fr] lg:px-12 lg:py-12">
           <div className="max-w-[660px] text-left">
             <div className={`flex max-w-[560px] items-center gap-4 ${heroIntroClassName}`} style={heroIntroStyle(80)}>
               <span className="font-mono text-[11px] tracking-[0.28em] text-imesul-red">
@@ -990,7 +990,7 @@ export default function ProjectSelector() {
               Consulte medidas disponíveis e envie sua solicitação pelo WhatsApp.
             </p>
 
-            <div className="mt-7 grid max-w-[640px] gap-x-5 gap-y-4 sm:grid-cols-2 xl:max-w-[760px] xl:grid-cols-4">
+            <div className="mt-6 grid max-w-[640px] gap-x-5 gap-y-3 sm:mt-7 sm:grid-cols-2 sm:gap-y-4 xl:max-w-[760px] xl:grid-cols-4">
               {trustItems.map((item, index) => {
                 const isGlowing = heroTrustGlowIndex === index && !heroReduceMotion;
 
@@ -1031,7 +1031,7 @@ export default function ProjectSelector() {
             </div>
           </div>
 
-          <div className="grid gap-4 self-center sm:grid-cols-2 lg:max-w-[560px] lg:justify-self-center">
+          <div className="grid gap-3 self-center sm:grid-cols-2 sm:gap-4 lg:max-w-[560px] lg:justify-self-center">
             <button
               type="button"
               data-testid="start-project-path"
@@ -1039,7 +1039,7 @@ export default function ProjectSelector() {
                 trackInteraction({ type: "click", label: "Tenho um projeto", section: "Hero", detail: "Card Preciso de ajuda" });
                 scrollToFlow("project-path");
               }}
-              className={`premium-soft-sheen group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-imesul-red/40 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(7,16,29,0.78)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-red/65 hover:bg-[linear-gradient(145deg,rgba(212,43,43,0.15),rgba(7,16,29,0.84)_62%)] hover:shadow-[0_20px_58px_rgba(212,43,43,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1280)}
+              className={`premium-soft-sheen group relative flex min-h-[188px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-imesul-red/40 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(7,16,29,0.78)_62%)] p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-red/65 hover:bg-[linear-gradient(145deg,rgba(212,43,43,0.15),rgba(7,16,29,0.84)_62%)] hover:shadow-[0_20px_58px_rgba(212,43,43,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:min-h-[218px] sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1280)}
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(212,43,43,0.13),transparent_36%)]" />
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-imesul-red/45 bg-imesul-red text-white shadow-[0_8px_22px_rgba(212,43,43,0.22)]">
@@ -1071,7 +1071,7 @@ export default function ProjectSelector() {
                 trackInteraction({ type: "click", label: "Já sei o material", section: "Hero", detail: "Card Já sei o que preciso" });
                 scrollToFlow("material-path");
               }}
-              className={`premium-soft-sheen group relative flex min-h-[218px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(31,66,108,0.20),rgba(7,16,29,0.76)_62%)] p-5 text-left shadow-[0_18px_50px_rgba(0,0,0,0.19)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-steel/45 hover:bg-[linear-gradient(145deg,rgba(31,66,108,0.24),rgba(7,16,29,0.82)_62%)] hover:shadow-[0_20px_58px_rgba(30,76,128,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-steel focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1400)}
+              className={`premium-soft-sheen group relative flex min-h-[188px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(31,66,108,0.20),rgba(7,16,29,0.76)_62%)] p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.19)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-steel/45 hover:bg-[linear-gradient(145deg,rgba(31,66,108,0.24),rgba(7,16,29,0.82)_62%)] hover:shadow-[0_20px_58px_rgba(30,76,128,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-steel focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:min-h-[218px] sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1400)}
             >
               <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(42,92,151,0.12),transparent_36%)]" />
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-white/[0.14] bg-[#1f5fb0]/55 text-white">
@@ -1105,7 +1105,7 @@ export default function ProjectSelector() {
         id="project-path"
         className="relative scroll-mt-0 border-b border-white/[0.08] bg-[#071321]/70"
       >
-        <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+        <div className="relative z-20 mx-auto max-w-[1480px] px-5 py-14 sm:px-8 sm:py-20 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(2.2rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">
@@ -1118,7 +1118,7 @@ export default function ProjectSelector() {
             </p>
           </header>
 
-          <div className="mt-12 grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-14 xl:grid-cols-5">
+          <div className="mt-8 grid auto-rows-fr grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:mt-14 xl:grid-cols-5">
             {projectShowcaseCards.map((card, index) => {
               const project = projects.find((item) => item.id === card.projectId);
               const isSelected = card.projectId === recommendedProject?.projectId;
@@ -1134,13 +1134,13 @@ export default function ProjectSelector() {
                   aria-pressed={isSelected}
                   aria-label={`Ver materiais indicados para ${card.title}`}
                   onClick={() => showRecommendedMaterials(card)}
-                  className={`group relative flex min-h-[360px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.2)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue ${
+                  className={`group relative flex min-h-[300px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.2)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue sm:min-h-[360px] ${
                     isSelected
                       ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
                       : "border-white/[0.1] hover:-translate-y-0.5 hover:border-imesul-red/42 hover:shadow-[0_22px_68px_rgba(212,43,43,0.09),inset_0_1px_0_rgba(255,255,255,0.045)]"
                   } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#071321]" : ""}`}
                 >
-                  <span className="relative block h-44 overflow-hidden bg-[#0b192b]">
+                  <span className="relative block h-36 overflow-hidden bg-[#0b192b] sm:h-44">
                     <Image
                       src={card.image}
                       alt={card.title}
@@ -1194,7 +1194,7 @@ export default function ProjectSelector() {
         id="material-path"
         className="relative scroll-mt-20 bg-[#091727]/58"
       >
-        <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+        <div className="relative z-20 mx-auto max-w-[1480px] px-5 py-14 sm:px-8 sm:py-20 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
               <h2 className="font-display text-[clamp(2.2rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">

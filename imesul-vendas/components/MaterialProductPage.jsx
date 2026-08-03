@@ -24,7 +24,7 @@ export default function MaterialProductPage({ category, product, backLink = null
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
       <section className="relative z-10 bg-[#091727]/58">
-        <div className="mx-auto max-w-[1480px] px-6 py-12 sm:px-8 sm:py-16 lg:px-12">
+        <div className="mx-auto max-w-[1480px] px-5 py-10 sm:px-8 sm:py-16 lg:px-12">
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={returnLink.href}
@@ -43,7 +43,7 @@ export default function MaterialProductPage({ category, product, backLink = null
           </div>
 
           {!isModelSelectionSection && (
-          <div className="mt-12 grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+          <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
             <div className="relative overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#f4f5f6] shadow-[0_22px_70px_rgba(0,0,0,0.24)]">
               <div className="relative aspect-[4/3]">
                 <Image
@@ -52,7 +52,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 46vw"
-                  className="object-contain p-7"
+                  className="object-contain p-5 sm:p-7"
                 />
               </div>
               <span
@@ -105,7 +105,7 @@ export default function MaterialProductPage({ category, product, backLink = null
           )}
 
           {hasVariants && (
-            <section className="mt-10 rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.92),rgba(6,16,29,0.96))] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.22)] sm:p-7">
+            <section className="mt-8 rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.92),rgba(6,16,29,0.96))] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.22)] sm:mt-10 sm:p-7">
               <div className="flex flex-col justify-between gap-3 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-end">
                 <div>
                   <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-imesul-red">
@@ -126,7 +126,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                 </p>
               </div>
 
-              <div className="mt-7 grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
                 {variants.map((variant) => {
                   const variantPath = getCatalogVariantPath(product, variant);
 
@@ -138,7 +138,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                       aria-label={`Selecionar ${variant.name}`}
                       className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#0a1829] text-left shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-all duration-300 will-change-transform hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_64px_rgba(212,43,43,0.08),inset_0_1px_0_rgba(255,255,255,0.045)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
                     >
-                      <span className="relative block h-60 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6]">
+                      <span className="relative block h-48 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6] sm:h-60">
                         <Image
                           src={variant.image}
                           alt={variant.name}
@@ -148,7 +148,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                         />
                       </span>
 
-                      <span className="flex flex-1 flex-col p-6">
+                      <span className="flex flex-1 flex-col p-5 sm:p-6">
                         <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-imesul-red">
                           {variant.group}
                         </span>
@@ -177,7 +177,7 @@ export default function MaterialProductPage({ category, product, backLink = null
           )}
 
           {!hasVariants && (
-            <div className="mt-10 rounded-[10px]">
+            <div className="mt-8 rounded-[10px] sm:mt-10">
               <MaterialQuoteFlow
                 key={product.id}
                 product={product}

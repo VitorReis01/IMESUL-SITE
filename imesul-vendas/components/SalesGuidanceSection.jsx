@@ -72,7 +72,7 @@ export default function SalesGuidanceSection() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(212,43,43,0.12),transparent_28%),radial-gradient(circle_at_82%_72%,rgba(43,94,151,0.16),transparent_34%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-imesul-red/50 to-transparent" />
 
-      <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+      <div className="relative z-20 mx-auto max-w-[1480px] px-5 py-14 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
         <div data-scroll-reveal>
           <h2 className="font-display text-[clamp(2.8rem,5vw,5.4rem)] leading-[0.92] text-white">
             COMO SOLICITAR ORÇAMENTO?
@@ -82,7 +82,7 @@ export default function SalesGuidanceSection() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-3">
           {howItWorks.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -90,7 +90,7 @@ export default function SalesGuidanceSection() {
                 key={item.number}
                 data-scroll-reveal
                 style={{ "--reveal-delay": `${index * 80}ms` }}
-                className="group relative min-h-[158px] overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#081625]/82 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-imesul-red/45 hover:bg-[#0b1c30]/90"
+                className="group relative min-h-[142px] overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#081625]/82 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-imesul-red/45 hover:bg-[#0b1c30]/90 sm:min-h-[158px] sm:p-6"
               >
                 <div className="flex items-start gap-5">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-imesul-red font-mono text-sm font-bold text-white shadow-[0_10px_26px_rgba(212,43,43,0.24)]">
@@ -116,13 +116,13 @@ export default function SalesGuidanceSection() {
           })}
         </div>
 
-        <div data-scroll-reveal className="mt-20">
-          <h2 className="max-w-5xl font-display text-[clamp(3rem,5.7vw,6.2rem)] leading-[0.9] text-white">
+        <div data-scroll-reveal className="mt-14 sm:mt-20">
+          <h2 className="max-w-5xl font-display text-[clamp(2.25rem,10vw,3rem)] leading-[0.92] text-white sm:text-[clamp(3rem,5.7vw,6.2rem)] sm:leading-[0.9]">
             ATENDIMENTO PARA OBRA, SERRALHERIA, CAMPO E INDÚSTRIA
           </h2>
         </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_0.78fr]">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 lg:grid-cols-[1fr_0.78fr]">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {benefits.map((benefit, index) => {
               const Icon = benefit.icon;
@@ -148,7 +148,7 @@ export default function SalesGuidanceSection() {
           <aside
             data-scroll-reveal
             style={{ "--reveal-delay": "160ms" }}
-            className="group/help-card relative min-h-[360px] overflow-visible rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(8,22,37,0.96)_42%)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition-all duration-500 hover:border-imesul-red/45 hover:shadow-[0_30px_90px_rgba(212,43,43,0.16)] sm:p-8"
+            className="group/help-card relative min-h-[310px] overflow-visible rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(8,22,37,0.96)_42%)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition-all duration-500 hover:border-imesul-red/45 hover:shadow-[0_30px_90px_rgba(212,43,43,0.16)] sm:min-h-[360px] sm:p-8"
           >
             <div className="relative z-10 max-w-[310px]">
               <span className="flex h-11 w-11 items-center justify-center rounded-[6px] border border-white/10 bg-white/[0.05] text-imesul-steel-light">
@@ -172,7 +172,7 @@ export default function SalesGuidanceSection() {
                   <path d="M7.2 20c.9-1.8 2.6-2.8 4.8-2.8s3.9 1 4.8 2.8" />
                 </svg>
               </span>
-              <h3 className="mt-6 font-display text-5xl leading-none text-white">
+              <h3 className="mt-5 font-display text-[clamp(2.15rem,10vw,3rem)] leading-none text-white sm:mt-6 sm:text-5xl">
                 Precisa de ajuda?
               </h3>
               <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
@@ -189,7 +189,7 @@ export default function SalesGuidanceSection() {
                   detail: "Card do mascote",
                   isLoggedIn: false,
                 })}
-                className="mt-7 inline-flex min-h-12 items-center justify-center rounded-[8px] bg-imesul-red px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.13em] text-white shadow-[0_14px_40px_rgba(212,43,43,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_18px_52px_rgba(212,43,43,0.34)]"
+                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-[8px] bg-imesul-red px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.13em] text-white shadow-[0_14px_40px_rgba(212,43,43,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_18px_52px_rgba(212,43,43,0.34)] sm:mt-7"
               >
                 FALAR COM A EQUIPE
               </a>
