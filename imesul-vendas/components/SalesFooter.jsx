@@ -125,8 +125,8 @@ export default function SalesFooter() {
     >
       <div className="h-px bg-gradient-to-r from-transparent via-imesul-red/35 to-transparent" />
 
-      <div className="mx-auto max-w-[1480px] px-6 py-14 sm:px-8 lg:px-12">
-        <div className="grid gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
+      <div className="mx-auto max-w-[1480px] px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
+        <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1.05fr_0.7fr_1.35fr_0.72fr]">
           <div className="flex max-w-[430px] flex-col items-center text-center">
             {/* Base branca em degradê destaca a marca no rodapé escuro sem alterar os demais blocos. */}
             <div className="inline-flex">
@@ -138,25 +138,25 @@ export default function SalesFooter() {
                 className="h-auto w-[194px] object-contain sm:w-[214px]"
               />
             </div>
-            <p className="mt-6 max-w-[390px] text-sm font-bold leading-7 text-slate-800">
+            <p className="mt-4 max-w-[390px] text-sm font-bold leading-7 text-slate-800 sm:mt-6">
               Distribuidora de materiais em aço para construção, serralheria,
               indústria e campo em Mato Grosso do Sul.
             </p>
           </div>
 
           <div>
-            <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
+            <h2 className="mb-4 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 sm:mb-6 sm:tracking-[0.28em]">
               <span className="h-px w-4 bg-imesul-red" />
               Navegação
             </h2>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-1.5 sm:gap-3">
               {navigationLinks.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
                     target={link.external ? "_blank" : undefined}
                     rel={link.external ? "noopener noreferrer" : undefined}
-                    className="group inline-flex items-center gap-2 font-condensed text-sm font-semibold uppercase tracking-[0.13em] text-slate-700 transition-colors hover:text-imesul-red"
+                    className="group inline-flex min-h-10 items-center gap-2 py-1 font-condensed text-sm font-semibold uppercase tracking-[0.1em] text-slate-700 transition-colors hover:text-imesul-red sm:tracking-[0.13em]"
                   >
                     {link.label}
                     {link.external && (
@@ -173,11 +173,11 @@ export default function SalesFooter() {
           </div>
 
           <div>
-            <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
+            <h2 className="mb-4 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 sm:mb-6 sm:tracking-[0.28em]">
               <span className="h-px w-4 bg-imesul-red" />
               Unidades
             </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-1">
               {units.map((unit) => (
                 <div key={unit.name}>
                   <p className="font-condensed text-base font-semibold uppercase tracking-[0.12em] text-slate-900">
@@ -187,13 +187,13 @@ export default function SalesFooter() {
                     href={unit.mapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1.5 block max-w-[420px] text-sm leading-6 text-slate-700 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color] hover:text-imesul-red hover:decoration-imesul-red/60"
+                    className="mt-1 block max-w-[420px] py-1 text-sm leading-6 text-slate-700 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color] hover:text-imesul-red hover:decoration-imesul-red/60 sm:mt-1.5"
                   >
                     {unit.address}
                   </a>
                   <a
                     href={unit.phoneHref}
-                    className="mt-1.5 inline-block font-mono text-[11px] tracking-[0.12em] text-slate-600 transition-colors hover:text-imesul-red"
+                    className="mt-1 inline-flex min-h-10 items-center py-1 font-mono text-[11px] tracking-[0.1em] text-slate-600 transition-colors hover:text-imesul-red sm:mt-1.5 sm:tracking-[0.12em]"
                   >
                     Telefone: {unit.phone}
                   </a>
@@ -203,18 +203,18 @@ export default function SalesFooter() {
           </div>
 
           <div>
-            <h2 className="mb-6 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
+            <h2 className="mb-4 flex items-center gap-3 font-condensed text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 sm:mb-6 sm:tracking-[0.28em]">
               <span className="h-px w-4 bg-imesul-red" />
               Links úteis
             </h2>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-1.5 sm:gap-3">
               {socialLinks.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 text-sm text-slate-700 transition-colors hover:text-imesul-red"
+                    className="group inline-flex min-h-10 items-center gap-2 py-1 text-sm text-slate-700 transition-colors hover:text-imesul-red"
                   >
                     {link.label}
                     <ArrowUpRight
@@ -229,11 +229,11 @@ export default function SalesFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-7 sm:flex-row">
-          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-slate-600">
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-5 text-center sm:mt-12 sm:flex-row sm:gap-4 sm:pt-7 sm:text-left">
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-600 sm:text-[10px] sm:tracking-[0.24em]">
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-slate-600">
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-600 sm:text-[10px] sm:tracking-[0.24em]">
             Dourados Matriz, Dourados Centro e Campo Grande
           </span>
         </div>

@@ -187,7 +187,7 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
 // Mostra um fallback consistente para campos opcionais ainda nao preenchidos.
 function SummaryRow({ label, value }) {
   return (
-    <div className="border-b border-white/[0.09] py-3.5">
+    <div className="border-b border-white/[0.09] py-3 sm:py-3.5">
       <dt className="font-condensed text-[12px] font-semibold uppercase tracking-[0.1em] text-imesul-steel/65">
         {label}
       </dt>
@@ -328,7 +328,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
   return (
     <section
       id="project-quote-flow"
-      className="scroll-mt-6 overflow-hidden rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.96),rgba(6,16,29,0.98))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
+      className="scroll-mt-6 overflow-hidden rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.96),rgba(6,16,29,0.98))] px-4 py-7 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
     >
       <StepHeader
         eyebrow="ORÇAMENTO GUIADO"
@@ -366,8 +366,8 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
       </div>
 
       {subtype && (
-        <div className="mt-12 grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
-          <div className="rounded-[8px] border border-white/[0.08] bg-black/[0.08] p-5 sm:p-7">
+        <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
+          <div className="rounded-[8px] border border-white/[0.08] bg-black/[0.08] p-4 sm:p-7">
             <div className="flex items-center gap-3">
               <Ruler size={18} className="text-imesul-red" aria-hidden="true" />
               <h3 className="font-condensed text-lg font-semibold uppercase tracking-[0.1em] text-white">
@@ -378,7 +378,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               Preencha as informações básicas para a equipe comercial dar continuidade pelo WhatsApp.
             </p>
 
-            <div className="mt-7 space-y-7">
+            <div className="mt-6 space-y-6 sm:mt-7 sm:space-y-7">
               <ChoiceGroup
                 label="Porte estimado"
                 options={projectSizeOptions}
@@ -391,7 +391,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
                 value={form.urgency}
                 onSelect={(urgency) => setForm((current) => ({ ...current, urgency }))}
               />
-              <div className="grid gap-5 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
                 <SelectField label="Quantidade" value={form.quantity} onChange={updateField("quantity")} options={quantityOptions} placeholder="Selecione" required />
                 <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={msCities} placeholder="Selecione" required />
                 <SelectField label="Estado" value={form.state} onChange={updateField("state")} options={brazilianStates} placeholder="Selecione" required />
@@ -408,7 +408,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
             </div>
           </div>
 
-          <aside className="relative overflow-hidden rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(155deg,rgba(212,43,43,0.08),rgba(11,25,43,0.94)_34%)] px-6 py-7 shadow-[0_22px_60px_rgba(0,0,0,0.2)] sm:px-8 sm:py-8">
+          <aside className="relative overflow-hidden rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(155deg,rgba(212,43,43,0.08),rgba(11,25,43,0.94)_34%)] px-4 py-5 shadow-[0_22px_60px_rgba(0,0,0,0.2)] sm:px-8 sm:py-8">
             <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
             <div className="flex items-center gap-3">
               <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
@@ -516,7 +516,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   return (
     <section
       id="material-quote-flow"
-      className="scroll-mt-6 overflow-visible rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(6,16,29,0.99))] px-5 py-10 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
+      className="scroll-mt-6 overflow-visible rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(6,16,29,0.99))] px-4 py-7 shadow-[0_26px_80px_rgba(0,0,0,0.24)] sm:px-8 sm:py-14 lg:px-10"
     >
       <StepHeader
         eyebrow="DADOS DO MATERIAL"
@@ -528,8 +528,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
         activeStep={3}
       />
 
-      <div className="mt-12 grid gap-8 border-t border-white/[0.08] pt-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
-        <div className="rounded-[8px] border border-white/[0.08] bg-black/[0.08] p-5 sm:p-7">
+      <div className="mt-8 grid gap-6 border-t border-white/[0.08] pt-7 sm:mt-12 sm:gap-8 sm:pt-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
+        <div className="rounded-[8px] border border-white/[0.08] bg-black/[0.08] p-4 sm:p-7">
           <div className="flex items-center gap-3">
             <Ruler size={18} className="text-imesul-red" aria-hidden="true" />
             <h3 className="font-condensed text-lg font-semibold uppercase tracking-[0.1em] text-white">
@@ -548,7 +548,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
             </div>
           )}
 
-          <div className={`${usesSimplifiedModelQuote ? "mt-8" : "mt-9 border-t border-white/[0.08] pt-8"} grid gap-5 sm:grid-cols-3`}>
+          <div className={`${usesSimplifiedModelQuote ? "mt-6 sm:mt-8" : "mt-7 border-t border-white/[0.08] pt-6 sm:mt-9 sm:pt-8"} grid gap-4 sm:grid-cols-3 sm:gap-5`}>
             <SelectField
               label="Quantidade"
               value={isCustomQuantity ? customQuantityValue : form.quantity}
@@ -604,7 +604,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           hideTechnicalRows={usesSimplifiedModelQuote}
         >
           {usesSimplifiedModelQuote ? (
-            <div className="mt-8 grid gap-3 xl:grid-cols-2">
+            <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">
               <AddToCartButton
                 product={product}
                 quantity={form.quantity}

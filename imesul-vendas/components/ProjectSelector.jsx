@@ -699,7 +699,7 @@ export default function ProjectSelector() {
               width={1600}
               height={477}
               priority
-              className="relative h-auto max-h-[44px] w-[132px] object-contain sm:max-h-[48px] sm:w-[174px]"
+                className="relative h-auto max-h-[44px] w-[112px] object-contain min-[360px]:w-[124px] sm:max-h-[48px] sm:w-[174px]"
             />
           </span>
           <nav
@@ -746,7 +746,7 @@ export default function ProjectSelector() {
           </nav>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div ref={searchRef} className="relative flex min-w-0">
-              <label className="flex h-11 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
+              <label className="flex h-11 w-[min(34vw,140px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[360px]:w-[min(38vw,160px)] min-[390px]:w-[min(42vw,190px)] sm:w-[270px] sm:px-3">
                 <span className="sr-only">Buscar materiais</span>
                 <input
                   type="search"
@@ -757,7 +757,7 @@ export default function ProjectSelector() {
                   }}
                   onFocus={() => setSearchOpen(true)}
                   placeholder="Buscar materiais..."
-                  className="min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 placeholder:text-slate-500 focus:outline-none sm:text-sm"
+                  className="min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 />
                 <Search size={16} strokeWidth={1.8} aria-hidden="true" />
               </label>
