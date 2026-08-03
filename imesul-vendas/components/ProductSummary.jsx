@@ -7,7 +7,7 @@ import { formatOptionValue } from "./ProductOptionSelector";
 function SummaryRow({ label, value }) {
   return (
     <div className="border-b border-white/[0.09] py-3.5">
-      <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.15em] text-imesul-steel/65">
+      <dt className="font-condensed text-[12px] font-semibold uppercase tracking-[0.1em] text-imesul-steel/65">
         {label}
       </dt>
       <dd className={`mt-1.5 text-[15px] leading-relaxed ${value ? "font-medium text-white" : "text-imesul-steel/48"}`}>

@@ -746,7 +746,7 @@ export default function ProjectSelector() {
           </nav>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div ref={searchRef} className="relative flex min-w-0">
-              <label className="flex h-10 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
+              <label className="flex h-11 w-[min(42vw,180px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[390px]:w-[min(46vw,210px)] sm:w-[270px] sm:px-3">
                 <span className="sr-only">Buscar materiais</span>
                 <input
                   type="search"
@@ -757,7 +757,7 @@ export default function ProjectSelector() {
                   }}
                   onFocus={() => setSearchOpen(true)}
                   placeholder="Buscar materiais..."
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 placeholder:text-slate-500 focus:outline-none sm:text-sm"
                 />
                 <Search size={16} strokeWidth={1.8} aria-hidden="true" />
               </label>
@@ -835,7 +835,7 @@ export default function ProjectSelector() {
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-sales-menu"
               onClick={() => setMobileMenuOpen((open) => !open)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-slate-200 bg-slate-50 text-slate-900 transition-colors hover:border-imesul-red/55 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red xl:hidden"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] border border-slate-200 bg-slate-50 text-slate-900 transition-colors hover:border-imesul-red/55 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red xl:hidden"
             >
               {mobileMenuOpen ? <X size={20} strokeWidth={2.2} aria-hidden="true" /> : <Menu size={22} strokeWidth={2.2} aria-hidden="true" />}
             </button>

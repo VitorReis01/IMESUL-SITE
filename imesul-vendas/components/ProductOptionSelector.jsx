@@ -138,7 +138,7 @@ export default function ProductOptionSelector({ product, form, setForm }) {
               setForm((current) => ({ ...current, details: event.target.value }))
             }
             placeholder="Informe as características desejadas."
-            className="min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[15px] leading-relaxed text-white outline-none transition focus:border-imesul-red/75 focus:ring-4 focus:ring-imesul-red/[0.08]"
+            className="min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[16px] leading-relaxed text-white outline-none transition focus:border-imesul-red/75 focus:ring-4 focus:ring-imesul-red/[0.08]"
           />
         </label>
         <div className="flex items-start gap-3 rounded-[7px] border border-[#e0a43b]/20 bg-[#e0a43b]/[0.07] p-4 text-sm leading-6 text-[#f0c776]">

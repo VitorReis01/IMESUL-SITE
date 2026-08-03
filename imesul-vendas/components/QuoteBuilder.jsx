@@ -45,13 +45,13 @@ const materialInitialForm = {
 };
 
 const selectClassName =
-  "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[15px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
+  "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[16px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
 
 const textareaClassName =
-  "min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[15px] leading-relaxed text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
+  "min-h-28 w-full resize-y rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 py-4 text-[16px] leading-relaxed text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
 
 const inputClassName =
-  "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[15px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
+  "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[16px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 placeholder:text-imesul-steel/38 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
 
 function isPositiveInteger(value) {
   return /^[1-9]\d*$/.test(String(value ?? "").trim());
@@ -188,7 +188,7 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
 function SummaryRow({ label, value }) {
   return (
     <div className="border-b border-white/[0.09] py-3.5">
-      <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.15em] text-imesul-steel/65">
+      <dt className="font-condensed text-[12px] font-semibold uppercase tracking-[0.1em] text-imesul-steel/65">
         {label}
       </dt>
       <dd className={`mt-1.5 text-[15px] leading-relaxed ${value ? "font-medium text-white" : "text-imesul-steel/48"}`}>
