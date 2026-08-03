@@ -152,10 +152,10 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
   return (
     <header className="max-w-5xl">
       <div className="flex items-center gap-4">
-        <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">{eyebrow}</span>
+        <span className="font-mono text-[11px] tracking-[0.24em] text-imesul-red">{eyebrow}</span>
         <span className="h-px w-14 bg-imesul-red" />
       </div>
-      <h2 className="mt-5 font-display text-5xl leading-[0.94] text-white sm:text-6xl lg:text-7xl">
+      <h2 className="mt-5 font-display text-[clamp(2rem,9vw,2.4rem)] leading-[0.96] text-white sm:text-6xl sm:leading-[0.94] lg:text-7xl">
         {title}
       </h2>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-imesul-steel-light/75">
@@ -168,7 +168,7 @@ function StepHeader({ eyebrow, title, description, steps, activeStep }) {
           return (
             <li
               key={step}
-              className={`flex min-h-12 items-center gap-3 border-b-2 px-1 py-2 font-condensed text-xs font-semibold uppercase tracking-[0.12em] ${
+              className={`flex min-h-12 items-center gap-3 border-b-2 px-1 py-2 font-condensed text-[13px] font-semibold uppercase tracking-[0.08em] ${
                 isActive ? "border-imesul-red text-white" : "border-white/[0.08] text-imesul-steel/45"
               }`}
             >
@@ -412,7 +412,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
             <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
             <div className="flex items-center gap-3">
               <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
-              <h3 className="font-display text-4xl leading-none text-white">Resumo do orçamento</h3>
+              <h3 className="font-display text-[clamp(1.9rem,8vw,2.25rem)] leading-none text-white sm:text-4xl">Resumo do orçamento</h3>
             </div>
             <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
               Você será direcionado ao WhatsApp para continuar o atendimento. A compra não é finalizada pelo site.

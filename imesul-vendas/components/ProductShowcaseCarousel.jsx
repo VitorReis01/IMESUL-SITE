@@ -374,7 +374,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
                 />
               </span>
               <span className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">
-                <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#f0c776]">
+                <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#f0c776]">
                   {product.showcaseCategoryName}
                 </span>
                 <strong className="mt-3 line-clamp-2 font-condensed text-[1.35rem] font-semibold leading-none text-white">

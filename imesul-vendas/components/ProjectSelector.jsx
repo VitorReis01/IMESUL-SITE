@@ -971,7 +971,7 @@ export default function ProjectSelector() {
         <div className="relative z-10 mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-8 px-6 py-10 sm:px-8 sm:py-12 lg:grid-cols-[0.93fr_1.07fr] lg:px-12 lg:py-12">
           <div className="max-w-[660px] text-left">
             <div className={`flex max-w-[560px] items-center gap-4 ${heroIntroClassName}`} style={heroIntroStyle(80)}>
-              <span className="font-mono text-[10px] tracking-[0.4em] text-imesul-red">
+              <span className="font-mono text-[11px] tracking-[0.28em] text-imesul-red">
                 IMESUL VENDAS
               </span>
               <span className="h-px w-14 bg-imesul-red" />
@@ -1108,7 +1108,7 @@ export default function ProjectSelector() {
         <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
-              <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
+              <h2 className="font-display text-[clamp(2.2rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">
                 Escolha pelo tipo de aplicação
               </h2>
             </div>
@@ -1197,7 +1197,7 @@ export default function ProjectSelector() {
         <div className="relative z-20 mx-auto max-w-[1480px] px-6 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <header data-scroll-reveal className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
-              <h2 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
+              <h2 className="font-display text-[clamp(2.2rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">
                 Catálogo de materiais
               </h2>
             </div>

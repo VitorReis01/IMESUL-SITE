@@ -31,7 +31,7 @@ export default function MaterialCategoryPage({ category }) {
 
           <header className="mt-12 grid gap-5 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
             <div>
-              <h1 className="font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
+              <h1 className="font-display text-[clamp(2.3rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">
                 {category.name}
               </h1>
             </div>

@@ -86,7 +86,7 @@ export default function ProductCatalog({
               {recommendedProjectTitle}
             </span>
           </p>
-          <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[10px] uppercase leading-5 tracking-[0.18em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:text-[11px]">
+          <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[11px] uppercase leading-5 tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             Selecione uma categoria para ver os produtos.
           </span>
         </div>
@@ -130,7 +130,7 @@ export default function ProductCatalog({
                   </span>
                 )}
                 {isRecommended && !isSelected && (
-                  <span className="absolute right-4 top-4 rounded-full border border-imesul-red/45 bg-[#071321]/88 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-imesul-red shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+                  <span className="absolute right-4 top-4 rounded-full border border-imesul-red/45 bg-[#071321]/88 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-imesul-red shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
                     Indicado
                   </span>
                 )}
@@ -225,10 +225,10 @@ export default function ProductCatalog({
 
           <div className={`${compactCategoryHeader ? "flex items-center justify-between gap-4 border-b border-white/[0.1] pb-5" : "flex flex-col justify-between gap-4 border-b border-white/[0.1] pb-6 sm:flex-row sm:items-end"}`}>
             <div>
-              <p className={`${compactCategoryHeader ? "hidden" : "font-mono text-[10px] tracking-[0.32em] text-imesul-red"}`}>
+              <p className={`${compactCategoryHeader ? "hidden" : "font-mono text-[11px] tracking-[0.22em] text-imesul-red"}`}>
                 PRODUTOS DA CATEGORIA
               </p>
-              <h3 className={`${compactCategoryHeader ? "hidden" : "mt-3 font-display text-5xl leading-none text-white sm:text-6xl"}`}>
+              <h3 className={`${compactCategoryHeader ? "hidden" : "mt-3 font-display text-[clamp(2rem,9vw,2.4rem)] leading-none text-white sm:text-6xl"}`}>
                 {selectedCategory.name}
               </h3>
               <p className={`${compactCategoryHeader ? "text-xs uppercase tracking-[0.14em] text-imesul-steel-light/68" : "mt-2 text-xs uppercase tracking-[0.14em] text-imesul-steel-light/60"}`}>
@@ -239,7 +239,7 @@ export default function ProductCatalog({
               Escolha um produto para consultar medidas e solicitar orçamento.
             </p>
           </div>
-          <p className="mt-4 inline-flex rounded-full border border-[#f0c776]/28 bg-[#f0c776]/8 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#f0c776]">
+          <p className="mt-4 inline-flex rounded-full border border-[#f0c776]/28 bg-[#f0c776]/8 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[#f0c776]">
             {selectedProductId
               ? "Produto selecionado. Confira as opções abaixo."
               : "Categoria selecionada. Escolha um produto para continuar."}
@@ -265,7 +265,7 @@ export default function ProductCatalog({
                       className="object-contain p-5 transition-transform duration-700 group-hover:scale-[1.045]"
                     />
                     <span
-                      className={`absolute left-4 top-4 rounded-[5px] border px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] ${
+                      className={`absolute left-4 top-4 rounded-[5px] border px-3 py-1.5 font-mono text-[11px] tracking-[0.1em] ${
                         item.hasStructuredOptions
                           ? "border-[#1f7a50]/25 bg-[#e5f4ec] text-[#17583b]"
                           : "border-[#8a641f]/25 bg-[#fff2d6] text-[#6e4b0f]"
@@ -276,7 +276,7 @@ export default function ProductCatalog({
                   </div>
 
                   <div className="flex flex-1 flex-col p-6">
-                    <p className="font-mono text-[9px] tracking-[0.22em] text-imesul-red">
+                    <p className="font-mono text-[11px] tracking-[0.14em] text-imesul-red">
                       {selectedCategory.name.toUpperCase()}
                     </p>
                     <h4 className="mt-3 font-condensed text-2xl font-semibold leading-tight text-white">

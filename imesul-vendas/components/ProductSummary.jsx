@@ -28,7 +28,7 @@ export default function ProductSummary({ category, product, form, selectedVariat
       <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
       <div className="flex items-center gap-3">
         <ClipboardList size={19} className="text-imesul-red" aria-hidden="true" />
-        <h3 className="font-display text-4xl leading-none text-white">Resumo do orçamento</h3>
+        <h3 className="font-display text-[clamp(1.9rem,8vw,2.25rem)] leading-none text-white sm:text-4xl">Resumo do orçamento</h3>
       </div>
       <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
         Você será direcionado ao WhatsApp para continuar o atendimento. A compra não é finalizada pelo site.

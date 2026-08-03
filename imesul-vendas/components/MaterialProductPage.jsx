@@ -56,7 +56,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                 />
               </div>
               <span
-                className={`absolute left-5 top-5 rounded-[5px] border px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] ${
+                className={`absolute left-5 top-5 rounded-[5px] border px-3 py-1.5 font-mono text-[11px] tracking-[0.1em] ${
                   product.hasStructuredOptions
                     ? "border-[#1f7a50]/25 bg-[#e5f4ec] text-[#17583b]"
                     : "border-[#8a641f]/25 bg-[#fff2d6] text-[#6e4b0f]"
@@ -67,10 +67,10 @@ export default function MaterialProductPage({ category, product, backLink = null
             </div>
 
             <header>
-              <p className="font-mono text-[10px] uppercase tracking-[0.32em] text-imesul-red">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-imesul-red">
                 {category.name}
               </p>
-              <h1 className="mt-4 font-display text-[clamp(3.1rem,5vw,5.8rem)] leading-[0.9] text-white">
+              <h1 className="mt-4 font-display text-[clamp(2.3rem,10vw,3.1rem)] leading-[0.92] text-white sm:text-[clamp(3.1rem,5vw,5.8rem)] sm:leading-[0.9]">
                 {product.name}
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-imesul-steel-light/75 sm:text-lg">
@@ -108,10 +108,10 @@ export default function MaterialProductPage({ category, product, backLink = null
             <section className="mt-10 rounded-[8px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(12,30,51,0.92),rgba(6,16,29,0.96))] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.22)] sm:p-7">
               <div className="flex flex-col justify-between gap-3 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-end">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-imesul-red">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-imesul-red">
                     Selecione o modelo
                   </p>
-                  <h2 className="mt-3 font-display text-4xl leading-none text-white">
+                  <h2 className="mt-3 font-display text-[clamp(1.9rem,8vw,2.25rem)] leading-none text-white sm:text-4xl">
                     {isFechosSection
                       ? "FECHOS DISPONÍVEIS"
                       : isDobradicasSection
@@ -149,7 +149,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                       </span>
 
                       <span className="flex flex-1 flex-col p-6">
-                        <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-imesul-red">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-imesul-red">
                           {variant.group}
                         </span>
                         <strong className="mt-3 font-condensed text-2xl font-semibold leading-tight text-white">

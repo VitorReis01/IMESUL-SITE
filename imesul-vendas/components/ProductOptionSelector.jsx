@@ -169,7 +169,7 @@ export default function ProductOptionSelector({ product, form, setForm }) {
       />
       {product.specifications.observacoesTecnicas?.length > 0 && (
         <div className="rounded-[7px] border border-white/[0.09] bg-white/[0.025] p-4">
-          <p className="font-mono text-[9px] tracking-[0.22em] text-imesul-red">
+          <p className="font-mono text-[11px] tracking-[0.14em] text-imesul-red">
             DADOS DO PERFIL
           </p>
           <p className="mt-2 text-sm leading-6 text-imesul-steel-light/72">
