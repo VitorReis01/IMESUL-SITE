@@ -38,7 +38,7 @@ export function getCatalogProductSlug(product) {
 }
 
 export function getCatalogProductPath(product) {
-  if (product?.variants?.length === 1) {
+  if (product?.variants?.length === 1 && product?.id !== "fechaduras") {
     return getCatalogVariantPath(product, product.variants[0]);
   }
 

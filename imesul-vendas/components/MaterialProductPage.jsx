@@ -12,7 +12,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isRoldanasSection = product.id === "roldanas";
   const isFechosSection = product.id === "fechos";
   const isDobradicasSection = product.id === "dobradicas";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection);
+  const isFechadurasSection = product.id === "fechaduras";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -116,12 +117,16 @@ export default function MaterialProductPage({ category, product, backLink = null
                       ? "FECHOS DISPONÍVEIS"
                       : isDobradicasSection
                         ? "DOBRADIÇAS DISPONÍVEIS"
-                        : "Roldanas disponíveis"}
+                        : isFechadurasSection
+                          ? "FECHADURAS DISPONÍVEIS"
+                          : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
                   {isDobradicasSection
                     ? "Escolha uma dobradiça para continuar com o orçamento."
+                    : isFechadurasSection
+                      ? "Escolha uma fechadura para continuar com o orçamento."
                     : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>

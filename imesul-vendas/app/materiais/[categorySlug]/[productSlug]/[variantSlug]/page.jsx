@@ -46,6 +46,12 @@ export default async function MaterialVariantRoutePage({ params }) {
     hasCompleteData: match.product.hasCompleteData,
   };
   const hasSingleVariant = match.product.variants.length === 1;
+  const shouldReturnToCategory = hasSingleVariant && match.product.id !== "fechaduras";
+  const backHref = match.product.id === "fechaduras"
+    ? `/${["materiais", categorySlug, productSlug].join("/")}`
+    : shouldReturnToCategory
+      ? getCatalogCategoryPath(match.category.id)
+      : getCatalogProductPath(match.product);
 
   return (
     <>
@@ -57,7 +63,7 @@ export default async function MaterialVariantRoutePage({ params }) {
         }}
         product={variantProduct}
         backLink={{
-          href: hasSingleVariant ? getCatalogCategoryPath(match.category.id) : getCatalogProductPath(match.product),
+          href: backHref,
           label: `Voltar para ${match.product.name}`,
         }}
       />

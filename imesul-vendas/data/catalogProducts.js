@@ -614,10 +614,31 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "fechaduras",
+    categoryId: "acessorios-serralheria",
+    name: "Fechaduras",
+    description: "Segurança para portas e portões metálicos.",
+    usage: ["Serralheria", "Montagem", "Manutenção"],
+    image: "/catalog-products/atualizadas/catalogo-fechadura.webp",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "fechadura-eletrica-cilindrica-40mm-preto-fosco",
+        name: "Fechadura Elétrica Cilíndrica 40mm Preto Fosco",
+        slug: "fechadura-eletrica-cilindrica-40mm-preto-fosco",
+        model: "Abre para dentro",
+        group: "Fechaduras",
+        description: "Fechadura elétrica cilíndrica 40mm preto fosco para portas e portões metálicos.",
+        usage: ["Portões", "Serralheria", "Segurança"],
+        image: "/catalog-products/atualizadas/fechadura-eletrica-cilindrica-40mm-preto-fosco.webp",
+      },
+    ],
+  }),
+
   ...[
     ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
-    ["fechaduras", "Fechaduras", "Segurança para portas e portões metálicos.", "/catalog-products/atualizadas/fechaduras.webp"],
     ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/fechos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
     ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/atualizadas/consumiveis.webp"],
