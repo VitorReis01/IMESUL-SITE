@@ -701,7 +701,7 @@ export const catalogProducts = [
   }),
 
   ...[
-    ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/parafusos.webp"],
+    ["parafusos", "Parafusos", "Fixação e montagem de componentes metálicos.", "/catalog-products/atualizadas/parafuso-autoperfurante-cabeca-sextavada-12-14-medidas.webp"],
     ["discos-corte", "Discos de Corte", "Corte e preparação de peças metálicas.", "/catalog-products/discos-corte.webp"],
     ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/fechos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
