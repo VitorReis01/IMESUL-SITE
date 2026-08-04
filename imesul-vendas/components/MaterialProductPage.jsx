@@ -164,7 +164,8 @@ export default function MaterialProductPage({ category, product, backLink = null
                           {[
                             variant.model ? `Modelo: ${variant.model}` : "",
                             variant.cylinderType ? `Cilindro ${String(variant.cylinderType).toLowerCase()}` : "",
-                            variant.finish && !variant.model ? `Acabamento: ${variant.finish}` : "",
+                            variant.finish && (variant.boreDistance || !variant.model) ? variant.finish : "",
+                            variant.boreDistance ? `Distância de broca: ${variant.boreDistance}` : "",
                             !variant.model && !variant.cylinderType && !variant.finish && variant.type ? variant.type : "",
                           ].filter(Boolean).join(" · ") || "Sob consulta"}
                         </span>
