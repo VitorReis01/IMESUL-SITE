@@ -646,6 +646,18 @@ export const catalogProducts = [
         usage: ["Portões", "Serralheria", "Segurança"],
         image: "/catalog-products/atualizadas/fechadura-stam-1803-11-espelho-inox-40mm-cilindro-redondo.webp",
       },
+      {
+        id: "fechadura-stam-701-100-preto-fosco-espelho-inox-50mm",
+        name: "Fechadura Stam 701/100 Preto Fosco com Espelho Inox 50mm",
+        slug: "fechadura-stam-701-100-preto-fosco-espelho-inox-50mm",
+        model: "701/100",
+        finish: "Preto fosco com espelho inox",
+        boreDistance: "50mm",
+        group: "Fechaduras",
+        description: "Fechadura Stam 701/100 preto fosco com espelho inox e distância de broca 50mm.",
+        usage: ["Portões", "Serralheria", "Segurança"],
+        image: "/catalog-products/atualizadas/fechadura-stam-701-100-preto-fosco-espelho-inox-50mm.webp",
+      },
     ],
   }),
 
