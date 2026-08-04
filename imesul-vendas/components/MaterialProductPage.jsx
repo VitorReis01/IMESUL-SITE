@@ -161,13 +161,12 @@ export default function MaterialProductPage({ category, product, backLink = null
                           {variant.name}
                         </strong>
                         <span className="mt-2 text-sm leading-6 text-imesul-steel-light/68">
-                          {variant.finish
-                            ? `Acabamento: ${variant.finish}`
-                            : variant.model
-                              ? `Modelo: ${variant.model}`
-                              : variant.type
-                                ? variant.type
-                                : "Sob consulta"}
+                          {[
+                            variant.model ? `Modelo: ${variant.model}` : "",
+                            variant.cylinderType ? `Cilindro ${String(variant.cylinderType).toLowerCase()}` : "",
+                            variant.finish && !variant.model ? `Acabamento: ${variant.finish}` : "",
+                            !variant.model && !variant.cylinderType && !variant.finish && variant.type ? variant.type : "",
+                          ].filter(Boolean).join(" · ") || "Sob consulta"}
                         </span>
                         <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
                           Selecionar modelo
