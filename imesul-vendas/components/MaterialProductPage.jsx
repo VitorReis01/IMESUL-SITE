@@ -13,7 +13,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isFechosSection = product.id === "fechos";
   const isDobradicasSection = product.id === "dobradicas";
   const isFechadurasSection = product.id === "fechaduras";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection);
+  const isParafusosSection = product.id === "parafusos";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -119,7 +120,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                         ? "DOBRADIÇAS DISPONÍVEIS"
                         : isFechadurasSection
                           ? "FECHADURAS DISPONÍVEIS"
-                          : "Roldanas disponíveis"}
+                          : isParafusosSection
+                            ? "PARAFUSOS DISPONÍVEIS"
+                            : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
@@ -127,7 +130,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                     ? "Escolha uma dobradiça para continuar com o orçamento."
                     : isFechadurasSection
                       ? "Escolha uma fechadura para continuar com o orçamento."
-                    : "Escolha um modelo para continuar com o orçamento."}
+                      : isParafusosSection
+                        ? "Escolha uma medida para continuar com o orçamento."
+                        : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 
