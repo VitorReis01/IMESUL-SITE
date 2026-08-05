@@ -706,7 +706,7 @@ export const catalogProducts = [
     name: "Parafusos",
     description: "Fixação e montagem de componentes metálicos.",
     usage: ["Serralheria", "Montagem", "Manutenção"],
-    image: "/catalog-products/atualizadas/parafuso-autoperfurante-cabeca-sextavada-12-14-medidas.webp",
+    image: "/catalog-products/atualizadas/catalogo-parafusos.webp",
     specifications: catalogSpecifications.acessorios,
     variants: [
       {
