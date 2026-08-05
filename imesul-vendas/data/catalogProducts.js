@@ -749,6 +749,16 @@ export const catalogProducts = [
         usage: ["Serralheria", "Montagem", "Manutenção"],
         image: "/catalog-products/atualizadas/parafuso-autoperfurante-cabeca-sextavada-12-14-x-4.webp",
       },
+      {
+        id: "protetor-metalico-cabeca-parafuso",
+        name: "Protetor Metálico para Cabeça de Parafuso",
+        slug: "protetor-metalico-cabeca-parafuso",
+        type: "Tipo: Complemento",
+        group: "Parafusos",
+        description: "Proteção e acabamento para esconder a cabeça do parafuso após a instalação.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/protetor-metalico-cabeca-parafuso.webp",
+      },
     ],
   }),
 

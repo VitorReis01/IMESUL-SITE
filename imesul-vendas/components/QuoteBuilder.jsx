@@ -449,7 +449,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
-  const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras";
+  const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos";
   const materialQuantityOptions = usesSimplifiedModelQuote
     ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
     : quantityOptions;
