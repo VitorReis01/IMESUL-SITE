@@ -14,7 +14,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isDobradicasSection = product.id === "dobradicas";
   const isFechadurasSection = product.id === "fechaduras";
   const isParafusosSection = product.id === "parafusos";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection);
+  const isDiscosCorteSection = product.id === "discos-corte";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -122,7 +123,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                           ? "FECHADURAS DISPONÍVEIS"
                           : isParafusosSection
                             ? "PARAFUSOS DISPONÍVEIS"
-                            : "Roldanas disponíveis"}
+                            : isDiscosCorteSection
+                              ? "DISCOS DE CORTE DISPONÍVEIS"
+                              : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
@@ -132,7 +135,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                       ? "Escolha uma fechadura para continuar com o orçamento."
                       : isParafusosSection
                         ? "Escolha uma medida para continuar com o orçamento."
-                        : "Escolha um modelo para continuar com o orçamento."}
+                        : isDiscosCorteSection
+                          ? "Escolha um disco para continuar com o orçamento."
+                          : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 
@@ -167,7 +172,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                         </strong>
                         <span className="mt-2 text-sm leading-6 text-imesul-steel-light/68">
                           {[
+                            variant.kind ? `Tipo: ${variant.kind}` : "",
                             variant.model ? `Modelo: ${variant.model}` : "",
+                            variant.measure ? `Medida: ${variant.measure}` : "",
                             variant.cylinderType ? `Cilindro ${String(variant.cylinderType).toLowerCase()}` : "",
                             variant.finish && (variant.boreDistance || !variant.model) ? variant.finish : "",
                             variant.boreDistance ? `Distância de broca: ${variant.boreDistance}` : "",
