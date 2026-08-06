@@ -16,7 +16,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isParafusosSection = product.id === "parafusos";
   const isDiscosCorteSection = product.id === "discos-corte";
   const isTrincosSection = product.id === "trincos";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection || isTrincosSection);
+  const isPuxadoresSection = product.id === "puxadores";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection || isTrincosSection || isPuxadoresSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -128,7 +129,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                               ? "DISCOS DE CORTE DISPONÍVEIS"
                               : isTrincosSection
                                 ? "TRINCOS DISPONÍVEIS"
-                                : "Roldanas disponíveis"}
+                                : isPuxadoresSection
+                                  ? "PUXADORES DISPONÍVEIS"
+                                  : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
@@ -142,7 +145,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                           ? "Escolha um disco para continuar com o orçamento."
                           : isTrincosSection
                             ? "Escolha um trinco para continuar com o orçamento."
-                            : "Escolha um modelo para continuar com o orçamento."}
+                            : isPuxadoresSection
+                              ? "Escolha um puxador para continuar com o orçamento."
+                              : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 

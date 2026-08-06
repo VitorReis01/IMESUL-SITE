@@ -924,8 +924,46 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "puxadores",
+    categoryId: "acessorios-serralheria",
+    name: "Puxadores",
+    description: "Acionamento e acabamento de portas e portões.",
+    usage: ["Serralheria", "Montagem", "Manutenção"],
+    image: "/catalog-products/atualizadas/catalogo-puxadores.webp",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "puxador-tipo-alca",
+        name: "Puxador Tipo Alça",
+        slug: "puxador-tipo-alca",
+        group: "Puxadores",
+        description: "Puxador Tipo Alça para acionamento e acabamento de portas e portões.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/puxador-tipo-alca.webp",
+      },
+      {
+        id: "jogo-de-puxadores-prensal-zincado",
+        name: "Jogo de Puxadores Prensal Zincado",
+        slug: "jogo-de-puxadores-prensal-zincado",
+        group: "Puxadores",
+        description: "Jogo de Puxadores Prensal Zincado para acionamento e acabamento de portas e portões.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/jogo-de-puxadores-prensal-zincado.webp",
+      },
+      {
+        id: "puxador-concha-de-embutir",
+        name: "Puxador Concha de Embutir",
+        slug: "puxador-concha-de-embutir",
+        group: "Puxadores",
+        description: "Puxador Concha de Embutir para acionamento e acabamento de portas e portões.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/puxador-concha-de-embutir.webp",
+      },
+    ],
+  }),
+
   ...[
-    ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
     ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/atualizadas/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
     product({
