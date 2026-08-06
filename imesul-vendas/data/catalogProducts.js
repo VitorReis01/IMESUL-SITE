@@ -895,7 +895,7 @@ export const catalogProducts = [
   }),
 
   ...[
-    ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/fechos.webp"],
+    ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/atualizadas/catalogo-trincos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
     ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/atualizadas/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
