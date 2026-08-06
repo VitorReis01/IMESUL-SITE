@@ -15,7 +15,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isFechadurasSection = product.id === "fechaduras";
   const isParafusosSection = product.id === "parafusos";
   const isDiscosCorteSection = product.id === "discos-corte";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection);
+  const isTrincosSection = product.id === "trincos";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection || isTrincosSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -125,7 +126,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                             ? "PARAFUSOS DISPONÍVEIS"
                             : isDiscosCorteSection
                               ? "DISCOS DE CORTE DISPONÍVEIS"
-                              : "Roldanas disponíveis"}
+                              : isTrincosSection
+                                ? "TRINCOS DISPONÍVEIS"
+                                : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
@@ -137,7 +140,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                         ? "Escolha uma medida para continuar com o orçamento."
                         : isDiscosCorteSection
                           ? "Escolha um disco para continuar com o orçamento."
-                          : "Escolha um modelo para continuar com o orçamento."}
+                          : isTrincosSection
+                            ? "Escolha um trinco para continuar com o orçamento."
+                            : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 

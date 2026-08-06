@@ -894,8 +894,37 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "trincos",
+    categoryId: "acessorios-serralheria",
+    name: "Trincos",
+    description: "Fechamento mecânico de portas e janelas.",
+    usage: ["Serralheria", "Montagem", "Manutenção"],
+    image: "/catalog-products/atualizadas/catalogo-trincos.webp",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "trinco-maximar",
+        name: "Trinco Maximar",
+        slug: "trinco-maximar",
+        group: "Trincos",
+        description: "Trinco Maximar para fechamento mecânico de portas e janelas.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/trinco-maximar.webp",
+      },
+      {
+        id: "trinco-papagaio",
+        name: "Trinco Papagaio",
+        slug: "trinco-papagaio",
+        group: "Trincos",
+        description: "Trinco Papagaio para fechamento mecânico de portas e janelas.",
+        usage: ["Serralheria", "Montagem", "Manutenção"],
+        image: "/catalog-products/atualizadas/trinco-papagaio.webp",
+      },
+    ],
+  }),
+
   ...[
-    ["trincos", "Trincos", "Fechamento mecânico de portas e janelas.", "/catalog-products/atualizadas/catalogo-trincos.webp"],
     ["puxadores", "Puxadores", "Acionamento e acabamento de portas e portões.", "/catalog-products/puxadores.webp"],
     ["consumiveis-acessorios", "Consumíveis", "Itens de apoio para solda, corte e montagem.", "/catalog-products/atualizadas/consumiveis.webp"],
   ].map(([id, name, description, image]) =>
