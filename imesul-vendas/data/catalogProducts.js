@@ -259,7 +259,7 @@ export const catalogProducts = [
     slug: "kit-n-2-rold-4",
     description: "Kit para portão com componentes essenciais para montagem, contendo cabo de aço com roldana, complemento do braço (barra chata) e acessórios para o complemento.",
     usage: ["Cabo de aço com roldana", "Complemento do braço (barra chata)", "Acessórios para o complemento", "Vendido por unidade de caixa"],
-    image: "/catalog-products/atualizadas/catalogo-kit-para-portao.webp",
+    image: "/catalog-products/atualizadas/catalogo-kit-para-portao-removebg-preview.webp",
     specifications: catalogSpecifications.acessorios,
   }),
   product({
@@ -269,7 +269,7 @@ export const catalogProducts = [
     slug: "kit-n-3-rold-5",
     description: "Kit para portão com componentes essenciais para montagem, contendo cabo de aço com roldana, complemento do braço (barra chata) e acessórios para o complemento.",
     usage: ["Cabo de aço com roldana", "Complemento do braço (barra chata)", "Acessórios para o complemento", "Vendido por unidade de caixa"],
-    image: "/catalog-products/atualizadas/catalogo-kit-para-portao.webp",
+    image: "/catalog-products/atualizadas/catalogo-kit-para-portao-removebg-preview.webp",
     specifications: catalogSpecifications.acessorios,
   }),
 
