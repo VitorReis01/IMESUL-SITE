@@ -9,6 +9,9 @@ import { catalogCategories } from "../data/catalogCategories";
 import { getCatalogProductsByCategory } from "../data/catalogProducts";
 import { getCatalogCategoryPath, getCatalogProductPath } from "../data/catalogRoutes";
 
+// Produtos com imagem de fundo transparente real: sem fundo claro solido atras da foto.
+const transparentBackdropProductIds = new Set(["dobradicas", "guias", "fechos", "roldanas"]);
+
 const materialShowcaseCards = [
   {
     categoryId: "tubos-metalicos",
@@ -256,7 +259,7 @@ export default function ProductCatalog({
               } ${isHighlighted ? "selection-feedback-pulse ring-2 ring-[#f0c776]/70 ring-offset-2 ring-offset-[#091727]" : ""}`;
               const productCardContent = (
                 <>
-                  <div className="relative h-48 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6] sm:h-60">
+                  <div className={`relative h-48 overflow-hidden border-b border-white/[0.08] sm:h-60 ${transparentBackdropProductIds.has(item.id) ? "" : "bg-[#f4f5f6]"}`}>
                     <Image
                       src={item.image}
                       alt={item.name}
