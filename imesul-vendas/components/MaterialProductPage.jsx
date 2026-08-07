@@ -17,7 +17,8 @@ export default function MaterialProductPage({ category, product, backLink = null
   const isDiscosCorteSection = product.id === "discos-corte";
   const isTrincosSection = product.id === "trincos";
   const isPuxadoresSection = product.id === "puxadores";
-  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection || isTrincosSection || isPuxadoresSection);
+  const isEletrodoSection = product.id === "eletrodo";
+  const isModelSelectionSection = hasVariants && (isRoldanasSection || isFechosSection || isDobradicasSection || isFechadurasSection || isParafusosSection || isDiscosCorteSection || isTrincosSection || isPuxadoresSection || isEletrodoSection);
   const returnLink = backLink || {
     href: getCatalogCategoryPath(category.id),
     label: "Voltar para categoria",
@@ -131,7 +132,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                                 ? "TRINCOS DISPONÍVEIS"
                                 : isPuxadoresSection
                                   ? "PUXADORES DISPONÍVEIS"
-                                  : "Roldanas disponíveis"}
+                                  : isEletrodoSection
+                                    ? "ELETRODOS E ARAMES DISPONÍVEIS"
+                                    : "Roldanas disponíveis"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">
@@ -147,7 +150,9 @@ export default function MaterialProductPage({ category, product, backLink = null
                             ? "Escolha um trinco para continuar com o orçamento."
                             : isPuxadoresSection
                               ? "Escolha um puxador para continuar com o orçamento."
-                              : "Escolha um modelo para continuar com o orçamento."}
+                              : isEletrodoSection
+                                ? "Escolha um eletrodo ou arame para continuar com o orçamento."
+                                : "Escolha um modelo para continuar com o orçamento."}
                 </p>
               </div>
 

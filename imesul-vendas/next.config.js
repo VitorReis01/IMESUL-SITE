@@ -44,6 +44,16 @@ const nextConfig = {
       },
     ];
   },
+  // Preserva a rota antiga apos renomear "Consumiveis" para "Eletrodo".
+  async redirects() {
+    return [
+      {
+        source: "/materiais/acessorios/consumiveis",
+        destination: "/materiais/acessorios/eletrodo",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
