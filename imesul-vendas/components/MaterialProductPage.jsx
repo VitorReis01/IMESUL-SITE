@@ -6,9 +6,6 @@ import { ArrowLeft, ArrowRight, Database, Home, ImageIcon } from "lucide-react";
 import { getCatalogCategoryPath, getCatalogVariantPath } from "../data/catalogRoutes";
 import { MaterialQuoteFlow } from "./QuoteBuilder";
 
-// Produtos com imagem de fundo transparente real: sem fundo claro solido atras da foto.
-const transparentBackdropProductIds = new Set(["dobradicas", "guias", "fechos", "roldanas"]);
-
 export default function MaterialProductPage({ category, product, backLink = null }) {
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
@@ -53,7 +50,7 @@ export default function MaterialProductPage({ category, product, backLink = null
 
           {!isModelSelectionSection && (
           <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-            <div className={`relative overflow-hidden rounded-[8px] border border-white/[0.1] shadow-[0_22px_70px_rgba(0,0,0,0.24)] ${transparentBackdropProductIds.has(product.id) ? "" : "bg-[#f4f5f6]"}`}>
+            <div className="relative overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#f4f5f6] shadow-[0_22px_70px_rgba(0,0,0,0.24)]">
               <div className="relative aspect-[4/3]">
                 <Image
                   src={product.image}
@@ -171,7 +168,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                       aria-label={`Selecionar ${variant.name}`}
                       className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#0a1829] text-left shadow-[0_18px_50px_rgba(0,0,0,0.16)] transition-all duration-300 will-change-transform hover:-translate-y-0.5 hover:border-imesul-red/38 hover:shadow-[0_22px_64px_rgba(212,43,43,0.08),inset_0_1px_0_rgba(255,255,255,0.045)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue"
                     >
-                      <span className={`relative block h-48 overflow-hidden border-b border-white/[0.08] sm:h-60 ${transparentBackdropProductIds.has(product.id) ? "" : "bg-[#f4f5f6]"}`}>
+                      <span className="relative block h-48 overflow-hidden border-b border-white/[0.08] bg-[#f4f5f6] sm:h-60">
                         <Image
                           src={variant.image}
                           alt={variant.name}
