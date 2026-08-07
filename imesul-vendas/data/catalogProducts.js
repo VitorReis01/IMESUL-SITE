@@ -1041,6 +1041,16 @@ export const catalogProducts = [
     ],
   }),
 
+  product({
+    id: "fixador-de-porta-de-piso",
+    categoryId: "acessorios-serralheria",
+    name: "Fixador de Porta de Piso",
+    description: "Fixação e travamento de portas no piso.",
+    usage: ["Portas", "Serralheria", "Fixação"],
+    image: "/catalog-products/atualizadas/fixador-de-porta-de-piso.webp",
+    specifications: catalogSpecifications.acessorios,
+  }),
+
   ...[
     ["primers", "Primers", "Preparação de superfícies metálicas antes do acabamento.", "/catalog-products/tintas-solventes.webp"],
     ["galvanizantes-frio", "Galvanizantes a Frio", "Proteção de áreas metálicas e pontos de manutenção.", "/catalog-products/tintas-solventes.webp"],

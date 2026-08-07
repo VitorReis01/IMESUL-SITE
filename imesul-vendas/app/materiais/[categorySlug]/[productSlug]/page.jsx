@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import MaterialProductPage from "../../../../components/MaterialProductPage";
 import SalesFooter from "../../../../components/SalesFooter";
 import {
+  getCatalogCategoryPath,
   getCatalogProductBySlugs,
   getRoutedCatalogProducts,
 } from "../../../../data/catalogRoutes";
@@ -32,6 +33,10 @@ export default async function MaterialProductRoutePage({ params }) {
 
   if (!match) notFound();
 
+  const backLink = match.product.id === "fixador-de-porta-de-piso"
+    ? { href: getCatalogCategoryPath(match.category.id), label: `Voltar para ${match.category.name}` }
+    : null;
+
   return (
     <>
       <MaterialProductPage
@@ -41,6 +46,7 @@ export default async function MaterialProductRoutePage({ params }) {
           description: match.category.description,
         }}
         product={match.product}
+        backLink={backLink}
       />
       <SalesFooter />
     </>
