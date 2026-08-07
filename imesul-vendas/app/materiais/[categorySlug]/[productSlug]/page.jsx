@@ -33,7 +33,7 @@ export default async function MaterialProductRoutePage({ params }) {
 
   if (!match) notFound();
 
-  const backLink = match.product.id === "fixador-de-porta-de-piso"
+  const backLink = ["fixador-de-porta-de-piso", "kit-n-2-rold-4", "kit-n-3-rold-5"].includes(match.product.id)
     ? { href: getCatalogCategoryPath(match.category.id), label: `Voltar para ${match.category.name}` }
     : null;
 

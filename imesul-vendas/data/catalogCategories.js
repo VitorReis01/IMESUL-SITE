@@ -57,8 +57,8 @@ export const catalogCategories = [
   },
   {
     id: "perfis-serralheria",
-    name: "Perfis para Serralheria",
-    description: "Perfis usados na fabricação de portões, portas e janelas de aço.",
+    name: "KIT PARA PORTÃO",
+    description: "Kits completos para montagem de portões, vendidos por unidade de caixa.",
     image: "/catalog-products/perfis-portoes-elevacao.webp",
     icon: DoorOpen,
   },

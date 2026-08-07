@@ -47,8 +47,8 @@ const materialShowcaseCards = [
   },
   {
     categoryId: "perfis-serralheria",
-    title: "Serralheria e Acabamentos",
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    title: "KIT PARA PORTÃO",
+    image: "/catalog-products/atualizadas/catalogo-kit-para-portao.webp",
   },
 ];
 
