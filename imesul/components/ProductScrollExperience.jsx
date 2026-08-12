@@ -134,9 +134,14 @@ function ProductInformation({ product, compact = false }) {
 export default function ProductScrollExperience() {
   const sectionRef = useRef(null);
   const visualRefs = useRef([]);
+  const mobileVisualRefs = useRef([]);
+  const mobileInfoRefs = useRef([]);
   const progressRef = useRef(null);
+  const mobileProgressRef = useRef(null);
   const activeRef = useRef(0);
+  const activeMobileRef = useRef(0);
   const [active, setActive] = useState(0);
+  const [activeMobile, setActiveMobile] = useState(0);
 
   // No desktop, transforma o progresso da secao em trocas de produto com foco e escala.
   // O matchMedia desativa o efeito no mobile e respeita movimento reduzido.
@@ -161,6 +166,83 @@ export default function ProductScrollExperience() {
           ScrollTrigger.refresh();
         });
       };
+
+      media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        const context = gsap.context(() => {
+          const mobileVisualItems = mobileVisualRefs.current.filter(Boolean);
+          const mobileInfoItems = mobileInfoRefs.current.filter(Boolean);
+
+          gsap.set(mobileVisualItems, { autoAlpha: 0, scale: 0.94, y: 24 });
+          gsap.set(mobileInfoItems, { autoAlpha: 0, y: 18 });
+          gsap.set([mobileVisualItems[0], mobileInfoItems[0]], {
+            autoAlpha: 1,
+            scale: 1,
+            y: 0,
+          });
+
+          // Mobile troca um produto por vez em um pin curto por item, sem blur pesado nem scroll artificial.
+          const timeline = gsap.timeline({
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top top",
+              end: () => `+=${products.length * Math.min(window.innerHeight * 0.48, 390)}`,
+              pin: true,
+              scrub: 0.55,
+              anticipatePin: 0.5,
+              invalidateOnRefresh: true,
+              onUpdate: ({ progress }) => {
+                const next = Math.min(products.length - 1, Math.floor(progress * products.length));
+                if (activeMobileRef.current !== next) {
+                  activeMobileRef.current = next;
+                  setActiveMobile(next);
+                }
+                gsap.set(mobileProgressRef.current, { scaleX: progress });
+              },
+            },
+          });
+
+          products.forEach((product, index) => {
+            const at = index * 1;
+
+            timeline
+              .to(
+                mobileVisualRefs.current[index],
+                { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: "power2.out" },
+                at
+              )
+              .to(
+                mobileInfoRefs.current[index],
+                { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" },
+                at
+              )
+              .to(
+                mobileVisualRefs.current[index],
+                { scale: 1.035, y: -8, duration: 0.58, ease: "none" },
+                at + 0.18
+              );
+
+            if (index < products.length - 1) {
+              timeline
+                .to(
+                  mobileVisualRefs.current[index],
+                  { autoAlpha: 0, scale: 0.97, y: -18, duration: 0.22, ease: "power2.inOut" },
+                  at + 0.78
+                )
+                .to(
+                  mobileInfoRefs.current[index],
+                  { autoAlpha: 0, y: -12, duration: 0.2, ease: "power2.inOut" },
+                  at + 0.8
+                );
+            }
+          });
+        }, sectionRef);
+
+        refreshProductScroll();
+        window.addEventListener("load", refreshProductScroll, { once: true });
+        window.addEventListener("resize", refreshProductScroll);
+
+        return () => context.revert();
+      });
 
       media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
@@ -259,13 +341,75 @@ export default function ProductScrollExperience() {
   }, []);
 
   const activeProduct = products[active];
+  const activeMobileProduct = products[activeMobile];
 
   return (
     <section id="produtos" ref={sectionRef} className="relative overflow-hidden bg-[#050b14]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.12),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.13),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
       <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
 
-      <div className="relative z-10 px-5 pb-20 pt-28 sm:px-8 sm:pb-24 sm:pt-32 lg:hidden">
+      <div className="relative z-10 flex min-h-[100svh] flex-col px-5 pb-6 pt-20 motion-reduce:hidden sm:px-8 lg:hidden">
+        <header className="mx-auto w-full max-w-3xl">
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
+              SHOWROOM IMESUL
+            </span>
+            <span className="h-px flex-1 bg-imesul-red/70" />
+            <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/50">
+              {activeMobileProduct.number}/{String(products.length).padStart(2, "0")}
+            </span>
+          </div>
+          <h2 className="mt-5 max-w-2xl font-display text-[clamp(2.45rem,12vw,4.7rem)] leading-[0.92] text-white">
+            SOLUÃ‡Ã•ES PARA QUEM CONSTRÃ“I E TRANSFORMA
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-imesul-steel-light/68 sm:text-base">
+            ConheÃ§a as principais linhas da IMESUL e encontre o material adequado para sua obra,
+            indÃºstria ou serralheria.
+          </p>
+        </header>
+
+        <div className="relative mx-auto mt-8 flex min-h-[58svh] w-full max-w-3xl flex-1 flex-col justify-end">
+          <div className="relative min-h-[42svh] overflow-hidden rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_62%_44%,rgba(212,43,43,0.12),transparent_38%),linear-gradient(145deg,#101f31,#07101c)] shadow-[0_26px_80px_rgba(0,0,0,0.34)]">
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                ref={(element) => {
+                  mobileVisualRefs.current[index] = element;
+                }}
+                className={`absolute inset-0 flex items-center justify-center ${
+                  index === 0 ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <ProductImage product={product} compact />
+              </div>
+            ))}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#07101c] to-transparent" />
+          </div>
+
+          <div className="relative mt-6 min-h-[310px]">
+            {products.map((product, index) => (
+              <article
+                key={product.id}
+                ref={(element) => {
+                  mobileInfoRefs.current[index] = element;
+                }}
+                aria-hidden={index !== activeMobile}
+                className={`absolute inset-x-0 top-0 rounded-[14px] border border-white/10 bg-[#07111f]/88 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-sm ${
+                  index === 0 ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <ProductInformation product={product} compact />
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-4 h-px w-full overflow-hidden bg-white/10">
+            <span ref={mobileProgressRef} className="block h-full origin-left scale-x-0 bg-imesul-red" />
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 hidden px-5 pb-20 pt-28 motion-reduce:block sm:px-8 sm:pb-24 sm:pt-32 lg:hidden">
         <header className="mx-auto max-w-5xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
