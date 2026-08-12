@@ -9,6 +9,7 @@
 // duplicado uma vez para o loop ficar sem emenda). Mobile/tablet: carrossel horizontal nativo
 // (scroll-snap), sem JS de animacao. prefers-reduced-motion: colunas viram grade estatica, sem
 // duplicar cards e sem transform em loop.
+import { useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import { reviews } from "../data/googleReviews";
 import { whatsapp } from "../data/products";
@@ -155,6 +156,60 @@ function MarqueeColumn({ items, duration, offsetClassName, reduceMotion }) {
   );
 }
 
+function MobileReviewsMarquee({ items, reduceMotion }) {
+  const [paused, setPaused] = useState(false);
+
+  if (reduceMotion) {
+    return (
+      <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 lg:hidden">
+        {items.map((review) => (
+          <div key={review.id} className="w-[82vw] max-w-sm flex-shrink-0 snap-center">
+            <ReviewCard review={review} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const loopItems = [...items, ...items];
+
+  return (
+    <div
+      className="-mx-6 overflow-x-auto overflow-y-hidden px-6 pb-2 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] lg:hidden"
+      onPointerDown={() => setPaused(true)}
+      onPointerUp={() => setPaused(false)}
+      onPointerCancel={() => setPaused(false)}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <style>
+        {`
+          @keyframes imesulReviewsMobileMarquee {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-50%, 0, 0); }
+          }
+        `}
+      </style>
+      <div
+        className="flex w-max gap-4"
+        style={{
+          animation: "imesulReviewsMobileMarquee 34s linear infinite",
+          animationPlayState: paused ? "paused" : "running",
+        }}
+      >
+        {loopItems.map((review, index) => (
+          <div key={`${review.id}-mobile-${index}`} className="w-[82vw] max-w-sm flex-shrink-0">
+            <ReviewCard
+              review={review}
+              hiddenFromScreenReaders={index >= items.length}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function GoogleReviews() {
   const shouldReduceMotion = useReducedMotion();
   const waUrl = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsapp.message)}`;
@@ -215,14 +270,11 @@ export default function GoogleReviews() {
                 ))}
               </div>
 
-              {/* Mobile/tablet: carrossel horizontal nativo, sem JS de animacao. */}
-              <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 lg:hidden">
-                {reviews.map((review) => (
-                  <div key={review.id} className="w-[82vw] max-w-sm flex-shrink-0 snap-center">
-                    <ReviewCard review={review} />
-                  </div>
-                ))}
-              </div>
+              {/* Mobile/tablet: marquee horizontal lento, pausavel ao toque e estatico em reduced-motion. */}
+              <MobileReviewsMarquee
+                items={reviews}
+                reduceMotion={shouldReduceMotion === true}
+              />
             </>
           )}
         </div>
