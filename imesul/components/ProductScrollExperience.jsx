@@ -13,7 +13,9 @@ function ProductImage({ product, compact = false }) {
   return (
     <div
       className={`relative flex items-center justify-center ${
-        compact ? "h-56 w-full sm:h-64" : "h-full w-full translate-x-[2%]"
+        compact
+          ? "h-[clamp(8rem,24svh,13rem)] w-full sm:h-[clamp(9rem,23svh,14rem)] [@media(max-height:700px)]:h-[clamp(6rem,20svh,8rem)] [@media(max-height:480px)]:h-[clamp(5rem,44svh,9rem)]"
+          : "h-full w-full translate-x-[2%]"
       }`}
     >
       <Image
@@ -48,7 +50,7 @@ function SalesLink({ compact = false }) {
       href={salesSiteUrl}
       className={`group/link inline-flex min-h-12 items-center justify-between gap-5 border border-imesul-red bg-imesul-red font-condensed font-bold text-white uppercase transition duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_16px_34px_rgba(212,43,43,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red ${
         compact
-          ? "mt-auto w-full px-5 py-3 text-xs tracking-[0.12em]"
+          ? "mt-4 w-full px-4 py-2.5 text-[10px] tracking-[0.1em] sm:px-5 sm:py-3 sm:text-xs [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:py-2"
           : "mt-7 w-fit min-w-[310px] px-6 py-3 text-sm tracking-[0.14em]"
       }`}
     >
@@ -83,8 +85,8 @@ function ProductInformation({ product, compact = false }) {
         className={`mt-4 max-w-[620px] font-display leading-[0.92] text-white ${
           compact
             ? longTitle
-              ? "text-3xl sm:text-[2.65rem]"
-              : "text-[2.65rem] sm:text-5xl"
+              ? "text-[clamp(1.55rem,7vw,2.15rem)] [@media(max-height:700px)]:text-[clamp(1.25rem,6vw,1.65rem)]"
+              : "text-[clamp(1.9rem,8vw,2.6rem)] [@media(max-height:700px)]:text-[clamp(1.45rem,7vw,2rem)]"
             : longTitle
               ? "text-[3.4rem] xl:text-[4rem]"
               : "text-[4.25rem] xl:text-[5rem]"
@@ -93,23 +95,37 @@ function ProductInformation({ product, compact = false }) {
         {product.name}
       </h3>
 
-      <p className="mt-3 font-condensed text-xs font-semibold tracking-[0.17em] text-imesul-red uppercase sm:text-sm">
+      <p className={`font-condensed text-xs font-semibold tracking-[0.17em] text-imesul-red uppercase sm:text-sm ${compact ? "mt-2 [@media(max-height:480px)]:hidden" : "mt-3"}`}>
         {product.subtitle}
       </p>
-      <p className="mt-4 max-w-[560px] text-sm leading-6 text-imesul-steel-light/75 sm:text-[15px] sm:leading-7">
+      <p
+        className={`max-w-[560px] text-imesul-steel-light/75 ${
+          compact
+            ? "mt-3 overflow-hidden text-xs leading-5 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] sm:text-sm [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:[-webkit-line-clamp:1] [@media(max-height:480px)]:hidden"
+            : "mt-4 text-sm leading-6 sm:text-[15px] sm:leading-7"
+        }`}
+      >
         {product.description}
       </p>
 
-      <dl className={`mt-6 grid gap-5 border-t border-white/10 pt-5 ${compact ? "mb-7" : "max-w-[570px] sm:grid-cols-[1.08fr_0.92fr]"}`}>
+      <dl
+        className={`grid border-t border-white/10 ${
+          compact
+            ? "mt-4 gap-3 pt-4 [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:pt-2"
+            : "mt-6 gap-5 pt-5 max-w-[570px] sm:grid-cols-[1.08fr_0.92fr]"
+        }`}
+      >
         <div>
           <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-steel/55">
             PRINCIPAIS VARIAÇÕES
           </dt>
-          <dd className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+          <dd className={`flex flex-wrap gap-x-4 gap-y-2 ${compact ? "mt-2 [@media(max-height:700px)]:gap-y-1" : "mt-3"}`}>
             {product.variations.map((variation) => (
               <span
                 key={variation}
-                className="relative pl-3 font-condensed text-sm font-medium text-imesul-steel before:absolute before:left-0 before:top-[0.58em] before:h-1 before:w-1 before:bg-imesul-red"
+                className={`relative pl-3 font-condensed font-medium text-imesul-steel before:absolute before:left-0 before:top-[0.58em] before:h-1 before:w-1 before:bg-imesul-red ${
+                  compact ? "text-xs" : "text-sm"
+                }`}
               >
                 {variation}
               </span>
@@ -117,7 +133,7 @@ function ProductInformation({ product, compact = false }) {
           </dd>
         </div>
 
-        <div className={compact ? "border-t border-white/10 pt-5" : "border-l border-white/10 pl-5"}>
+        <div className={compact ? "hidden" : "border-l border-white/10 pl-5"}>
           <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-red">
             USO PRINCIPAL
           </dt>
@@ -185,7 +201,16 @@ export default function ProductScrollExperience() {
             scrollTrigger: {
               trigger: sectionRef.current,
               start: "top top",
-              end: () => `+=${products.length * Math.min(window.innerHeight * 0.48, 390)}`,
+              end: () => {
+                const landscape = window.innerWidth > window.innerHeight;
+                const compactHeight = window.innerHeight < 700;
+                const perProduct = landscape
+                  ? Math.min(window.innerHeight * 0.22, 150)
+                  : compactHeight
+                    ? Math.min(window.innerHeight * 0.26, 175)
+                    : Math.min(window.innerHeight * 0.32, 240);
+                return `+=${products.length * perProduct}`;
+              },
               pin: true,
               scrub: 0.55,
               anticipatePin: 0.5,
@@ -348,7 +373,7 @@ export default function ProductScrollExperience() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.12),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.13),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
       <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
 
-      <div className="relative z-10 flex min-h-[100svh] flex-col px-5 pb-6 pt-20 motion-reduce:hidden sm:px-8 lg:hidden">
+      <div className="relative z-10 flex min-h-[100svh] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-12 motion-reduce:hidden sm:px-6 sm:pt-14 lg:hidden [@media(max-height:700px)]:pt-9">
         <header className="mx-auto w-full max-w-3xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
@@ -359,17 +384,17 @@ export default function ProductScrollExperience() {
               {activeMobileProduct.number}/{String(products.length).padStart(2, "0")}
             </span>
           </div>
-          <h2 className="mt-5 max-w-2xl font-display text-[clamp(2.45rem,12vw,4.7rem)] leading-[0.92] text-white">
-            SOLUÃ‡Ã•ES PARA QUEM CONSTRÃ“I E TRANSFORMA
+          <h2 className="mt-4 max-w-2xl font-display text-[clamp(1.9rem,9vw,3.2rem)] leading-[0.92] text-white sm:text-[clamp(2.2rem,8vw,3.8rem)] [@media(max-height:700px)]:text-[clamp(1.65rem,8vw,2.45rem)]">
+            SOLUÇÕES PARA QUEM CONSTRÓI E TRANSFORMA
           </h2>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-imesul-steel-light/68 sm:text-base">
-            ConheÃ§a as principais linhas da IMESUL e encontre o material adequado para sua obra,
-            indÃºstria ou serralheria.
+          <p className="mt-3 max-w-xl text-xs leading-5 text-imesul-steel-light/68 sm:text-sm sm:leading-6 [@media(max-height:700px)]:hidden">
+            Conheça as principais linhas da IMESUL e encontre o material adequado para sua obra,
+            indústria ou serralheria.
           </p>
         </header>
 
-        <div className="relative mx-auto mt-8 flex min-h-[58svh] w-full max-w-3xl flex-1 flex-col justify-end">
-          <div className="relative min-h-[42svh] overflow-hidden rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_62%_44%,rgba(212,43,43,0.12),transparent_38%),linear-gradient(145deg,#101f31,#07101c)] shadow-[0_26px_80px_rgba(0,0,0,0.34)]">
+        <div className="relative mx-auto mt-4 flex min-h-0 w-full max-w-3xl flex-1 flex-col justify-center gap-3 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:gap-2 [@media(max-height:480px)]:grid [@media(max-height:480px)]:grid-cols-[0.82fr_1.18fr] [@media(max-height:480px)]:items-center">
+          <div className="relative h-[clamp(9rem,28svh,15rem)] overflow-hidden rounded-[16px] border border-white/10 bg-[radial-gradient(circle_at_62%_44%,rgba(212,43,43,0.12),transparent_38%),linear-gradient(145deg,#101f31,#07101c)] shadow-[0_20px_58px_rgba(0,0,0,0.3)] [@media(max-height:700px)]:h-[clamp(6.75rem,21svh,8.5rem)] [@media(max-height:480px)]:h-[clamp(8rem,62svh,13rem)]">
             {products.map((product, index) => (
               <div
                 key={product.id}
@@ -386,7 +411,7 @@ export default function ProductScrollExperience() {
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#07101c] to-transparent" />
           </div>
 
-          <div className="relative mt-6 min-h-[310px]">
+          <div className="relative h-[clamp(16.5rem,40svh,22rem)] [@media(max-height:700px)]:h-[clamp(13.25rem,39svh,16rem)] [@media(max-height:480px)]:h-[clamp(12rem,72svh,16rem)]">
             {products.map((product, index) => (
               <article
                 key={product.id}
@@ -394,7 +419,7 @@ export default function ProductScrollExperience() {
                   mobileInfoRefs.current[index] = element;
                 }}
                 aria-hidden={index !== activeMobile}
-                className={`absolute inset-x-0 top-0 rounded-[14px] border border-white/10 bg-[#07111f]/88 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-sm ${
+                className={`absolute inset-x-0 top-0 rounded-[14px] border border-white/10 bg-[#07111f]/88 p-4 shadow-[0_18px_52px_rgba(0,0,0,0.24)] backdrop-blur-sm sm:p-5 ${
                   index === 0 ? "opacity-100" : "opacity-0"
                 }`}
               >
@@ -403,7 +428,7 @@ export default function ProductScrollExperience() {
             ))}
           </div>
 
-          <div className="mt-4 h-px w-full overflow-hidden bg-white/10">
+          <div className="mt-1 h-px w-full overflow-hidden bg-white/10">
             <span ref={mobileProgressRef} className="block h-full origin-left scale-x-0 bg-imesul-red" />
           </div>
         </div>

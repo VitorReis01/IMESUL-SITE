@@ -108,14 +108,16 @@ export default function MaterialsShowreel() {
 
       media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
+          const landscape = window.innerWidth > window.innerHeight;
+
           gsap.set(videoBoxRef.current, {
-            width: "82vw",
+            width: landscape ? "54vw" : "88vw",
             maxWidth: "none",
-            scale: 0.92,
-            borderRadius: 22,
+            scale: 0.96,
+            borderRadius: 18,
           });
-          gsap.set(bgRef.current, { opacity: 0.44, scale: 1.02 });
-          gsap.set(subtitleRef.current, { opacity: 0, y: 18 });
+          gsap.set(bgRef.current, { opacity: 0.34, scale: 1.01 });
+          gsap.set(subtitleRef.current, { opacity: 0, y: 12 });
           gsap.set(scrollCueRef.current, { opacity: 0.9 });
 
           // Pin mobile curto: entrega sensacao imersiva sem prender o toque nem copiar a retencao longa do desktop.
@@ -123,7 +125,12 @@ export default function MaterialsShowreel() {
             scrollTrigger: {
               trigger: sectionRef.current,
               start: "top top",
-              end: () => `+=${window.innerHeight * (window.innerWidth > window.innerHeight ? 0.62 : 0.86)}`,
+              end: () => {
+                const landscape = window.innerWidth > window.innerHeight;
+                const compactHeight = window.innerHeight < 700;
+                const factor = landscape ? 0.42 : compactHeight ? 0.55 : 0.62;
+                return `+=${window.innerHeight * factor}`;
+              },
               scrub: 0.45,
               pin: true,
               pinSpacing: true,
@@ -134,12 +141,12 @@ export default function MaterialsShowreel() {
 
           timeline
             .to(scrollCueRef.current, { opacity: 0, y: -8, ease: "none", duration: 0.14 }, 0.02)
-            .to(videoBoxRef.current, { width: "96vw", scale: 1.02, borderRadius: 12, ease: "none", duration: 0.54 }, 0.12)
-            .to(bgRef.current, { opacity: 0.18, scale: 1.08, ease: "none", duration: 0.54 }, 0.12)
-            .to(titleLeftRef.current, { yPercent: -22, opacity: 0, ease: "none", duration: 0.5 }, 0.18)
-            .to(titleRightRef.current, { yPercent: -22, opacity: 0, ease: "none", duration: 0.5 }, 0.18)
-            .to(subtitleRef.current, { opacity: 1, y: 0, ease: "none", duration: 0.22 }, 0.62)
-            .to({}, { duration: 0.16 }, 0.84);
+            .to(videoBoxRef.current, { width: landscape ? "64vw" : "95vw", scale: 1, borderRadius: 12, ease: "none", duration: 0.48 }, 0.1)
+            .to(bgRef.current, { opacity: 0.16, scale: 1.04, ease: "none", duration: 0.48 }, 0.1)
+            .to(titleLeftRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
+            .to(titleRightRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
+            .to(subtitleRef.current, { opacity: 1, y: 0, ease: "none", duration: 0.2 }, 0.56)
+            .to({}, { duration: 0.1 }, 0.78);
         }, sectionRef);
 
         refreshShowreel();
@@ -222,13 +229,13 @@ export default function MaterialsShowreel() {
     <section
       id="showroom-abertura"
       ref={sectionRef}
-      className={`relative h-auto overflow-hidden bg-[#050b14] py-24 sm:py-28 ${
-        immersive ? "lg:h-screen lg:py-0" : ""
+      className={`relative h-auto overflow-hidden bg-[#050b14] ${
+        immersive ? "min-h-[100svh] py-6 sm:py-8 lg:h-screen lg:py-0 [@media(max-height:480px)]:py-3" : "py-24 sm:py-28"
       }`}
     >
       <div
-        className={`relative flex h-full w-full flex-col items-center px-6 sm:px-8 lg:px-12 ${
-          immersive ? "lg:h-screen lg:justify-center lg:overflow-hidden" : ""
+        className={`relative flex h-full w-full flex-col items-center px-5 sm:px-8 lg:px-12 ${
+          immersive ? "min-h-[100svh] justify-center overflow-hidden lg:h-screen" : ""
         }`}
       >
         {/* Fundo amplo: o mesmo frame real da fabrica, escurecido, ocupando a viewport inteira no desktop. */}
@@ -246,8 +253,8 @@ export default function MaterialsShowreel() {
         <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
 
         <div
-          className={`relative z-10 flex w-full max-w-[1400px] flex-1 flex-col items-center justify-center py-16 ${
-            immersive ? "lg:h-full lg:py-0" : ""
+          className={`relative z-10 flex w-full max-w-[1400px] flex-1 flex-col items-center justify-center ${
+            immersive ? "py-0 lg:h-full lg:py-0" : "py-16"
           }`}
         >
           <motion.div
@@ -255,7 +262,7 @@ export default function MaterialsShowreel() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 0.6 }}
-            className={`flex items-center gap-4 ${immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[7%]" : ""}`}
+            className={`flex items-center gap-3 ${immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[7%]" : ""}`}
           >
             <span className="h-px w-10 bg-imesul-red" />
             <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
@@ -265,7 +272,7 @@ export default function MaterialsShowreel() {
           </motion.div>
 
           <h2
-            className={`mt-6 flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-display leading-[0.94] text-white [font-size:clamp(2.2rem,5vw,4.2rem)] ${
+            className={`mt-4 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-center font-display leading-[0.94] text-white [font-size:clamp(1.85rem,9.5vw,3.15rem)] sm:[font-size:clamp(2.1rem,7vw,3.7rem)] lg:[font-size:clamp(2.2rem,5vw,4.2rem)] [@media(max-height:480px)]:mt-2 [@media(max-height:480px)]:[font-size:clamp(1.25rem,5vw,2rem)] ${
               immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[19%] lg:mt-0" : ""
             }`}
           >
@@ -275,7 +282,7 @@ export default function MaterialsShowreel() {
 
           <div
             ref={videoBoxRef}
-            className={`relative z-20 mx-auto mt-14 aspect-video w-full max-w-3xl overflow-hidden rounded-[20px] shadow-[0_50px_150px_rgba(0,0,0,0.55)] ${
+            className={`relative z-20 mx-auto mt-6 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] shadow-[0_34px_90px_rgba(0,0,0,0.5)] sm:mt-8 lg:mt-14 lg:rounded-[20px] lg:shadow-[0_50px_150px_rgba(0,0,0,0.55)] [@media(max-height:480px)]:mt-3 ${
               immersive
                 ? "lg:absolute lg:left-1/2 lg:top-1/2 lg:mx-0 lg:mt-0 lg:w-auto lg:[max-width:calc(100vw-96px)]"
                 : ""
@@ -300,7 +307,7 @@ export default function MaterialsShowreel() {
 
           <p
             ref={subtitleRef}
-            className={`mt-10 max-w-xl text-center text-base leading-relaxed text-imesul-steel-light/80 sm:text-lg ${
+            className={`mt-5 max-w-xl text-center text-sm leading-6 text-imesul-steel-light/80 sm:mt-7 sm:text-base sm:leading-relaxed lg:mt-10 lg:text-lg [@media(max-height:480px)]:mt-3 [@media(max-height:480px)]:text-xs [@media(max-height:480px)]:leading-5 ${
               immersive ? "lg:absolute lg:bottom-[9%] lg:left-0 lg:right-0 lg:mt-0 lg:opacity-0" : ""
             }`}
           >
@@ -315,7 +322,7 @@ export default function MaterialsShowreel() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className={`relative z-10 mt-10 flex flex-col items-center gap-2 pb-16 text-center ${
+          className={`relative z-10 mt-5 flex flex-col items-center gap-2 pb-3 text-center sm:mt-7 lg:mt-10 lg:pb-16 [@media(max-height:480px)]:hidden ${
             immersive ? "lg:absolute lg:bottom-[3%] lg:left-0 lg:right-0 lg:mt-0 lg:pb-0" : ""
           }`}
         >
