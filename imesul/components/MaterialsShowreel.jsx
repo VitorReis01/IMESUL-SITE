@@ -8,7 +8,7 @@
 // secao liberar o scroll normal para o ProductScrollExperience. O pin substitui o sticky CSS usado
 // antes (nao usar os dois juntos) — cleanup via gsap.context().revert(), sem preventDefault, sem
 // bloquear wheel/touch, sem window.scrollTo.
-// Mobile e reduced-motion caem para um card grande estatico, sem pin e sem scrub.
+// Mobile usa um pin curto e leve; reduced-motion cai para um card grande estatico, sem pin e sem scrub.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
@@ -105,6 +105,49 @@ export default function MaterialsShowreel() {
           ScrollTrigger.refresh();
         });
       };
+
+      media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        const context = gsap.context(() => {
+          gsap.set(videoBoxRef.current, {
+            width: "82vw",
+            maxWidth: "none",
+            scale: 0.92,
+            borderRadius: 22,
+          });
+          gsap.set(bgRef.current, { opacity: 0.44, scale: 1.02 });
+          gsap.set(subtitleRef.current, { opacity: 0, y: 18 });
+          gsap.set(scrollCueRef.current, { opacity: 0.9 });
+
+          // Pin mobile curto: entrega sensacao imersiva sem prender o toque nem copiar a retencao longa do desktop.
+          const timeline = gsap.timeline({
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top top",
+              end: () => `+=${window.innerHeight * (window.innerWidth > window.innerHeight ? 0.62 : 0.86)}`,
+              scrub: 0.45,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 0.5,
+              invalidateOnRefresh: true,
+            },
+          });
+
+          timeline
+            .to(scrollCueRef.current, { opacity: 0, y: -8, ease: "none", duration: 0.14 }, 0.02)
+            .to(videoBoxRef.current, { width: "96vw", scale: 1.02, borderRadius: 12, ease: "none", duration: 0.54 }, 0.12)
+            .to(bgRef.current, { opacity: 0.18, scale: 1.08, ease: "none", duration: 0.54 }, 0.12)
+            .to(titleLeftRef.current, { yPercent: -22, opacity: 0, ease: "none", duration: 0.5 }, 0.18)
+            .to(titleRightRef.current, { yPercent: -22, opacity: 0, ease: "none", duration: 0.5 }, 0.18)
+            .to(subtitleRef.current, { opacity: 1, y: 0, ease: "none", duration: 0.22 }, 0.62)
+            .to({}, { duration: 0.16 }, 0.84);
+        }, sectionRef);
+
+        refreshShowreel();
+        window.addEventListener("load", refreshShowreel, { once: true });
+        window.addEventListener("resize", refreshShowreel);
+
+        return () => context.revert();
+      });
 
       media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
