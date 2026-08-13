@@ -9,6 +9,7 @@
 // prefers-reduced-motion: so "E MUITO MAIS" estatico, sem pin, sem timers.
 import { useEffect, useRef, useState } from "react";
 import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import useCompatibility from "../hooks/useCompatibility";
 
 const WORDS = [
   "TELHAS",
@@ -25,13 +26,59 @@ const LAST_INDEX = WORDS.length - 1;
 const STEP_MS = 500; // cada palavra fica ~500ms em tela (dentro de 350-500ms pedido)
 const SETTLE_MS = 850; // segura "E MUITO MAIS" mais um pouco antes de liberar (dentro de 700-1000ms)
 
+function StaticMoreMaterials() {
+  return (
+    <section className="relative overflow-hidden bg-[#050b14] py-28 sm:py-32">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(212,43,43,0.1),transparent_45%),linear-gradient(180deg,#050b14_0%,#07101c_100%)]" />
+      <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
+      <div data-mobile-gradient="top" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-28 bg-gradient-to-b from-[#050b14] to-transparent lg:hidden" />
+      <div data-mobile-gradient="bottom" aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-32 bg-gradient-to-b from-transparent via-[#050b14]/70 to-[#050b14] lg:hidden" />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 text-center">
+        <div className="flex items-center gap-4">
+          <span className="h-px w-10 bg-imesul-red" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
+            Linha completa
+          </span>
+          <span className="h-px w-10 bg-imesul-red" />
+        </div>
+
+        <div className="relative mt-8 min-h-[100px] w-full sm:min-h-[130px] lg:min-h-[210px]">
+          <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap font-display uppercase leading-none text-imesul-red text-glow-red [font-size:clamp(2.4rem,9vw,7rem)]">
+            E MUITO MAIS
+          </span>
+        </div>
+
+        <span className="sr-only">
+          Materiais em destaque: telhas, tubos, chapas, perfis, acessórios, steel deck, painéis e
+          muito mais.
+        </span>
+
+        <p className="mt-8 max-w-xl text-sm leading-relaxed text-imesul-steel-light/72 sm:text-base">
+          Além dos principais materiais, a Imesul oferece uma linha completa para obras,
+          serralherias, indústrias e produtores rurais.
+        </p>
+
+        <span
+          aria-hidden="true"
+          className="mt-10 h-px w-40 origin-center bg-gradient-to-r from-transparent via-imesul-red to-transparent"
+        />
+      </div>
+    </section>
+  );
+}
+
 export default function MoreMaterialsMorph() {
-  const shouldReduceMotion = useReducedMotion();
+  const motionPrefersReduced = useReducedMotion();
+  const { mode, ready } = useCompatibility();
   const sectionRef = useRef(null);
   const hasPlayedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [settled, setSettled] = useState(false);
+  const [animationFailed, setAnimationFailed] = useState(false);
+  const isFullMode = ready && mode === "full" && !animationFailed;
+  const shouldReduceMotion = ready ? mode !== "full" : motionPrefersReduced;
 
   const finished = index >= LAST_INDEX;
 
@@ -45,6 +92,8 @@ export default function MoreMaterialsMorph() {
   };
 
   useEffect(() => {
+    if (!isFullMode) return undefined;
+
     const section = sectionRef.current;
     if (!section || shouldReduceMotion) return undefined;
 
@@ -60,11 +109,11 @@ export default function MoreMaterialsMorph() {
 
     observer.observe(section);
     return () => observer.disconnect();
-  }, [shouldReduceMotion]);
+  }, [isFullMode, shouldReduceMotion]);
 
   // Avanca uma palavra por vez ate a ultima, depois segura por SETTLE_MS e para — sem RAF, sem scrub.
   useEffect(() => {
-    if (!started || shouldReduceMotion) return undefined;
+    if (!isFullMode || !started || shouldReduceMotion) return undefined;
 
     if (index < LAST_INDEX) {
       const timeoutId = window.setTimeout(() => {
@@ -75,56 +124,62 @@ export default function MoreMaterialsMorph() {
 
     const settleTimeoutId = window.setTimeout(() => setSettled(true), SETTLE_MS);
     return () => window.clearTimeout(settleTimeoutId);
-  }, [started, index, shouldReduceMotion]);
+  }, [index, isFullMode, shouldReduceMotion, started]);
 
   // Desktop: cria apenas o pin (sem timeline/scrub) e chama startSequence() quando ele engatar.
   useEffect(() => {
+    if (!isFullMode) return undefined;
+
     let media;
     let cancelled = false;
     let refreshTimeoutId;
     let refreshMorph;
 
     const setup = async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
-      if (cancelled) return;
-      gsap.registerPlugin(ScrollTrigger);
-      media = gsap.matchMedia();
+      try {
+        const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ]);
+        if (cancelled) return;
+        gsap.registerPlugin(ScrollTrigger);
+        media = gsap.matchMedia();
 
-      // Debounce simples (sem requestAnimationFrame) para recalcular start/end apos load/resize.
-      refreshMorph = () => {
-        window.clearTimeout(refreshTimeoutId);
-        refreshTimeoutId = window.setTimeout(() => {
-          ScrollTrigger.refresh();
-        }, 150);
-      };
+        // Debounce simples (sem requestAnimationFrame) para recalcular start/end apos load/resize.
+        refreshMorph = () => {
+          window.clearTimeout(refreshTimeoutId);
+          refreshTimeoutId = window.setTimeout(() => {
+            ScrollTrigger.refresh();
+          }, 150);
+        };
 
-      media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
-        const context = gsap.context(() => {
-          // "top top": pina assim que a secao chega ao topo da viewport. "end" reserva ~130vh de
-          // distancia de scroll — o suficiente, num scroll normal, para a sequencia automatica
-          // (~4,35s) terminar antes do usuario atravessar essa distancia e liberar o pin. Sem scrub:
-          // a troca das palavras roda por tempo (startSequence), o pin so segura a posicao na tela.
-          ScrollTrigger.create({
-            trigger: sectionRef.current,
-            start: "top top",
-            end: () => `+=${window.innerHeight * 1.3}`,
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onEnter: startSequence,
-          });
-        }, sectionRef);
+        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+          const context = gsap.context(() => {
+            // "top top": pina assim que a secao chega ao topo da viewport. "end" reserva ~130vh de
+            // distancia de scroll — o suficiente, num scroll normal, para a sequencia automatica
+            // (~4,35s) terminar antes do usuario atravessar essa distancia e liberar o pin. Sem scrub:
+            // a troca das palavras roda por tempo (startSequence), o pin so segura a posicao na tela.
+            ScrollTrigger.create({
+              trigger: sectionRef.current,
+              start: "top top",
+              end: () => `+=${window.innerHeight * 1.3}`,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              onEnter: startSequence,
+            });
+          }, sectionRef);
 
-        refreshMorph();
-        window.addEventListener("load", refreshMorph, { once: true });
-        window.addEventListener("resize", refreshMorph);
+          refreshMorph();
+          window.addEventListener("load", refreshMorph, { once: true });
+          window.addEventListener("resize", refreshMorph);
 
-        return () => context.revert();
-      });
+          return () => context.revert();
+        });
+      } catch {
+        if (!cancelled) setAnimationFailed(true);
+      }
     };
 
     setup();
@@ -138,9 +193,13 @@ export default function MoreMaterialsMorph() {
       }
       media?.revert();
     };
-  }, []);
+  }, [isFullMode]);
 
   const word = WORDS[index];
+
+  if (ready && (mode !== "full" || animationFailed)) {
+    return <StaticMoreMaterials />;
+  }
 
   return (
     <section
