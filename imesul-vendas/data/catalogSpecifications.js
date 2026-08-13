@@ -39,6 +39,13 @@ const weightedRows = (rows, pesoUnidade) =>
     pesoUnidade,
   }));
 
+// Mantem medidas confirmadas sem inventar peso, comprimento ou chapa inexistente.
+const confirmedRows = (rows) =>
+  rows.map(([medida, espessura]) => ({
+    medida,
+    ...(espessura !== null && espessura !== undefined ? { espessura } : {}),
+  }));
+
 // Marca produtos sem leitura confiavel para manter o preenchimento livre.
 const incompleteSpecs = (paginaFonte, observacao) => ({
   medidas: [],
@@ -158,6 +165,18 @@ export const catalogSpecifications = {
       weightedRows([["1100 mm", 0.43, 4.13], ["1100 mm", 0.5, 4.8]], "kg/m"),
       { paginaFonte: 6, observacoesTecnicas: ["Passo 75 mm", "Altura 15 mm"] }
     ),
+    translucidas: buildSpecs(
+      confirmedRows([
+        ["Telha ondulada translúcida"],
+        ["Telha Trap 40 translúcida"],
+        ["Telha Trap 25 translúcida"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Modelos translúcidos confirmados no levantamento físico; medidas, chapas e pesos sob confirmação comercial.",
+      }
+    ),
     cumeeiras: incompleteSpecs(6, "O catálogo apresenta os modelos de cumeeira sem tabela de medidas ou pesos."),
   },
 
@@ -243,6 +262,87 @@ export const catalogSpecifications = {
     portoesElevacao: incompleteSpecs(11, "A página apresenta aplicações visuais, sem tabela técnica."),
     portasAco: incompleteSpecs(11, "A página apresenta aplicações visuais, sem tabela técnica."),
     janelasAco: incompleteSpecs(11, "A página apresenta aplicações visuais, sem tabela técnica."),
+    batentesPorta: buildSpecs(
+      confirmedRows([
+        ["120 x 32"],
+        ["130 x 27"],
+        ["120 x 42"],
+        ["130 x 32"],
+        ["130 x 42"],
+        ["140 x 32"],
+        ["140 x 42"],
+        ["140 x 27", "chapa #18"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Medidas confirmadas no levantamento físico; chapas não informadas permanecem sob confirmação comercial.",
+      }
+    ),
+    colunas: buildSpecs(
+      confirmedRows([
+        ["Coluna LAT 150", "chapa #16"],
+        ["Coluna LAT 150", "chapa #18"],
+        ["Coluna LAT 170", "chapa #18"],
+        ["Coluna LAT 170", "chapa #14"],
+        ["Coluna SUP 170", "chapa #18"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Combinações confirmadas no levantamento físico; pesos e comprimentos sob confirmação comercial.",
+      }
+    ),
+    tampas: buildSpecs(
+      confirmedRows([
+        ["Tampa COL. LAT. 170"],
+        ["Tampa simples", "chapa #18"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Itens confirmados no levantamento físico; medidas complementares sob confirmação comercial.",
+      }
+    ),
+    cartolas: buildSpecs(
+      confirmedRows([
+        ["Cartola 320 x 23 x 20", "chapa #18"],
+        ["Cartola 320 x 23 x 20", "chapa #20"],
+        ["Cartola 500", "chapa #18"],
+        ["Cartola 500", "chapa #20"],
+        ["Cartola 500 x 20 x 30", "chapa #18"],
+        ["Cartola 520 x 30", "chapa #20"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Combinações confirmadas no levantamento físico; pesos e comprimentos sob confirmação comercial.",
+      }
+    ),
+    vigaG: buildSpecs(
+      confirmedRows([
+        ["75 — 5 x 2,5"],
+        ["75 — 5 x 7,5"],
+        ["75 — 7,5 x 40 x 20", "chapa #13"],
+        ["150 x 50 x 20", "chapa #12"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Nomenclatura preservada conforme levantamento físico; não convertida para Perfil U.",
+      }
+    ),
+    caixaPeso: buildSpecs(
+      confirmedRows([
+        ["Caixa de peso 140"],
+        ["Caixa/Chapa de peso 120"],
+      ]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Itens confirmados sem chapa informada; detalhes finais sob confirmação comercial.",
+      }
+    ),
   },
 
   acessorios: incompleteSpecs(12, "Os acessórios são identificados visualmente, sem medidas ou pesos no catálogo."),
