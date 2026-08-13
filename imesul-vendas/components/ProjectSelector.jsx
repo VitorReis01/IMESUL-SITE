@@ -81,7 +81,7 @@ const productSearchAliases = {
   "cantoneiras-abas-iguais": ["cantoneira", "cantoneiras", "perfil", "perfis", "reforço"],
   "barras-chatas": ["barra", "barras", "ferro chato", "barra chata"],
   "barras-quadradas": ["barra", "barras", "barra quadrada", "ferro quadrado"],
-  "barras-redondas": ["barra", "barras", "barra redonda", "ferro redondo"],
+  "barras-redondas": ["barra", "barras", "barra redonda", "perfil redondo", "ferro redondo"],
   "chapas-planas": ["chapa", "chapas", "lisa", "plana", "corte", "dobra"],
   "chapas-grossas": ["chapa", "chapas", "grossa", "corte", "estrutura"],
   "chapas-finas-frio": ["chapa", "chapas", "fina", "frio", "dobras"],
