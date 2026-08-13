@@ -973,7 +973,6 @@ export default function ProjectSelector() {
               <span className="font-mono text-[11px] tracking-[0.28em] text-imesul-red">
                 IMESUL VENDAS
               </span>
-              <span className="h-px w-14 bg-imesul-red" />
             </div>
 
             <h1 className="mt-4 max-w-[640px] text-balance font-display text-[clamp(2.55rem,4.75vw,5.35rem)] leading-[0.9] tracking-[0.02em] text-white drop-shadow-[0_18px_55px_rgba(0,0,0,0.45)]">
