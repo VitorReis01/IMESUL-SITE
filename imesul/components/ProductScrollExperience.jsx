@@ -380,7 +380,6 @@ export default function ProductScrollExperience() {
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
               SHOWROOM IMESUL
             </span>
-            <span className="h-px flex-1 bg-imesul-red/70" />
             <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/50">
               {activeMobileProduct.number}/{String(products.length).padStart(2, "0")}
             </span>
@@ -441,7 +440,6 @@ export default function ProductScrollExperience() {
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
               SHOWROOM IMESUL
             </span>
-            <span className="h-px w-14 bg-imesul-red" />
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-end">
             <h2 className="max-w-3xl font-display text-5xl leading-[0.94] text-white sm:text-6xl">
@@ -481,7 +479,6 @@ export default function ProductScrollExperience() {
               <span className="font-mono text-[10px] tracking-[0.36em] text-imesul-red">
                 SHOWROOM IMESUL
               </span>
-              <span className="h-px w-14 bg-imesul-red" />
               <span className="font-mono text-[10px] tracking-[0.23em] text-imesul-steel/50">
                 {activeProduct.number}/{String(products.length).padStart(2, "0")}
               </span>

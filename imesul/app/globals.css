@@ -404,13 +404,6 @@ body {
   color: var(--red-light);
 }
 
-.story-panel__eyebrow::after {
-  content: "";
-  width: 58px;
-  height: 1px;
-  background: var(--red);
-}
-
 .story-panel h2 {
   max-width: 720px;
   font-family: var(--font-display);

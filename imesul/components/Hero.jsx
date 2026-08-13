@@ -120,7 +120,6 @@ export default function Hero() {
             <span className="font-mono text-[10px] tracking-[0.42em] text-imesul-red uppercase">
               SOLUÇÕES EM AÇO
             </span>
-            <span className="h-px w-16 bg-imesul-red" />
           </motion.div>
 
           <motion.h1

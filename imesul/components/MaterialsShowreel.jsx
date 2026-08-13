@@ -265,13 +265,11 @@ export default function MaterialsShowreel() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 0.6 }}
-            className={`flex items-center gap-3 ${immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[7%]" : ""}`}
-          >
-            <span className="h-px w-10 bg-imesul-red" />
+          className={`flex items-center gap-3 ${immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[7%]" : ""}`}
+        >
             <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
               Showroom IMESUL
             </span>
-            <span className="h-px w-10 bg-imesul-red" />
           </motion.div>
 
           <h2
