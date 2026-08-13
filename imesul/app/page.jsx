@@ -11,29 +11,32 @@ import Footer from "../components/Footer";
 import WhatsAppFloat from "../components/WhatsAppFloat";
 import MotionProvider from "../components/MotionProvider";
 import SmoothScroll from "../components/SmoothScroll";
+import CompatibilityProvider from "../components/CompatibilityProvider";
 
 // Monta a homepage na ordem em que as secoes aparecem durante a rolagem.
 // A pagina fica no servidor; apenas interacoes isoladas sao hidratadas.
 export default function Home() {
   return (
     <main className="min-h-screen bg-imesul-blue text-white">
-      <MotionProvider>
-        <Navbar />
-        <Hero />
-        <CompanyStory />
-        <WhyChoose />
-        <MaterialsShowreel />
-        <ProductScrollExperience />
-        <MoreMaterialsMorph />
-        <GoogleReviews />
-        <FinalCTA />
-        {/* Ancora usada pela Navbar para levar direto as unidades de Dourados na home. */}
-        <div id="dourados">
-          <Footer />
-        </div>
-        <WhatsAppFloat />
-        <SmoothScroll />
-      </MotionProvider>
+      <CompatibilityProvider>
+        <MotionProvider>
+          <Navbar />
+          <Hero />
+          <CompanyStory />
+          <WhyChoose />
+          <MaterialsShowreel />
+          <ProductScrollExperience />
+          <MoreMaterialsMorph />
+          <GoogleReviews />
+          <FinalCTA />
+          {/* Ancora usada pela Navbar para levar direto as unidades de Dourados na home. */}
+          <div id="dourados">
+            <Footer />
+          </div>
+          <WhatsAppFloat />
+          <SmoothScroll />
+        </MotionProvider>
+      </CompatibilityProvider>
     </main>
   );
 }
