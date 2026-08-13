@@ -156,7 +156,7 @@ export const catalogProducts = [
     name: "Barras Chatas",
     description: "Usadas em grades, suportes, reforços e fabricação de peças.",
     usage: ["Grades", "Suportes", "Fabricação"],
-    image: "/catalog-products/barras-chatas.webp",
+    image: "/catalog-products/atualizadas/barra-chata.webp",
     specifications: catalogSpecifications.laminados.barrasChatas,
   }),
   product({
@@ -165,7 +165,7 @@ export const catalogProducts = [
     name: "Barras Quadradas",
     description: "Usadas em grades, eixos, componentes e trabalhos de serralheria.",
     usage: ["Eixos", "Grades", "Componentes"],
-    image: "/catalog-products/barras-quadradas.webp",
+    image: "/catalog-products/atualizadas/barras-quadradas.webp",
     specifications: catalogSpecifications.laminados.barrasQuadradas,
   }),
   product({
@@ -174,7 +174,7 @@ export const catalogProducts = [
     name: "Barras Redondas",
     description: "Usadas em eixos, pinos, peças usinadas e manutenção industrial.",
     usage: ["Eixos", "Pinos", "Fabricação"],
-    image: "/catalog-products/barras-redondas.webp",
+    image: "/catalog-products/atualizadas/barras-redondas.webp",
     specifications: catalogSpecifications.laminados.barrasRedondas,
   }),
 
