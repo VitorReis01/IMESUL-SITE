@@ -4,6 +4,7 @@ import Image from "next/image";
 import { m as motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
+import useCompatibility from "../hooks/useCompatibility";
 import { getInstitutionalVideoSources, institutionalVideo } from "../data/videoAssets";
 
 // Conteudo editorial dos cinco paineis anteriores ao video institucional.
@@ -100,19 +101,159 @@ function StoryVisual({ chapter, index }) {
   );
 }
 
+function CompatibilityStoryVisual({ chapter, index }) {
+  if (chapter.highlights) {
+    return (
+      <div className="border border-white/10 bg-[#091827]/82 p-5 sm:p-6">
+        <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-red">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+          {chapter.highlights.map((highlight) => (
+            <li key={highlight} className="flex items-center gap-3 text-sm text-imesul-steel-light/82">
+              <span className="flex h-6 w-6 flex-none items-center justify-center border border-imesul-red/50 text-imesul-red" aria-hidden="true">
+                ✓
+              </span>
+              {highlight}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-[1.18] overflow-hidden border border-white/10 bg-[#091827]">
+      <Image
+        src={chapter.image}
+        alt={chapter.imageAlt}
+        fill
+        sizes="(max-width: 767px) 92vw, 620px"
+        className="object-cover brightness-[0.82] contrast-[1.05]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#06111f]/72 via-transparent to-transparent" />
+      {chapter.metric && (
+        <div className="absolute bottom-5 right-5 flex flex-col items-end">
+          <strong className="font-display text-6xl leading-none text-white">{chapter.metric}</strong>
+          <span className="mt-2 font-mono text-[9px] tracking-[0.22em] text-imesul-red">
+            {chapter.metricLabel}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompatibilityStory({ mode, videoSources, storyVideoRef, videoPanelRef }) {
+  const showVideo = mode === "reduced" && Boolean(videoSources);
+
+  return (
+    <section id="nossa-historia" className="relative overflow-hidden bg-[#06111f] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_28%,rgba(24,62,103,0.18),transparent_34%)]" />
+      <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="mb-12 flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.26em] text-imesul-steel-light/68">
+          <span>IMESUL / TRAJETÓRIA</span>
+          <span className="text-imesul-red">MATO GROSSO DO SUL</span>
+        </div>
+
+        <div className="grid gap-7">
+          {chapters.map((chapter, index) => (
+            <article
+              key={chapter.title}
+              className="grid gap-6 border-b border-white/10 pb-8 md:grid-cols-[0.9fr_1.1fr] md:items-center"
+            >
+              <div>
+                <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-red">
+                  {chapter.number} / 06
+                </span>
+                <p className="mt-6 font-condensed text-xs font-bold uppercase tracking-[0.28em] text-imesul-red">
+                  {chapter.eyebrow}
+                </p>
+                <h2 className="mt-4 font-display text-[clamp(3.4rem,12vw,6.2rem)] uppercase leading-[0.9] text-white md:text-[clamp(3.8rem,7vw,7rem)]">
+                  {chapter.title}
+                </h2>
+                {chapter.text && (
+                  <p className="mt-5 max-w-xl text-base leading-7 text-imesul-steel-light/76">
+                    {chapter.text}
+                  </p>
+                )}
+              </div>
+              <CompatibilityStoryVisual chapter={chapter} index={index} />
+            </article>
+          ))}
+
+          <article
+            ref={videoPanelRef}
+            className="grid gap-6 pt-4 md:grid-cols-[0.9fr_1.1fr] md:items-center"
+          >
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-red">
+                06 / 06
+              </span>
+              <p className="mt-6 font-condensed text-xs font-bold uppercase tracking-[0.28em] text-imesul-red">
+                VEJA A ESTRUTURA DA IMESUL
+              </p>
+              <h2 className="mt-4 font-display text-[clamp(3.4rem,12vw,6.2rem)] uppercase leading-[0.9] text-white md:text-[clamp(3.8rem,7vw,7rem)]">
+                Estrutura que movimenta projetos
+              </h2>
+              <p className="mt-5 max-w-xl text-base leading-7 text-imesul-steel-light/76">
+                Conheça de perto a estrutura da IMESUL e veja de onde o aço sai para chegar até
+                quem constrói.
+              </p>
+            </div>
+
+            <div className="relative aspect-video overflow-hidden border border-white/10 bg-[#030a13]">
+              {showVideo ? (
+                <video
+                  ref={storyVideoRef}
+                  className="h-full w-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  poster={institutionalVideo.poster}
+                  aria-label="Estrutura da fábrica da IMESUL em Dourados"
+                >
+                  <source src={videoSources.mp4} type="video/mp4" />
+                  <source src={videoSources.webm} type="video/webm" />
+                </video>
+              ) : (
+                <Image
+                  src={institutionalVideo.poster}
+                  alt="Estrutura da fábrica da IMESUL em Dourados"
+                  fill
+                  sizes="(max-width: 767px) 92vw, 620px"
+                  className="object-cover brightness-[0.82] contrast-[1.05]"
+                />
+              )}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030a13]/54 to-transparent" />
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Controla a narrativa horizontal no desktop e preserva cards verticais no mobile.
 export default function CompanyStory() {
+  const { mode, ready } = useCompatibility();
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const progressRef = useRef(null);
   const videoPanelRef = useRef(null);
   const storyVideoRef = useRef(null);
   const [isStoryVideoNear, setIsStoryVideoNear] = useState(false);
+  const isFullMode = ready && mode === "full";
+  const isFallbackMode = ready && mode === "fallback";
   const videoProfile = useAdaptiveVideoProfile({ enabled: isStoryVideoNear });
   const videoSources = getInstitutionalVideoSources(videoProfile);
 
   // Habilita a selecao de midia somente quando o painel final se aproxima da viewport.
   useEffect(() => {
+    if (!ready || isFallbackMode) return undefined;
+
     const panel = videoPanelRef.current;
     if (!panel || isStoryVideoNear) return undefined;
 
@@ -128,10 +269,12 @@ export default function CompanyStory() {
 
     observer.observe(panel);
     return () => observer.disconnect();
-  }, [isStoryVideoNear]);
+  }, [isFallbackMode, isStoryVideoNear, ready]);
 
   // Recarrega o video ao trocar de perfil e remove fontes no modo de poster.
   useEffect(() => {
+    if (!ready || isFallbackMode) return undefined;
+
     if (!storyVideoRef.current) return;
     if (!videoSources) {
       storyVideoRef.current.pause();
@@ -140,11 +283,13 @@ export default function CompanyStory() {
     }
     storyVideoRef.current.load();
     storyVideoRef.current.play().catch(() => {});
-  }, [videoSources]);
+  }, [isFallbackMode, ready, videoSources]);
 
   // Converte progresso vertical em deslocamento horizontal e crescimento do video.
   // O gatilho e removido quando a secao deixa de existir.
   useEffect(() => {
+    if (!isFullMode) return undefined;
+
     let trigger;
     let cancelled = false;
     let refreshFrame = 0;
@@ -215,7 +360,18 @@ export default function CompanyStory() {
       }
       trigger?.kill();
     };
-  }, []);
+  }, [isFullMode]);
+
+  if (ready && mode !== "full") {
+    return (
+      <CompatibilityStory
+        mode={mode}
+        videoSources={videoSources}
+        storyVideoRef={storyVideoRef}
+        videoPanelRef={videoPanelRef}
+      />
+    );
+  }
 
   return (
     <section ref={sectionRef} id="nossa-historia" className="company-story">
