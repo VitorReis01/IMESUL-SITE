@@ -3,7 +3,6 @@ import {
   CircleDot,
   DoorOpen,
   FlaskConical,
-  Grid3X3,
   Layers3,
   PanelsTopLeft,
   Waves,
@@ -47,13 +46,6 @@ export const catalogCategories = [
     description: "Chapas para corte, dobra, piso, fechamento e fabricação de peças.",
     image: "/catalog-products/chapas-planas.webp",
     icon: Layers3,
-  },
-  {
-    id: "chapas-frisadas-lambris",
-    name: "Chapas Frisadas e Lambris",
-    description: "Chapas perfiladas e lambris usados em portões, fachadas e fechamentos.",
-    image: "/catalog-products/chapas-frisadas.webp",
-    icon: Grid3X3,
   },
   {
     id: "perfis-serralheria",

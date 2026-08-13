@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import MaterialProductPage from "../../../../components/MaterialProductPage";
 import SalesFooter from "../../../../components/SalesFooter";
 import {
   getCatalogCategoryPath,
+  getLegacyCategoryRedirectPath,
   getCatalogProductBySlugs,
   getRoutedCatalogProducts,
 } from "../../../../data/catalogRoutes";
@@ -29,6 +30,9 @@ export async function generateMetadata({ params }) {
 
 export default async function MaterialProductRoutePage({ params }) {
   const { categorySlug, productSlug } = await params;
+  const legacyRedirectPath = getLegacyCategoryRedirectPath(categorySlug, productSlug);
+  if (legacyRedirectPath) redirect(legacyRedirectPath);
+
   const match = getCatalogProductBySlugs(categorySlug, productSlug);
 
   if (!match) notFound();

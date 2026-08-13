@@ -226,7 +226,7 @@ export const catalogProducts = [
 
   product({
     id: "chapas-frisadas-u",
-    categoryId: "chapas-frisadas-lambris",
+    categoryId: "chapas",
     name: "Chapas Frisadas em U",
     description: "Usada em portões, fechamentos, fachadas e painéis metálicos.",
     usage: ["Portões", "Fechamentos", "Fachadas"],
@@ -235,7 +235,7 @@ export const catalogProducts = [
   }),
   product({
     id: "chapa-meia-cana-1090",
-    categoryId: "chapas-frisadas-lambris",
+    categoryId: "chapas",
     name: "Chapa Meia Cana 1090 mm",
     description: "Usada em portões e fechamentos metálicos com largura maior.",
     usage: ["Portões", "Fechamentos", "Serralheria"],
@@ -244,7 +244,7 @@ export const catalogProducts = [
   }),
   product({
     id: "chapa-meia-cana-545",
-    categoryId: "chapas-frisadas-lambris",
+    categoryId: "chapas",
     name: "Chapa Meia Cana 545 mm",
     description: "Usada em painéis, portões e fechamentos metálicos menores.",
     usage: ["Painéis", "Portões", "Acabamentos"],
@@ -253,7 +253,7 @@ export const catalogProducts = [
   }),
   product({
     id: "lambris",
-    categoryId: "chapas-frisadas-lambris",
+    categoryId: "chapas",
     name: "Lambris",
     description: "Usado em revestimentos, portões, fachadas e fechamentos de serralheria.",
     usage: ["Revestimentos", "Portões", "Fachadas"],

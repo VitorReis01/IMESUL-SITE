@@ -60,7 +60,6 @@ const searchAliases = {
   "tubos-metalicos": ["tubo", "tubos", "metalon", "metalons", "ferro", "aço", "metal", "estrutura", "portão", "serralheria"],
   laminados: ["barra", "barras", "vergalhao", "vergalhão", "ferro", "aço", "metal", "cantoneira", "cantoneiras"],
   chapas: ["chapa", "chapas", "piso", "corte", "dobra", "fechamento", "metal", "aço"],
-  "chapas-frisadas-lambris": ["chapa", "chapas", "frisada", "frisadas", "meia cana", "lambril", "lambris", "portão", "fachada", "fechamento"],
   "perfis-estruturais": ["perfil", "perfis", "perfil u", "cantoneira", "cantoneiras", "estrutura", "galpão", "cobertura", "ferro", "aço"],
   "perfis-serralheria": ["kit", "kits", "kit para portão", "portão", "portões", "cabo de aço", "roldana", "roldanas", "barra chata", "braço", "montagem", "caixa"],
   "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria"],

@@ -5,12 +5,15 @@ export const catalogCategorySlugs = {
   "tubos-metalicos": "tubos-e-metalons",
   "perfis-estruturais": "perfis-estruturais",
   chapas: "chapas",
-  "chapas-frisadas-lambris": "chapas-frisadas-lambris",
   "telhas-metalicas": "telhas-metalicas",
   laminados: "barras",
   "acessorios-serralheria": "acessorios",
   "thinner-fixadores": "thinner-e-solventes",
   "perfis-serralheria": "serralheria-e-acabamentos",
+};
+
+export const legacyCatalogCategoryRedirects = {
+  "chapas-frisadas-lambris": "chapas",
 };
 
 export const catalogCategoryIdsBySlug = Object.fromEntries(
@@ -23,6 +26,12 @@ export function getCatalogCategorySlug(categoryId) {
 
 export function getCatalogCategoryPath(categoryId) {
   return `/materiais/${getCatalogCategorySlug(categoryId)}`;
+}
+
+export function getLegacyCategoryRedirectPath(categorySlug, productSlug = "") {
+  const targetSlug = legacyCatalogCategoryRedirects[categorySlug];
+  if (!targetSlug) return null;
+  return `/materiais/${targetSlug}${productSlug ? `/${productSlug}` : ""}`;
 }
 
 export function createCatalogSlug(value) {
