@@ -5,6 +5,7 @@ export const catalogCategorySlugs = {
   "tubos-metalicos": "tubos-e-metalons",
   "perfis-estruturais": "perfis-estruturais",
   chapas: "chapas",
+  "chapas-frisadas-lambris": "chapas-frisadas-lambris",
   "telhas-metalicas": "telhas-metalicas",
   laminados: "barras",
   "acessorios-serralheria": "acessorios",

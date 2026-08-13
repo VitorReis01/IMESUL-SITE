@@ -26,6 +26,11 @@ const materialShowcaseCards = [
     image: "/images/vendas/materiais/categoria-chapas.webp",
   },
   {
+    categoryId: "chapas-frisadas-lambris",
+    title: "Chapas Frisadas e Lambris",
+    image: "/catalog-products/atualizadas/chapas-frisadas.webp",
+  },
+  {
     categoryId: "telhas-metalicas",
     title: "Telhas Metálicas",
     image: "/images/vendas/materiais/categoria-telhas-metalicas.webp",
