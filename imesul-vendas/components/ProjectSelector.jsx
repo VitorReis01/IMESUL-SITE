@@ -71,7 +71,7 @@ const searchAliases = {
 const productSearchAliases = {
   "tubo-retangular": ["metalon", "metalons", "tubo", "tubos", "portão", "serralheria", "estrutura"],
   "tubo-quadrado": ["metalon", "metalons", "tubo", "tubos", "portão", "serralheria", "estrutura"],
-  "tubo-redondo": ["tubo", "tubos", "corrimão", "estrutura", "suporte"],
+  "tubo-redondo": ["tubo", "tubos", "tubo red", "tubos red", "corrimão", "estrutura", "suporte"],
   "perfil-u-enrijecido": ["perfil", "perfil u", "u enrijecido", "estrutura", "galpão", "cobertura"],
   "perfil-u-simples": ["perfil", "perfil u", "u simples", "estrutura", "travamento", "cobertura"],
   "telha-trapezoidal-40": ["telha", "telhado", "cobertura", "trapezoidal", "telha 40", "tp40"],
