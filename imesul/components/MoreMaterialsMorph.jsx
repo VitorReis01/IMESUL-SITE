@@ -151,6 +151,8 @@ export default function MoreMaterialsMorph() {
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(212,43,43,0.1),transparent_45%),linear-gradient(180deg,#050b14_0%,#07101c_100%)]" />
       <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
+      <div data-mobile-gradient="top" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-28 bg-gradient-to-b from-[#050b14] to-transparent lg:hidden" />
+      <div data-mobile-gradient="bottom" aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-32 bg-gradient-to-b from-transparent via-[#050b14]/70 to-[#050b14] lg:hidden" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-6 text-center">
         <motion.div

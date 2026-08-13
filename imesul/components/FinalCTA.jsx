@@ -56,6 +56,7 @@ export default function FinalCTA() {
     <section id="cta-final" ref={sectionRef} className="relative min-h-[82vh] overflow-hidden bg-[#050b14]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(212,43,43,0.22),transparent_30%),radial-gradient(circle_at_70%_70%,rgba(66,132,202,0.2),transparent_34%),linear-gradient(180deg,#050b14_0%,#0A1628_100%)]" />
       <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(120deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:38px_38px]" />
+      <div data-mobile-gradient="top" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-36 bg-gradient-to-b from-[#050b14] to-transparent lg:hidden" />
       {/* Marca d'agua decorativa do CTA fica atras da chamada para preservar os cliques. */}
       <div className="imesul-logo-watermark" aria-hidden="true" />
 

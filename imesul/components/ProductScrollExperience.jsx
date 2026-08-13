@@ -372,6 +372,7 @@ export default function ProductScrollExperience() {
     <section id="produtos" ref={sectionRef} className="relative overflow-hidden bg-[#050b14]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.12),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.13),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
       <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
+      <div data-mobile-gradient="bottom" aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-32 bg-gradient-to-b from-transparent via-[#050b14]/76 to-[#050b14] lg:hidden" />
 
       <div className="relative z-10 flex min-h-[100svh] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-12 motion-reduce:hidden sm:px-6 sm:pt-14 lg:hidden [@media(max-height:700px)]:pt-9">
         <header className="mx-auto w-full max-w-3xl">
@@ -411,7 +412,7 @@ export default function ProductScrollExperience() {
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#07101c] to-transparent" />
           </div>
 
-          <div className="relative h-[clamp(16.5rem,40svh,22rem)] [@media(max-height:700px)]:h-[clamp(13.25rem,39svh,16rem)] [@media(max-height:480px)]:h-[clamp(12rem,72svh,16rem)]">
+          <div className="relative z-10 h-[clamp(17.5rem,42svh,23rem)] [@media(max-height:700px)]:h-[clamp(15.5rem,45svh,18rem)] [@media(max-height:480px)]:h-[clamp(12.5rem,72svh,16rem)]">
             {products.map((product, index) => (
               <article
                 key={product.id}
@@ -428,7 +429,7 @@ export default function ProductScrollExperience() {
             ))}
           </div>
 
-          <div className="mt-1 h-px w-full overflow-hidden bg-white/10">
+          <div data-mobile-progress className="relative z-0 mt-3 h-px w-full overflow-hidden bg-white/10 [@media(max-height:700px)]:mt-2 [@media(max-height:480px)]:col-span-2">
             <span ref={mobileProgressRef} className="block h-full origin-left scale-x-0 bg-imesul-red" />
           </div>
         </div>

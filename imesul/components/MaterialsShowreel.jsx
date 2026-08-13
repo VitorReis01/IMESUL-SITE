@@ -111,10 +111,13 @@ export default function MaterialsShowreel() {
           const landscape = window.innerWidth > window.innerHeight;
 
           gsap.set(videoBoxRef.current, {
-            width: landscape ? "54vw" : "88vw",
+            left: "auto",
+            width: landscape ? "54vw" : "calc(100vw - 40px)",
             maxWidth: "none",
+            xPercent: 0,
             scale: 0.96,
             borderRadius: 18,
+            transformOrigin: "50% 50%",
           });
           gsap.set(bgRef.current, { opacity: 0.34, scale: 1.01 });
           gsap.set(subtitleRef.current, { opacity: 0, y: 12 });
@@ -141,7 +144,7 @@ export default function MaterialsShowreel() {
 
           timeline
             .to(scrollCueRef.current, { opacity: 0, y: -8, ease: "none", duration: 0.14 }, 0.02)
-            .to(videoBoxRef.current, { width: landscape ? "64vw" : "95vw", scale: 1, borderRadius: 12, ease: "none", duration: 0.48 }, 0.1)
+            .to(videoBoxRef.current, { left: "auto", width: landscape ? "64vw" : "calc(100vw - 24px)", xPercent: 0, scale: 1, borderRadius: 12, ease: "none", duration: 0.48 }, 0.1)
             .to(bgRef.current, { opacity: 0.16, scale: 1.04, ease: "none", duration: 0.48 }, 0.1)
             .to(titleLeftRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
             .to(titleRightRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
@@ -282,10 +285,10 @@ export default function MaterialsShowreel() {
 
           <div
             ref={videoBoxRef}
-            className={`relative z-20 mx-auto mt-6 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] shadow-[0_34px_90px_rgba(0,0,0,0.5)] sm:mt-8 lg:mt-14 lg:rounded-[20px] lg:shadow-[0_50px_150px_rgba(0,0,0,0.55)] [@media(max-height:480px)]:mt-3 ${
+            className={`relative z-20 mt-6 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] shadow-[0_34px_90px_rgba(0,0,0,0.5)] sm:mt-8 lg:mt-14 lg:rounded-[20px] lg:shadow-[0_50px_150px_rgba(0,0,0,0.55)] [@media(max-height:480px)]:mt-3 ${
               immersive
-                ? "lg:absolute lg:left-1/2 lg:top-1/2 lg:mx-0 lg:mt-0 lg:w-auto lg:[max-width:calc(100vw-96px)]"
-                : ""
+                ? "mx-auto lg:absolute lg:left-1/2 lg:top-1/2 lg:mx-0 lg:mt-0 lg:w-auto lg:[max-width:calc(100vw-96px)]"
+                : "mx-auto"
             }`}
           >
             <video
