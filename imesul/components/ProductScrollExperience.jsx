@@ -5,6 +5,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { products, salesSiteUrl } from "../data/products";
+import useCompatibility from "../hooks/useCompatibility";
 
 // Mantem o tratamento visual das imagens consistente nos cards e no palco desktop.
 function ProductImage({ product, compact = false }) {
@@ -146,8 +147,120 @@ function ProductInformation({ product, compact = false }) {
   );
 }
 
+function CompatibilityProductCard({ product, index, fallback = false }) {
+  return (
+    <article className="grid gap-5 border border-white/10 bg-[#091524]/92 p-4 shadow-[0_18px_52px_rgba(0,0,0,0.24)] sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+      <div className="relative flex h-52 items-center justify-center overflow-hidden border border-white/10 bg-[radial-gradient(circle_at_62%_44%,rgba(212,43,43,0.1),transparent_38%),linear-gradient(145deg,#101f31,#07101c)] sm:h-64 md:h-72">
+        <span className="absolute left-4 top-4 z-10 font-mono text-[9px] tracking-[0.2em] text-white/35">
+          {String(index + 1).padStart(2, "0")}/{String(products.length).padStart(2, "0")}
+        </span>
+        <Image
+          src={product.image}
+          alt={`${product.name} da linha IMESUL`}
+          width={1536}
+          height={1024}
+          sizes="(max-width: 767px) 92vw, 42vw"
+          className="h-full w-full object-contain p-5"
+          draggable="false"
+          priority={index === 0 && !fallback}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-red">
+            {product.number}
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/55">
+            {product.tag}
+          </span>
+        </div>
+        <h3 className="mt-4 font-display text-[clamp(2.2rem,10vw,4.5rem)] uppercase leading-[0.92] text-white md:text-[clamp(3.4rem,6vw,5.4rem)]">
+          {product.name}
+        </h3>
+        <p className="mt-3 font-condensed text-xs font-semibold uppercase tracking-[0.17em] text-imesul-red sm:text-sm">
+          {product.subtitle}
+        </p>
+        <p className="mt-4 max-w-xl text-sm leading-6 text-imesul-steel-light/76 sm:text-base sm:leading-7">
+          {product.description}
+        </p>
+
+        <dl className="mt-5 grid gap-4 border-t border-white/10 pt-5 sm:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-steel/55">
+              PRINCIPAIS VARIAÃ‡Ã•ES
+            </dt>
+            <dd className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+              {product.variations.map((variation) => (
+                <span
+                  key={variation}
+                  className="relative pl-3 font-condensed text-sm font-medium text-imesul-steel before:absolute before:left-0 before:top-[0.58em] before:h-1 before:w-1 before:bg-imesul-red"
+                >
+                  {variation}
+                </span>
+              ))}
+            </dd>
+          </div>
+
+          <div className="sm:border-l sm:border-white/10 sm:pl-5">
+            <dt className="font-mono text-[9px] tracking-[0.24em] text-imesul-red">
+              USO PRINCIPAL
+            </dt>
+            <dd className="mt-3 text-sm leading-6 text-white/80">{product.principalUse}</dd>
+          </div>
+        </dl>
+
+        <SalesLink />
+      </div>
+    </article>
+  );
+}
+
+function CompatibilityProductExperience({ fallback = false }) {
+  return (
+    <section id="produtos" className="relative overflow-hidden bg-[#050b14] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.1),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.1),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
+      <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.07)_1px,transparent_1px)] [background-size:86px_86px]" />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+        <header className="max-w-4xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
+              SHOWROOM IMESUL
+            </span>
+            {!fallback && (
+              <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/50">
+                {String(products.length).padStart(2, "0")} LINHAS
+              </span>
+            )}
+          </div>
+          <h2 className="mt-5 max-w-3xl font-display text-[clamp(2.6rem,11vw,5.4rem)] leading-[0.92] text-white">
+            SOLUÃ‡Ã•ES PARA QUEM CONSTRÃ“I E TRANSFORMA
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-imesul-steel-light/70 sm:text-base sm:leading-7">
+            ConheÃ§a as principais linhas da IMESUL e encontre o material adequado para sua obra,
+            indÃºstria ou serralheria.
+          </p>
+        </header>
+
+        <div className="mt-10 grid gap-6">
+          {products.map((product, index) => (
+            <CompatibilityProductCard
+              key={product.id}
+              product={product}
+              index={index}
+              fallback={fallback}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Exibe cards no mobile e um showroom fixado, controlado por scroll, no desktop.
 export default function ProductScrollExperience() {
+  const { mode, ready } = useCompatibility();
   const sectionRef = useRef(null);
   const visualRefs = useRef([]);
   const mobileVisualRefs = useRef([]);
@@ -158,32 +271,37 @@ export default function ProductScrollExperience() {
   const activeMobileRef = useRef(0);
   const [active, setActive] = useState(0);
   const [activeMobile, setActiveMobile] = useState(0);
+  const [animationFailed, setAnimationFailed] = useState(false);
+  const isFullMode = ready && mode === "full" && !animationFailed;
 
   // No desktop, transforma o progresso da secao em trocas de produto com foco e escala.
   // O matchMedia desativa o efeito no mobile e respeita movimento reduzido.
   useEffect(() => {
+    if (!isFullMode) return undefined;
+
     let media;
     let cancelled = false;
     let refreshFrame = 0;
     let refreshProductScroll;
 
     const setup = async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
-      if (cancelled) return;
-      gsap.registerPlugin(ScrollTrigger);
-      media = gsap.matchMedia();
-      refreshProductScroll = () => {
-        if (refreshFrame) return;
-        refreshFrame = window.requestAnimationFrame(() => {
-          refreshFrame = 0;
-          ScrollTrigger.refresh();
-        });
-      };
+      try {
+        const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ]);
+        if (cancelled) return;
+        gsap.registerPlugin(ScrollTrigger);
+        media = gsap.matchMedia();
+        refreshProductScroll = () => {
+          if (refreshFrame) return;
+          refreshFrame = window.requestAnimationFrame(() => {
+            refreshFrame = 0;
+            ScrollTrigger.refresh();
+          });
+        };
 
-      media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
           const mobileVisualItems = mobileVisualRefs.current.filter(Boolean);
           const mobileInfoItems = mobileInfoRefs.current.filter(Boolean);
@@ -269,7 +387,7 @@ export default function ProductScrollExperience() {
         return () => context.revert();
       });
 
-      media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
           const visualItems = visualRefs.current.filter(Boolean);
 
@@ -348,7 +466,10 @@ export default function ProductScrollExperience() {
         window.addEventListener("resize", refreshProductScroll);
 
         return () => context.revert();
-      });
+        });
+      } catch {
+        if (!cancelled) setAnimationFailed(true);
+      }
     };
 
     setup();
@@ -363,10 +484,14 @@ export default function ProductScrollExperience() {
       }
       media?.revert();
     };
-  }, []);
+  }, [isFullMode]);
 
   const activeProduct = products[active];
   const activeMobileProduct = products[activeMobile];
+
+  if (ready && (mode !== "full" || animationFailed)) {
+    return <CompatibilityProductExperience fallback={mode === "fallback"} />;
+  }
 
   return (
     <section id="produtos" ref={sectionRef} className="relative overflow-hidden bg-[#050b14]">
