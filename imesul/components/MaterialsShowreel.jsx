@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
+import useCompatibility from "../hooks/useCompatibility";
 import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
 
 // Video proprio do showreel (nao compartilhado com o Hero); um unico par de arquivos serve todos
@@ -25,7 +26,72 @@ const SHOWREEL_VIDEO_MP4 = "/videos/estoque-showreel.mp4";
 // vindo de institutionalVideo.poster para o fallback do <video>).
 const SHOWREEL_BACKGROUND_SRC = "/images/company/estrutura-estoque.webp";
 
+function StaticShowreel({ mode, videoSources, videoRef, canUseVideo }) {
+  const showVideo = mode === "reduced" && canUseVideo && Boolean(videoSources);
+
+  return (
+    <section id="showroom-abertura" className="relative overflow-hidden bg-[#050b14] py-20 sm:py-24">
+      <div aria-hidden="true" className="absolute inset-0 opacity-40">
+        {/* eslint-disable-next-line @next/next/no-img-element -- fallback visual estatico, sem dependencia de animacao. */}
+        <img
+          src={SHOWREEL_BACKGROUND_SRC}
+          alt=""
+          className="h-full w-full object-cover"
+          draggable="false"
+        />
+      </div>
+      <div className="absolute inset-0 bg-[#050b14]/76" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(47,104,171,0.12),transparent_42%)]" />
+      <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
+
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 text-center sm:px-8">
+        <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
+          Showroom IMESUL
+        </span>
+
+        <h2 className="mt-5 max-w-4xl font-display leading-[0.94] text-white [font-size:clamp(2rem,9vw,4rem)] sm:[font-size:clamp(2.4rem,7vw,5rem)]">
+          Materiais que sustentam grandes projetos
+        </h2>
+
+        <div className="relative mt-8 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] border border-white/10 bg-[#07111f] shadow-[0_28px_80px_rgba(0,0,0,0.42)]">
+          {showVideo ? (
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              poster={institutionalVideo.poster}
+              aria-label="Movimentação de materiais e estrutura da fábrica da IMESUL"
+            >
+              {videoSources?.mp4 && <source src={videoSources.mp4} type="video/mp4" />}
+              {videoSources?.webm && <source src={videoSources.webm} type="video/webm" />}
+            </video>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- usa o poster/foto existente como fallback seguro.
+            <img
+              src={institutionalVideo.poster}
+              alt="Movimentação de materiais e estrutura da fábrica da IMESUL"
+              className="h-full w-full object-cover"
+              draggable="false"
+            />
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,18,0.16)_0%,transparent_36%,rgba(2,8,18,0.56)_100%)]" />
+        </div>
+
+        <p className="mt-6 max-w-xl text-sm leading-6 text-imesul-steel-light/80 sm:text-base sm:leading-relaxed">
+          Da estrutura ao acabamento, a Imesul conecta estoque, atendimento e logística para obras,
+          serralherias, indústrias e produtores rurais.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function MaterialsShowreel() {
+  const { capabilities, mode, ready } = useCompatibility();
   // Decide o layout em JS (nao via variante CSS) para nunca deixar a legenda presa em opacidade 0:
   // sem isso, desktop com reduced-motion herdaria o layout imersivo (posicoes absolutas, legenda
   // escondida) sem nenhum GSAP rodando para revelar nada. null (SSR) conta como "sem reducao".
@@ -40,7 +106,10 @@ export default function MaterialsShowreel() {
   const scrollCueRef = useRef(null);
   const videoRef = useRef(null);
   const [isNear, setIsNear] = useState(false);
-  const videoProfile = useAdaptiveVideoProfile({ enabled: isNear });
+  const [animationFailed, setAnimationFailed] = useState(false);
+  const isFullMode = ready && mode === "full" && !animationFailed;
+  const isFallbackMode = ready && mode === "fallback";
+  const videoProfile = useAdaptiveVideoProfile({ enabled: isNear && !isFallbackMode });
   const videoSources = useMemo(
     () =>
       videoProfile === VIDEO_DISABLED_PROFILE
@@ -51,8 +120,12 @@ export default function MaterialsShowreel() {
 
   // Adia a escolha da fonte de video ate a secao se aproximar da viewport.
   useEffect(() => {
+    if (!ready || isFallbackMode) return undefined;
+
     const section = sectionRef.current;
     if (!section || isNear) return undefined;
+
+    if (!capabilities.supportsIntersectionObserver) return undefined;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -66,10 +139,12 @@ export default function MaterialsShowreel() {
 
     observer.observe(section);
     return () => observer.disconnect();
-  }, [isNear]);
+  }, [capabilities.supportsIntersectionObserver, isFallbackMode, isNear, ready]);
 
   // Recarrega o video ao trocar de perfil e remove fontes no modo de poster.
   useEffect(() => {
+    if (!ready || isFallbackMode) return undefined;
+
     if (!videoRef.current) return;
     if (!videoSources) {
       videoRef.current.pause();
@@ -78,35 +153,38 @@ export default function MaterialsShowreel() {
     }
     videoRef.current.load();
     videoRef.current.play().catch(() => {});
-  }, [videoSources]);
+  }, [isFallbackMode, ready, videoSources]);
 
   // Pina a secao em tela cheia e expande o video conforme o usuario rola dentro dela.
   // Roda so no desktop com movimento permitido; mobile e reduced-motion ficam no layout estatico.
   useEffect(() => {
+    if (!isFullMode) return undefined;
+
     let media;
     let cancelled = false;
     let refreshFrame = 0;
     let refreshShowreel;
 
     const setup = async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
-      if (cancelled) return;
-      gsap.registerPlugin(ScrollTrigger);
-      media = gsap.matchMedia();
+      try {
+        const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ]);
+        if (cancelled) return;
+        gsap.registerPlugin(ScrollTrigger);
+        media = gsap.matchMedia();
 
-      // Recalcula start/end depois que o layout das secoes acima termina de assentar.
-      refreshShowreel = () => {
-        if (refreshFrame) return;
-        refreshFrame = window.requestAnimationFrame(() => {
-          refreshFrame = 0;
-          ScrollTrigger.refresh();
-        });
-      };
+        // Recalcula start/end depois que o layout das secoes acima termina de assentar.
+        refreshShowreel = () => {
+          if (refreshFrame) return;
+          refreshFrame = window.requestAnimationFrame(() => {
+            refreshFrame = 0;
+            ScrollTrigger.refresh();
+          });
+        };
 
-      media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
           const landscape = window.innerWidth > window.innerHeight;
 
@@ -159,7 +237,7 @@ export default function MaterialsShowreel() {
         return () => context.revert();
       });
 
-      media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
           // xPercent/yPercent ficam fixos em -50 o tempo todo (nunca entram no timeline abaixo):
           // com left:50%/top:50% no CSS, isso centraliza o video de forma absoluta e imune a
@@ -212,7 +290,10 @@ export default function MaterialsShowreel() {
         window.addEventListener("resize", refreshShowreel);
 
         return () => context.revert();
-      });
+        });
+      } catch {
+        if (!cancelled) setAnimationFailed(true);
+      }
     };
 
     setup();
@@ -226,7 +307,18 @@ export default function MaterialsShowreel() {
       }
       media?.revert();
     };
-  }, []);
+  }, [isFullMode]);
+
+  if (ready && (mode !== "full" || animationFailed)) {
+    return (
+      <StaticShowreel
+        mode={animationFailed ? "reduced" : mode}
+        videoSources={videoSources}
+        videoRef={videoRef}
+        canUseVideo={capabilities.supportsVideoMP4 || capabilities.supportsVideoWebM}
+      />
+    );
+  }
 
   return (
     <section
