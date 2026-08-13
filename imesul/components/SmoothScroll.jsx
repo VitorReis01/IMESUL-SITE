@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
+import useCompatibility from "../hooks/useCompatibility";
 
 // Conecta o Lenis ao ticker do GSAP sem bloquear a primeira renderizacao.
 export default function SmoothScroll() {
+  const { mode, ready } = useCompatibility();
+
   useEffect(() => {
+    if (!ready || mode !== "full") return undefined;
+
     let lenis;
     let gsap;
     let tickerCallback;
@@ -14,36 +19,35 @@ export default function SmoothScroll() {
 
     // Carrega as bibliotecas durante tempo ocioso e mantem o scroll nativo como fallback.
     const initSmoothScroll = async () => {
-      const [{ default: Lenis }, gsapModule, scrollTriggerModule] =
-        await Promise.all([
+      try {
+        const [{ default: Lenis }, gsapModule, scrollTriggerModule] = await Promise.all([
           import("lenis"),
           import("gsap"),
           import("gsap/ScrollTrigger"),
         ]);
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      gsap = gsapModule.gsap;
-      const { ScrollTrigger } = scrollTriggerModule;
-      gsap.registerPlugin(ScrollTrigger);
+        gsap = gsapModule.gsap;
+        const { ScrollTrigger } = scrollTriggerModule;
+        gsap.registerPlugin(ScrollTrigger);
 
-      lenis = new Lenis({
-        duration: 1.12,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-        syncTouch: false,
-      });
+        lenis = new Lenis({
+          duration: 1.12,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          syncTouch: false,
+        });
 
-      lenis.on("scroll", ScrollTrigger.update);
-      tickerCallback = (time) => lenis?.raf(time * 1000);
-      gsap.ticker.add(tickerCallback);
-      gsap.ticker.lagSmoothing(0);
+        lenis.on("scroll", ScrollTrigger.update);
+        tickerCallback = (time) => lenis?.raf(time * 1000);
+        gsap.ticker.add(tickerCallback);
+        gsap.ticker.lagSmoothing(0);
+      } catch {
+        lenis?.destroy();
+        lenis = undefined;
+      }
     };
-
-    // Nao suaviza a rolagem quando o usuario prefere menos movimento.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return undefined;
-    }
 
     if ("requestIdleCallback" in window) {
       idleId = window.requestIdleCallback(initSmoothScroll, { timeout: 1800 });
@@ -59,7 +63,7 @@ export default function SmoothScroll() {
       if (tickerCallback && gsap) gsap.ticker.remove(tickerCallback);
       lenis?.destroy();
     };
-  }, []);
+  }, [mode, ready]);
 
   return null;
 }
