@@ -86,7 +86,7 @@ const productSearchAliases = {
   "chapas-finas-frio": ["chapa", "chapas", "fina", "frio", "dobras"],
   "chapas-finas-quente": ["chapa", "chapas", "fina", "quente", "dobras"],
   "chapas-piso": ["chapa", "chapas", "piso", "xadrez"],
-  "chapas-frisadas-u": ["chapa", "chapas", "frisada", "frisadas", "portão", "fechamento"],
+  "chapas-frisadas-u": ["chapa", "chapas", "chapa frisada", "chapas frisadas", "frisada", "frisadas", "frisada em u", "portão", "fechamento"],
   "chapa-meia-cana-1090": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
   "chapa-meia-cana-545": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
   lambris: ["lambril", "lambris", "chapa", "fachada", "fechamento"],
