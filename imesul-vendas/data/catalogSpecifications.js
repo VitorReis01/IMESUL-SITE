@@ -319,13 +319,13 @@ export const catalogSpecifications = {
       }
     ),
     colunas: buildSpecs(
-      confirmedRows([
-        ["Coluna LAT 150", "chapa #16"],
-        ["Coluna LAT 150", "chapa #18"],
-        ["Coluna LAT 170", "chapa #18"],
-        ["Coluna LAT 170", "chapa #14"],
-        ["Coluna SUP 170", "chapa #18"],
-      ]),
+      [
+        { medida: "Coluna LAT 150", espessura: "chapa #16", image: "/catalog-products/atualizadas/coluna-lateral.webp" },
+        { medida: "Coluna LAT 150", espessura: "chapa #18", image: "/catalog-products/atualizadas/coluna-lateral.webp" },
+        { medida: "Coluna LAT 170", espessura: "chapa #18", image: "/catalog-products/atualizadas/coluna-lateral.webp" },
+        { medida: "Coluna LAT 170", espessura: "chapa #14", image: "/catalog-products/atualizadas/coluna-lateral.webp" },
+        { medida: "Coluna SUP 170", espessura: "chapa #18", image: "/catalog-products/atualizadas/coluna-superior.webp" },
+      ],
       {
         paginaFonte: "levantamento-fisico",
         dadosCompletos: false,
@@ -333,10 +333,10 @@ export const catalogSpecifications = {
       }
     ),
     tampas: buildSpecs(
-      confirmedRows([
-        ["Tampa COL. LAT. 170"],
-        ["Tampa simples", "chapa #18"],
-      ]),
+      [
+        { medida: "Tampa COL. LAT. 170", image: "/catalog-products/atualizadas/tampa-coluna-lateral-170.webp" },
+        { medida: "Tampa simples", espessura: "chapa #18" },
+      ],
       {
         paginaFonte: "levantamento-fisico",
         dadosCompletos: false,

@@ -2,11 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Database, Home, ImageIcon } from "lucide-react";
 import { getCatalogCategoryPath, getCatalogVariantPath } from "../data/catalogRoutes";
 import { MaterialQuoteFlow } from "./QuoteBuilder";
 
 export default function MaterialProductPage({ category, product, backLink = null }) {
+  // Alguns produtos (ex.: Colunas) trocam a imagem principal conforme a opcao selecionada no orcamento.
+  // A key={product.id} no container abaixo garante que esse estado reinicia ao trocar de produto.
+  const [heroImage, setHeroImage] = useState(product.image);
+
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
   const isRoldanasSection = product.id === "roldanas";
@@ -30,7 +35,7 @@ export default function MaterialProductPage({ category, product, backLink = null
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
 
       <section className="relative z-10 bg-[#091727]/58">
-        <div className="mx-auto max-w-[1480px] px-5 py-10 sm:px-8 sm:py-16 lg:px-12">
+        <div key={product.id} className="mx-auto max-w-[1480px] px-5 py-10 sm:px-8 sm:py-16 lg:px-12">
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={returnLink.href}
@@ -53,7 +58,7 @@ export default function MaterialProductPage({ category, product, backLink = null
             <div className="relative overflow-hidden rounded-[8px] border border-white/[0.1] bg-[#f4f5f6] shadow-[0_22px_70px_rgba(0,0,0,0.24)]">
               <div className="relative aspect-[4/3]">
                 <Image
-                  src={product.image}
+                  src={heroImage}
                   alt={product.name}
                   fill
                   priority
@@ -213,6 +218,7 @@ export default function MaterialProductPage({ category, product, backLink = null
               <MaterialQuoteFlow
                 key={product.id}
                 product={product}
+                onVariationImageChange={(image) => setHeroImage(image || product.image)}
               />
             </div>
           )}

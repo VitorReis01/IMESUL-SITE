@@ -3,7 +3,7 @@
 // Fluxos de pre-orcamento por projeto e por material.
 // Monta formularios, resumo e envio ao WhatsApp sem finalizar compra no site.
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler, ShoppingCart } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
 import { getCatalogCategory } from "../data/catalogCategories";
@@ -467,7 +467,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
 }
 
 // Monta o fluxo direto e valida combinacoes tecnicas antes de abrir o WhatsApp.
-export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
+export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImageChange }) {
   const [form, setForm] = useState(materialInitialForm);
   const [customQuantity, setCustomQuantity] = useState("");
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
@@ -486,6 +486,13 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     && (isTelaEletrossoldada ? !isHalfMeterLength(customQuantity) : !isPositiveInteger(customQuantity));
   // A variacao exata fornece peso (ou altura, para a tela) e confirma que a combinacao existe no catalogo.
   const selectedVariation = findSelectedVariation(product, form, { withLength: isTelaEletrossoldada });
+
+  // Repassa a imagem da variacao selecionada para a pagina do produto trocar a imagem principal, quando o produto suportar isso.
+  useEffect(() => {
+    if (onVariationImageChange) {
+      onVariationImageChange(selectedVariation?.image || null);
+    }
+  }, [selectedVariation, onVariationImageChange]);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));

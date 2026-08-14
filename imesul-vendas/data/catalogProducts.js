@@ -65,7 +65,7 @@ export const catalogProducts = [
     name: "Perfil U Enrijecido",
     description: "Usado em coberturas, galpões, terças e estruturas que exigem reforço.",
     usage: ["Galpões", "Coberturas", "Estruturas"],
-    image: "/catalog-products/atualizadas/perfil-u-enrijecido.webp",
+    image: "/catalog-products/atualizadas/viga-u.webp",
     specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
   }),
   product({
@@ -299,7 +299,7 @@ export const catalogProducts = [
     name: "Batentes de Porta",
     description: "Batentes para montagem e acabamento de portas metálicas.",
     usage: ["Portas", "Serralheria", "Acabamento"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/batente-de-porta.webp",
     specifications: catalogSpecifications.perfisSerralheria.batentesPorta,
   }),
   product({
@@ -308,7 +308,7 @@ export const catalogProducts = [
     name: "Colunas",
     description: "Colunas laterais e superiores para composições de portas e estruturas de serralheria.",
     usage: ["Portas", "Serralheria", "Montagem"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/coluna-lateral.webp",
     specifications: catalogSpecifications.perfisSerralheria.colunas,
   }),
   product({
@@ -317,7 +317,7 @@ export const catalogProducts = [
     name: "Tampas",
     description: "Tampas e acabamentos para componentes metálicos de serralheria.",
     usage: ["Acabamento", "Serralheria", "Montagem"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/tampa-coluna-lateral-170.webp",
     specifications: catalogSpecifications.perfisSerralheria.tampas,
   }),
   product({
@@ -326,7 +326,7 @@ export const catalogProducts = [
     name: "Cartolas",
     description: "Perfis cartola para montagem, reforço e acabamento em estruturas metálicas.",
     usage: ["Serralheria", "Reforços", "Montagem"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/cartola.webp",
     specifications: catalogSpecifications.perfisSerralheria.cartolas,
   }),
   product({
@@ -344,7 +344,7 @@ export const catalogProducts = [
     name: "Caixa de Peso",
     description: "Caixas de peso confirmadas para orçamento sob conferência comercial.",
     usage: ["Portões", "Serralheria", "Montagem"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/caixa-de-peso.webp",
     specifications: catalogSpecifications.perfisSerralheria.caixaPeso,
   }),
 
