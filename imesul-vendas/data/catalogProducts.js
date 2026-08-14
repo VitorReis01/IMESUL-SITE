@@ -128,7 +128,7 @@ export const catalogProducts = [
     name: "Telhas Translúcidas",
     description: "Modelos translúcidos para entrada de iluminação natural em coberturas.",
     usage: ["Coberturas", "Iluminação natural", "Fechamentos"],
-    image: "/images/vendas/materiais/categoria-telhas-metalicas.webp",
+    image: "/catalog-products/atualizadas/telha-translucida.webp",
     specifications: catalogSpecifications.telhasMetalicas.translucidas,
   }),
 
@@ -147,7 +147,7 @@ export const catalogProducts = [
     name: "Trilhos",
     description: "Guiamento de portões e sistemas deslizantes.",
     usage: ["Serralheria", "Montagem", "Manutenção"],
-    image: "/catalog-products/acessorios-serralheria.webp",
+    image: "/catalog-products/atualizadas/perfil-trilho.webp",
     specifications: catalogSpecifications.acessorios,
   }),
   product({
@@ -239,7 +239,7 @@ export const catalogProducts = [
     name: "Chapa Meia Cana 1090 mm",
     description: "Usada em portões e fechamentos metálicos com largura maior.",
     usage: ["Portões", "Fechamentos", "Serralheria"],
-    image: "/catalog-products/chapa-meia-cana-1090.webp",
+    image: "/catalog-products/atualizadas/chapa-meia-cana.webp",
     specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana1090,
   }),
   product({
@@ -248,7 +248,7 @@ export const catalogProducts = [
     name: "Chapa Meia Cana 545 mm",
     description: "Usada em painéis, portões e fechamentos metálicos menores.",
     usage: ["Painéis", "Portões", "Acabamentos"],
-    image: "/catalog-products/chapa-meia-cana-545.webp",
+    image: "/catalog-products/atualizadas/chapa-meia-cana.webp",
     specifications: catalogSpecifications.chapas.frisadasELambris.meiaCana545,
   }),
   product({
