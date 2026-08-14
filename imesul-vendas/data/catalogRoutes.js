@@ -17,6 +17,16 @@ export const legacyCatalogCategoryRedirects = {
   "chapas-frisadas-lambris": "chapas",
 };
 
+// Produtos que migraram de categoria mantem a rota antiga funcionando via redirect.
+export const legacyCatalogProductRedirects = {
+  "serralheria-e-acabamentos/batentes-de-porta": "perfis-estruturais/batentes-de-porta",
+  "serralheria-e-acabamentos/colunas": "perfis-estruturais/colunas",
+  "serralheria-e-acabamentos/tampas": "perfis-estruturais/tampas",
+  "serralheria-e-acabamentos/cartolas": "perfis-estruturais/cartolas",
+  "serralheria-e-acabamentos/viga-g": "perfis-estruturais/viga-g",
+  "serralheria-e-acabamentos/caixa-de-peso": "perfis-estruturais/caixa-de-peso",
+};
+
 export const catalogCategoryIdsBySlug = Object.fromEntries(
   Object.entries(catalogCategorySlugs).map(([categoryId, slug]) => [slug, categoryId])
 );
@@ -30,6 +40,11 @@ export function getCatalogCategoryPath(categoryId) {
 }
 
 export function getLegacyCategoryRedirectPath(categorySlug, productSlug = "") {
+  if (productSlug) {
+    const productRedirect = legacyCatalogProductRedirects[`${categorySlug}/${productSlug}`];
+    if (productRedirect) return `/materiais/${productRedirect}`;
+  }
+
   const targetSlug = legacyCatalogCategoryRedirects[categorySlug];
   if (!targetSlug) return null;
   return `/materiais/${targetSlug}${productSlug ? `/${productSlug}` : ""}`;

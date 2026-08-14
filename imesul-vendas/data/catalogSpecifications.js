@@ -384,8 +384,8 @@ export const catalogSpecifications = {
     ),
   },
 
-  acessorios: incompleteSpecs(12, "Os acessórios são identificados visualmente, sem medidas ou pesos no catálogo."),
-  tintasSolventes: incompleteSpecs(12, "Tintas e thinners aparecem visualmente, sem especificações técnicas completas no catálogo."),
+  acessorios: incompleteSpecs(12),
+  tintasSolventes: incompleteSpecs(12),
 };
 
 // Conta variacoes tecnicas sem somar o mesmo objeto mais de uma vez.

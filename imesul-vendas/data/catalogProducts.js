@@ -295,7 +295,7 @@ export const catalogProducts = [
   }),
   product({
     id: "batentes-porta",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Batentes de Porta",
     description: "Batentes para montagem e acabamento de portas metálicas.",
     usage: ["Portas", "Serralheria", "Acabamento"],
@@ -304,7 +304,7 @@ export const catalogProducts = [
   }),
   product({
     id: "colunas",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Colunas",
     description: "Colunas laterais e superiores para composições de portas e estruturas de serralheria.",
     usage: ["Portas", "Serralheria", "Montagem"],
@@ -313,7 +313,7 @@ export const catalogProducts = [
   }),
   product({
     id: "tampas",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Tampas",
     description: "Tampas e acabamentos para componentes metálicos de serralheria.",
     usage: ["Acabamento", "Serralheria", "Montagem"],
@@ -322,7 +322,7 @@ export const catalogProducts = [
   }),
   product({
     id: "cartolas",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Cartolas",
     description: "Perfis cartola para montagem, reforço e acabamento em estruturas metálicas.",
     usage: ["Serralheria", "Reforços", "Montagem"],
@@ -331,7 +331,7 @@ export const catalogProducts = [
   }),
   product({
     id: "viga-g",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Viga G",
     description: "Viga G com nomenclatura preservada conforme levantamento físico.",
     usage: ["Serralheria", "Estruturas", "Montagem"],
@@ -340,7 +340,7 @@ export const catalogProducts = [
   }),
   product({
     id: "caixa-de-peso",
-    categoryId: "perfis-serralheria",
+    categoryId: "perfis-estruturais",
     name: "Caixa de Peso",
     description: "Caixas de peso confirmadas para orçamento sob conferência comercial.",
     usage: ["Portões", "Serralheria", "Montagem"],
