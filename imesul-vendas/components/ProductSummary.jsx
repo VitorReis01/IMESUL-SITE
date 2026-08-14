@@ -24,17 +24,11 @@ export default function ProductSummary({
   category,
   product,
   form,
-  selectedVariation,
   hideTechnicalRows = false,
   children,
   labels = defaultSummaryLabels,
   showLength = false,
-  showWeight = true,
 }) {
-  const weight = selectedVariation?.peso !== undefined
-    ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-    : "Não informado";
-
   return (
     <aside className="relative overflow-hidden rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(155deg,rgba(212,43,43,0.08),rgba(11,25,43,0.96)_34%)] px-4 py-5 shadow-[0_22px_60px_rgba(0,0,0,0.2)] sm:px-8 sm:py-8 lg:sticky lg:top-6 lg:self-start">
       <span className="absolute inset-y-0 left-0 w-1 bg-imesul-red" />
@@ -61,9 +55,6 @@ export default function ProductSummary({
         )}
         {!hideTechnicalRows && !product.hasStructuredOptions && (
           <SummaryRow label="Características" value={form.details} />
-        )}
-        {!hideTechnicalRows && showWeight && (
-          <SummaryRow label="Peso informado no catálogo" value={weight} />
         )}
         <SummaryRow label={labels.quantity} value={form.quantity} />
         <SummaryRow label="Cidade" value={form.city} />

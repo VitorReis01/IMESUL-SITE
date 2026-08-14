@@ -546,11 +546,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     category,
     product,
     form,
-    selectedVariation,
     hideTechnicalRows: usesSimplifiedModelQuote,
     labels: isTelaEletrossoldada ? telaMessageLabels : undefined,
     showLength: isTelaEletrossoldada,
-    showWeight: !isTelaEletrossoldada,
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
@@ -600,7 +598,6 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
                 setForm={setForm}
                 withLength={isTelaEletrossoldada}
                 labels={isTelaEletrossoldada ? telaOptionLabels : undefined}
-                showWeight={!isTelaEletrossoldada}
               />
             </div>
           )}
@@ -664,11 +661,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           category={category}
           product={product}
           form={form}
-          selectedVariation={selectedVariation}
           hideTechnicalRows={usesSimplifiedModelQuote}
           labels={isTelaEletrossoldada ? telaSummaryLabels : undefined}
           showLength={isTelaEletrossoldada}
-          showWeight={!isTelaEletrossoldada}
         >
           {(usesSimplifiedModelQuote || isTelaEletrossoldada) ? (
             <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">

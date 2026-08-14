@@ -3,7 +3,7 @@
 // Seleciona medidas e espessuras validas para o produto escolhido.
 // Usa a tabela tecnica do catalogo para evitar combinacoes inexistentes.
 import { useEffect, useMemo } from "react";
-import { AlertCircle, Check, Scale } from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 
 const sameValue = (left, right) => String(left) === String(right);
 
@@ -116,12 +116,8 @@ function OptionGroup({ label, type, options, value, onSelect }) {
 }
 
 // Coordena medida, espessura e (quando habilitado) altura conforme a tabela tecnica do produto.
-export default function ProductOptionSelector({ product, form, setForm, withLength = false, labels = defaultOptionLabels, showWeight = true }) {
+export default function ProductOptionSelector({ product, form, setForm, withLength = false, labels = defaultOptionLabels }) {
   const options = useMemo(() => getAvailableOptions(product, form, { withLength }), [product, form, withLength]);
-  const selectedVariation = useMemo(
-    () => findSelectedVariation(product, form, { withLength }),
-    [product, form, withLength]
-  );
 
   // Seleciona valores unicos e preserva escolhas que ainda continuam validas.
   useEffect(() => {
@@ -203,24 +199,6 @@ export default function ProductOptionSelector({ product, form, setForm, withLeng
           <p className="mt-2 text-sm leading-6 text-imesul-steel-light/72">
             {product.specifications.observacoesTecnicas.join(" · ")}
           </p>
-        </div>
-      )}
-
-      {showWeight && (
-        <div className="flex items-center gap-4 rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(135deg,rgba(212,43,43,0.1),rgba(255,255,255,0.02))] p-5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[7px] bg-imesul-red/15 text-imesul-red">
-            <Scale size={21} aria-hidden="true" />
-          </span>
-          <div>
-            <p className="font-condensed text-xs font-semibold uppercase tracking-[0.14em] text-imesul-steel/68">
-              Peso informado no catálogo
-            </p>
-            <p className="mt-1 text-lg font-semibold text-white">
-              {selectedVariation?.peso !== undefined
-                ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-                : "Selecione uma opção para continuar"}
-            </p>
-          </div>
         </div>
       )}
     </div>

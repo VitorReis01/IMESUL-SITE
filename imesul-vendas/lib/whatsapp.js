@@ -49,21 +49,15 @@ export function buildProjectMessage({ project, subtype, materials, form }) {
 
 const defaultMessageLabels = { measure: "Medida", thickness: "Espessura", quantity: "Quantidade" };
 
-// Monta a mensagem tecnica e inclui peso somente quando a linha selecionada o informa.
+// Monta a mensagem tecnica com as opcoes escolhidas pelo cliente.
 export function buildProductMessage({
   category,
   product,
   form,
-  selectedVariation,
   hideTechnicalRows = false,
   labels = defaultMessageLabels,
   showLength = false,
-  showWeight = true,
 }) {
-  const weight = selectedVariation?.peso !== undefined
-    ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-    : "Não informado";
-
   const details = optionalBlock("Características adicionais", form.details);
   const notes = optionalBlock("Observações", form.notes);
   const thickness = form.thickness || form.thickness === 0
@@ -82,7 +76,6 @@ export function buildProductMessage({
     hideTechnicalRows ? "" : thickness,
     hideTechnicalRows ? "" : length,
     details,
-    (hideTechnicalRows || !showWeight) ? "" : `Peso informado no catálogo:\n${weight}`,
     `${labels.quantity}:\n${valueOrFallback(form.quantity)}`,
     `Cidade/UF:\n${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}`,
     notes,
