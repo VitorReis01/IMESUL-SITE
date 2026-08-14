@@ -293,7 +293,7 @@ export const catalogSpecifications = {
         weightedRows([["545 mm", 'chapa #20', 8.7, 2000], ["545 mm", 'chapa #20', 9.6, 2200], ["545 mm", 'chapa #20', 10.81, 2500], ["545 mm", 'chapa #20', 13.08, 3000]], "kg/peça"),
         { paginaFonte: 10 }
       ),
-      lambris: incompleteSpecs(10, "O catálogo agrupa lambris nesta seção, mas não apresenta uma tabela técnica individual legível."),
+      lambris: incompleteSpecs(10),
     },
   },
 

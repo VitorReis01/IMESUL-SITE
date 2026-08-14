@@ -584,11 +584,11 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
               Opções do catálogo
             </h3>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-            {product.hasStructuredOptions
-              ? `Opções disponíveis no catálogo IMESUL 2024, página ${product.specifications.paginaFonte}.`
-              : "Informe os detalhes do material para consulta comercial."}
-          </p>
+          {product.hasStructuredOptions && (
+            <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
+              {`Opções disponíveis no catálogo IMESUL 2024, página ${product.specifications.paginaFonte}.`}
+            </p>
+          )}
 
           {!usesSimplifiedModelQuote && (
             <div className="mt-8">
