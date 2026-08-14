@@ -260,7 +260,7 @@ export const catalogProducts = [
     slug: "bobininha",
     description: "Bobininha galvanizada AZ-120 para aplicações em cercamentos, reforços e montagem.",
     usage: ["Cercamentos", "Reforços", "Galvanizada"],
-    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+    image: "/catalog-products/atualizadas/bobinas-galvanizadas.webp",
     specifications: catalogSpecifications.telasEBobininhas.bobininha,
   }),
   product({
@@ -269,7 +269,7 @@ export const catalogProducts = [
     name: "Tela Eletrossoldada",
     description: "Tela eletrossoldada para cercamentos, fechamentos e aplicações rurais.",
     usage: ["Cercamentos", "Fechamentos", "Área rural", "Venda por metro"],
-    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+    image: "/catalog-products/atualizadas/tela-eletrossoldada.webp",
     specifications: catalogSpecifications.telasEBobininhas.telaEletrossoldada,
   }),
 
