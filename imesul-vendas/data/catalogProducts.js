@@ -179,15 +179,6 @@ export const catalogProducts = [
   }),
 
   product({
-    id: "chapas-planas",
-    categoryId: "chapas",
-    name: "Chapas Planas",
-    description: "Usadas para corte, dobra, fechamento e fabricação de peças.",
-    usage: ["Corte", "Dobra", "Fabricação"],
-    image: "/catalog-products/atualizadas/chapas-planas.webp",
-    specifications: catalogSpecifications.chapas.planas.generica,
-  }),
-  product({
     id: "chapas-grossas",
     categoryId: "chapas",
     name: "Chapas Grossas",
@@ -217,10 +208,11 @@ export const catalogProducts = [
   product({
     id: "chapas-piso",
     categoryId: "chapas",
-    name: "Chapas de Piso",
-    description: "Usadas em pisos, passarelas, rampas e áreas de circulação.",
-    usage: ["Pisos", "Passarelas", "Acessos"],
-    image: "/catalog-products/atualizadas/chapas-planas.webp",
+    slug: "chapas-de-piso",
+    name: "Chapa Piso",
+    description: "Chapa xadrez usada em pisos, passarelas, rampas e áreas de circulação.",
+    usage: ["Pisos", "Passarelas", "Chapa xadrez"],
+    image: "/catalog-products/atualizadas/chapa-xadrez.webp",
     specifications: catalogSpecifications.chapas.planas.piso,
   }),
 

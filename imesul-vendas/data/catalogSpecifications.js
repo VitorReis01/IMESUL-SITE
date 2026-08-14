@@ -249,8 +249,8 @@ export const catalogSpecifications = {
         { paginaFonte: 9 }
       ),
       piso: buildSpecs(
-        weightedRows([["Chapa de piso", 3, 24], ["Chapa de piso", 4.75, 38], ["Chapa de piso", 3.3, 49.39], ["Chapa de piso", 8, 62.72], ["Chapa de piso", 9.5, 74.48], ["Chapa de piso", 2.65, 80.14], ["Chapa de piso", 2, 56.52]], "kg/m²"),
-        { paginaFonte: 9, observacao: "Algumas equivalências pol/MSG x mm da tabela parecem inconsistentes; os valores foram mantidos como impressos e devem ser confirmados comercialmente." }
+        confirmedRows([["12"], ["14"], ["3/16"], ["1/8"]]),
+        { paginaFonte: "levantamento-fisico", dadosCompletos: false, observacao: "Chapa Piso corresponde comercialmente a chapa xadrez. Medidas confirmadas no levantamento físico; pesos sob confirmação comercial." }
       ),
     },
     frisadasELambris: {
