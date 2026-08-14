@@ -183,6 +183,27 @@ export const catalogSpecifications = {
     cumeeiras: incompleteSpecs(6, "O catálogo apresenta os modelos de cumeeira sem tabela de medidas ou pesos."),
   },
 
+  telasEBobininhas: {
+    bobininha: buildSpecs(
+      confirmedRows([["AZ-120", "Galvanizada - 30 m"]]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Bobininha galvanizada AZ-120, origem Tianjin, com comprimento confirmado de 30 metros. Largura, espessura, peso e diâmetro não foram confirmados.",
+        observacoesTecnicas: ["Origem: Tianjin", "Revestimento: AZ-120", "Comprimento: 30 m", "Acabamento: galvanizada"],
+      }
+    ),
+    telaEletrossoldada: buildSpecs(
+      confirmedRows([["Malha 5 x 15 cm", "Fio 2,30 mm - altura 1,80 m - comprimento 25 m"]]),
+      {
+        paginaFonte: "levantamento-fisico",
+        dadosCompletos: false,
+        observacao: "Somente a combinação com malha legível foi cadastrada. A tela com fio 2,10 mm, altura 1,50 m e comprimento comercial 25 m ficou sem malha confirmada; a tela com altura 1,00 m ficou sem dados suficientes.",
+        observacoesTecnicas: ["Malha: 5 x 15 cm", "Fio: 2,30 mm", "Altura: 1,80 m", "Comprimento: 25 m"],
+      }
+    ),
+  },
+
   laminados: {
     cantoneirasAbasIguais: buildSpecs(
       weightedRows(

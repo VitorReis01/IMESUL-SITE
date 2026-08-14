@@ -254,6 +254,26 @@ export const catalogProducts = [
   }),
 
   product({
+    id: "bobininha",
+    categoryId: "telas-e-bobininhas",
+    name: "Bobininha Galvanizada AZ-120",
+    slug: "bobininha",
+    description: "Bobininha galvanizada AZ-120 para aplicações em cercamentos, reforços e montagem.",
+    usage: ["Cercamentos", "Reforços", "Galvanizada"],
+    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+    specifications: catalogSpecifications.telasEBobininhas.bobininha,
+  }),
+  product({
+    id: "tela-eletrossoldada",
+    categoryId: "telas-e-bobininhas",
+    name: "Tela Eletrossoldada",
+    description: "Tela eletrossoldada para cercamentos, fechamentos e aplicações rurais.",
+    usage: ["Cercamentos", "Fechamentos", "Área rural"],
+    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+    specifications: catalogSpecifications.telasEBobininhas.telaEletrossoldada,
+  }),
+
+  product({
     id: "kit-n-2-rold-4",
     categoryId: "perfis-serralheria",
     name: "Kit n°2 (Rold. 4\")",

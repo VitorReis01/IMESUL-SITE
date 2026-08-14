@@ -26,6 +26,11 @@ const materialShowcaseCards = [
     image: "/images/vendas/materiais/categoria-chapas.webp",
   },
   {
+    categoryId: "telas-e-bobininhas",
+    title: "Telas e Bobininhas",
+    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+  },
+  {
     categoryId: "telhas-metalicas",
     title: "Telhas Metálicas",
     image: "/images/vendas/materiais/categoria-telhas-metalicas.webp",

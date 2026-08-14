@@ -3,6 +3,7 @@ import {
   CircleDot,
   DoorOpen,
   FlaskConical,
+  Grid3X3,
   Layers3,
   PanelsTopLeft,
   Waves,
@@ -46,6 +47,13 @@ export const catalogCategories = [
     description: "Chapas para corte, dobra, piso, fechamento e fabricação de peças.",
     image: "/catalog-products/chapas-planas.webp",
     icon: Layers3,
+  },
+  {
+    id: "telas-e-bobininhas",
+    name: "Telas e Bobininhas",
+    description: "Telas eletrossoldadas e bobininhas galvanizadas para cercamentos, reforços e aplicações rurais.",
+    image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
+    icon: Grid3X3,
   },
   {
     id: "perfis-serralheria",

@@ -89,6 +89,8 @@ const productSearchAliases = {
   "chapa-meia-cana-1090": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
   "chapa-meia-cana-545": ["chapa", "chapas", "meia cana", "portão", "fechamento"],
   lambris: ["lambril", "lambris", "chapa", "fachada", "fechamento"],
+  "tela-eletrossoldada": ["tela", "tela eletrossoldada", "tela soldada", "tela galvanizada"],
+  bobininha: ["bobininha", "bobina galvanizada", "az 120", "az-120"],
   "kit-n-2-rold-4": ["kit", "kit para portão", "portão", "roldana 4", "cabo de aço", "barra chata", "caixa"],
   "kit-n-3-rold-5": ["kit", "kit para portão", "portão", "roldana 5", "cabo de aço", "barra chata", "caixa"],
   roldanas: ["roldana", "roldanas", "portão", "deslizante"],
