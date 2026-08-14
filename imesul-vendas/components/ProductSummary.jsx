@@ -3,6 +3,8 @@
 import { ClipboardList } from "lucide-react";
 import { formatOptionValue } from "./ProductOptionSelector";
 
+const defaultSummaryLabels = { measure: "Medida", thickness: "Espessura", length: "Altura", quantity: "Quantidade" };
+
 // Padroniza linhas preenchidas e ausentes no painel de confirmacao.
 function SummaryRow({ label, value }) {
   return (
@@ -18,7 +20,17 @@ function SummaryRow({ label, value }) {
 }
 
 // Reune produto, opcoes tecnicas e localidade antes do envio.
-export default function ProductSummary({ category, product, form, selectedVariation, hideTechnicalRows = false, children }) {
+export default function ProductSummary({
+  category,
+  product,
+  form,
+  selectedVariation,
+  hideTechnicalRows = false,
+  children,
+  labels = defaultSummaryLabels,
+  showLength = false,
+  showWeight = true,
+}) {
   const weight = selectedVariation?.peso !== undefined
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
     : "Não informado";
@@ -40,17 +52,20 @@ export default function ProductSummary({ category, product, form, selectedVariat
         <SummaryRow label="Produto" value={product.name} />
         {!hideTechnicalRows && (
           <>
-            <SummaryRow label="Medida" value={formatOptionValue(form.measure, "measure")} />
-            <SummaryRow label="Espessura" value={formatOptionValue(form.thickness, "thickness")} />
+            <SummaryRow label={labels.measure} value={formatOptionValue(form.measure, "measure")} />
+            <SummaryRow label={labels.thickness} value={formatOptionValue(form.thickness, "thickness")} />
+            {showLength && (
+              <SummaryRow label={labels.length} value={formatOptionValue(form.length, "length")} />
+            )}
           </>
         )}
         {!hideTechnicalRows && !product.hasStructuredOptions && (
           <SummaryRow label="Características" value={form.details} />
         )}
-        {!hideTechnicalRows && (
+        {!hideTechnicalRows && showWeight && (
           <SummaryRow label="Peso informado no catálogo" value={weight} />
         )}
-        <SummaryRow label="Quantidade" value={form.quantity} />
+        <SummaryRow label={labels.quantity} value={form.quantity} />
         <SummaryRow label="Cidade" value={form.city} />
         <SummaryRow label="Estado" value={form.state} />
         <SummaryRow label="Observações" value={form.notes} />

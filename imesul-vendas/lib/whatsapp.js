@@ -47,8 +47,19 @@ export function buildProjectMessage({ project, subtype, materials, form }) {
   ].filter(Boolean).join("\n\n");
 }
 
+const defaultMessageLabels = { measure: "Medida", thickness: "Espessura", quantity: "Quantidade" };
+
 // Monta a mensagem tecnica e inclui peso somente quando a linha selecionada o informa.
-export function buildProductMessage({ category, product, form, selectedVariation, hideTechnicalRows = false }) {
+export function buildProductMessage({
+  category,
+  product,
+  form,
+  selectedVariation,
+  hideTechnicalRows = false,
+  labels = defaultMessageLabels,
+  showLength = false,
+  showWeight = true,
+}) {
   const weight = selectedVariation?.peso !== undefined
     ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
     : "Não informado";
@@ -56,7 +67,10 @@ export function buildProductMessage({ category, product, form, selectedVariation
   const details = optionalBlock("Características adicionais", form.details);
   const notes = optionalBlock("Observações", form.notes);
   const thickness = form.thickness || form.thickness === 0
-    ? optionalBlock("Espessura", formatTechnicalValue(form.thickness, "thickness"))
+    ? optionalBlock(labels.thickness, formatTechnicalValue(form.thickness, "thickness"))
+    : "";
+  const length = showLength && (form.length || form.length === 0)
+    ? optionalBlock("Altura", formatTechnicalValue(form.length, "length"))
     : "";
 
   return [
@@ -64,11 +78,12 @@ export function buildProductMessage({ category, product, form, selectedVariation
     "Tipo de solicitação:\nMaterial",
     `Categoria:\n${category?.name || "Não informado"}`,
     `Produto:\n${product.name}`,
-    hideTechnicalRows ? "" : `Medida:\n${formatTechnicalValue(form.measure, "measure")}`,
+    hideTechnicalRows ? "" : `${labels.measure}:\n${formatTechnicalValue(form.measure, "measure")}`,
     hideTechnicalRows ? "" : thickness,
+    hideTechnicalRows ? "" : length,
     details,
-    hideTechnicalRows ? "" : `Peso informado no catálogo:\n${weight}`,
-    `Quantidade:\n${valueOrFallback(form.quantity)}`,
+    (hideTechnicalRows || !showWeight) ? "" : `Peso informado no catálogo:\n${weight}`,
+    `${labels.quantity}:\n${valueOrFallback(form.quantity)}`,
     `Cidade/UF:\n${valueOrFallback(form.city)} - ${valueOrFallback(form.state)}`,
     notes,
     "Fico no aguardo da confirmação de medida, disponibilidade e valor.",

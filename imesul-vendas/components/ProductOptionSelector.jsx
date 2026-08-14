@@ -7,6 +7,9 @@ import { AlertCircle, Check, Scale } from "lucide-react";
 
 const sameValue = (left, right) => String(left) === String(right);
 
+const defaultOptionLabels = { measure: "Medida", thickness: "Espessura", length: "Altura" };
+const variationKeyByField = { measure: "medida", thickness: "espessura", length: "comprimento" };
+
 // Formata valores tecnicos sem alterar a unidade armazenada no catalogo.
 export function formatOptionValue(value, type) {
   if (value === "" || value === null || value === undefined) return "";
@@ -20,46 +23,59 @@ export function formatOptionValue(value, type) {
 }
 
 // Mantem somente linhas compativeis com as escolhas ja feitas pelo cliente.
-function filterVariations(variations, form, ignoredField) {
+function filterVariations(variations, form, ignoredField, fields = ["measure", "thickness"]) {
   return variations.filter((variation) =>
-    ["measure", "thickness"].every((field) => {
+    fields.every((field) => {
       if (field === ignoredField || !form[field]) return true;
-      const variationKey = {
-        measure: "medida",
-        thickness: "espessura",
-      }[field];
+      const variationKey = variationKeyByField[field];
       return variation[variationKey] === undefined || sameValue(variation[variationKey], form[field]);
     })
   );
 }
 
 // Calcula as proximas opcoes validas e impede combinacoes inexistentes na tabela.
-export function getAvailableOptions(product, form) {
+// withLength habilita uma terceira dimensao dependente (ex.: altura da tela), opcional e isolada por produto.
+export function getAvailableOptions(product, form, { withLength = false } = {}) {
   const specifications = product.specifications;
   if (!specifications?.variacoes?.length) {
-    return { measures: [], thicknesses: [] };
+    return { measures: [], thicknesses: [], lengths: [] };
   }
+
+  const fields = withLength ? ["measure", "thickness", "length"] : ["measure", "thickness"];
 
   return {
     measures: specifications.medidas || [],
     thicknesses: [
       ...new Set(
-        filterVariations(specifications.variacoes, form, "thickness")
+        filterVariations(specifications.variacoes, form, "thickness", fields)
           .map((variation) => variation.espessura)
         .filter((value) => value !== undefined)
       ),
     ],
+    lengths: withLength
+      ? [
+          ...new Set(
+            filterVariations(specifications.variacoes, form, "length", fields)
+              .map((variation) => variation.comprimento)
+              .filter((value) => value !== undefined)
+          ),
+        ]
+      : [],
   };
 }
 
 // Retorna a linha completa usada no resumo e no peso, quando todas as chaves conferem.
-export function findSelectedVariation(product, form) {
+// withLength exige tambem a altura para confirmar a combinacao (usado somente pela tela eletrossoldada).
+export function findSelectedVariation(product, form, { withLength = false } = {}) {
   const variations = product.specifications?.variacoes || [];
+  const checks = [
+    ["medida", form.measure],
+    ["espessura", form.thickness],
+  ];
+  if (withLength) checks.push(["comprimento", form.length]);
+
   return variations.find((variation) =>
-    [
-      ["medida", form.measure],
-      ["espessura", form.thickness],
-    ].every(([key, selected]) =>
+    checks.every(([key, selected]) =>
       variation[key] === undefined ? true : Boolean(selected) && sameValue(variation[key], selected)
     )
   );
@@ -99,12 +115,12 @@ function OptionGroup({ label, type, options, value, onSelect }) {
   );
 }
 
-// Coordena medida e espessura conforme a tabela tecnica do produto.
-export default function ProductOptionSelector({ product, form, setForm }) {
-  const options = useMemo(() => getAvailableOptions(product, form), [product, form]);
+// Coordena medida, espessura e (quando habilitado) altura conforme a tabela tecnica do produto.
+export default function ProductOptionSelector({ product, form, setForm, withLength = false, labels = defaultOptionLabels, showWeight = true }) {
+  const options = useMemo(() => getAvailableOptions(product, form, { withLength }), [product, form, withLength]);
   const selectedVariation = useMemo(
-    () => findSelectedVariation(product, form),
-    [product, form]
+    () => findSelectedVariation(product, form, { withLength }),
+    [product, form, withLength]
   );
 
   // Seleciona valores unicos e preserva escolhas que ainda continuam validas.
@@ -112,16 +128,19 @@ export default function ProductOptionSelector({ product, form, setForm }) {
     const updates = {};
     if (!form.measure && options.measures.length === 1) updates.measure = options.measures[0];
     if (!form.thickness && options.thicknesses.length === 1) updates.thickness = options.thicknesses[0];
+    if (withLength && !form.length && options.lengths.length === 1) updates.length = options.lengths[0];
     if (Object.keys(updates).length) {
       setForm((current) => ({ ...current, ...updates }));
     }
-  }, [form.measure, form.thickness, options, setForm]);
+  }, [form.measure, form.thickness, form.length, options, setForm, withLength]);
 
-  // Uma nova medida invalida a espessura escolhida anteriormente.
+  // Uma nova medida invalida a espessura (e a altura) escolhidas anteriormente.
   const selectMeasure = (measure) =>
-    setForm((current) => ({ ...current, measure, thickness: "" }));
+    setForm((current) => ({ ...current, measure, thickness: "", length: "" }));
   const selectThickness = (thickness) =>
-    setForm((current) => ({ ...current, thickness }));
+    setForm((current) => ({ ...current, thickness, length: "" }));
+  const selectLength = (length) =>
+    setForm((current) => ({ ...current, length }));
 
   // Produtos sem tabela permanecem livres e deixam a confirmacao para o atendimento.
   if (!product.hasStructuredOptions) {
@@ -154,19 +173,28 @@ export default function ProductOptionSelector({ product, form, setForm }) {
   return (
     <div className="space-y-7">
       <OptionGroup
-        label="Medida"
+        label={labels.measure}
         type="measure"
         options={options.measures}
         value={form.measure}
         onSelect={selectMeasure}
       />
       <OptionGroup
-        label="Espessura"
+        label={labels.thickness}
         type="thickness"
         options={options.thicknesses}
         value={form.thickness}
         onSelect={selectThickness}
       />
+      {withLength && (
+        <OptionGroup
+          label={labels.length}
+          type="length"
+          options={options.lengths}
+          value={form.length}
+          onSelect={selectLength}
+        />
+      )}
       {product.specifications.observacoesTecnicas?.length > 0 && (
         <div className="rounded-[7px] border border-white/[0.09] bg-white/[0.025] p-4">
           <p className="font-mono text-[11px] tracking-[0.14em] text-imesul-red">
@@ -178,21 +206,23 @@ export default function ProductOptionSelector({ product, form, setForm }) {
         </div>
       )}
 
-      <div className="flex items-center gap-4 rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(135deg,rgba(212,43,43,0.1),rgba(255,255,255,0.02))] p-5">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[7px] bg-imesul-red/15 text-imesul-red">
-          <Scale size={21} aria-hidden="true" />
-        </span>
-        <div>
-          <p className="font-condensed text-xs font-semibold uppercase tracking-[0.14em] text-imesul-steel/68">
-            Peso informado no catálogo
-          </p>
-          <p className="mt-1 text-lg font-semibold text-white">
-            {selectedVariation?.peso !== undefined
-              ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
-              : "Selecione uma opção para continuar"}
-          </p>
+      {showWeight && (
+        <div className="flex items-center gap-4 rounded-[8px] border border-imesul-red/25 bg-[linear-gradient(135deg,rgba(212,43,43,0.1),rgba(255,255,255,0.02))] p-5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[7px] bg-imesul-red/15 text-imesul-red">
+            <Scale size={21} aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-condensed text-xs font-semibold uppercase tracking-[0.14em] text-imesul-steel/68">
+              Peso informado no catálogo
+            </p>
+            <p className="mt-1 text-lg font-semibold text-white">
+              {selectedVariation?.peso !== undefined
+                ? `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(selectedVariation.peso)} ${selectedVariation.pesoUnidade}`
+                : "Selecione uma opção para continuar"}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

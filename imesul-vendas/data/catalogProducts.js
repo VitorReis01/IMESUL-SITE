@@ -268,7 +268,7 @@ export const catalogProducts = [
     categoryId: "telas-e-bobininhas",
     name: "Tela Eletrossoldada",
     description: "Tela eletrossoldada para cercamentos, fechamentos e aplicações rurais.",
-    usage: ["Cercamentos", "Fechamentos", "Área rural"],
+    usage: ["Cercamentos", "Fechamentos", "Área rural", "Venda por metro"],
     image: "/images/vendas/materiais/categoria-telas-e-bobininhas.webp",
     specifications: catalogSpecifications.telasEBobininhas.telaEletrossoldada,
   }),

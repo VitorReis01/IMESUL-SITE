@@ -194,12 +194,18 @@ export const catalogSpecifications = {
       }
     ),
     telaEletrossoldada: buildSpecs(
-      confirmedRows([["Malha 5 x 15 cm", "Fio 2,30 mm - altura 1,80 m - comprimento 25 m"]]),
+      [
+        { medida: "5 x 15 cm", espessura: 2.3, comprimento: 1800 },
+        { medida: "50 x 50 mm", espessura: 2.1, comprimento: 2000 },
+        { medida: "25 x 25 mm", espessura: 2.1, comprimento: 1500 },
+        { medida: "25 x 25 mm", espessura: 2.1, comprimento: 2000 },
+        { medida: "35 x 35 mm", espessura: 2.1, comprimento: 1000 },
+      ],
       {
         paginaFonte: "levantamento-fisico",
-        dadosCompletos: false,
-        observacao: "Somente a combinação com malha legível foi cadastrada. A tela com fio 2,10 mm, altura 1,50 m e comprimento comercial 25 m ficou sem malha confirmada; a tela com altura 1,00 m ficou sem dados suficientes.",
-        observacoesTecnicas: ["Malha: 5 x 15 cm", "Fio: 2,30 mm", "Altura: 1,80 m", "Comprimento: 25 m"],
+        dadosCompletos: true,
+        observacao: "Malha, fio e altura confirmados no levantamento físico. Tela vendida por metro; o comprimento de 25 m corresponde ao rolo completo, não à quantidade mínima de compra.",
+        observacoesTecnicas: ["Comprimento do rolo: 25 m", "Venda por metro (corte mínimo de 0,5 m)"],
       }
     ),
   },

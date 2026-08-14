@@ -14,6 +14,7 @@ import {
   projectSizeOptions,
   projectUrgencyOptions,
   quantityOptions,
+  telaComprimentoOptions,
 } from "../data/quoteOptions";
 import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../lib/whatsapp";
 import { trackLocalEvent } from "../lib/localAnalytics";
@@ -37,12 +38,17 @@ const projectInitialForm = {
 const materialInitialForm = {
   measure: "",
   thickness: "",
+  length: "",
   details: "",
   quantity: "",
   city: "",
   state: "",
   notes: "",
 };
+
+const telaOptionLabels = { measure: "Malha", thickness: "Fio", length: "Altura" };
+const telaSummaryLabels = { measure: "Malha", thickness: "Fio", length: "Altura", quantity: "Comprimento solicitado" };
+const telaMessageLabels = { measure: "Malha", thickness: "Fio", quantity: "Comprimento" };
 
 const selectClassName =
   "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[16px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
@@ -59,6 +65,24 @@ function isPositiveInteger(value) {
 
 function formatCustomQuantity(value) {
   return `${value} ${value === "1" ? "unidade" : "unidades"}`;
+}
+
+// Tela eletrossoldada e vendida por metro; aceita fracoes de meio metro (ex.: 0,5 / 1,5 / 2,5).
+function normalizeDecimal(value) {
+  return String(value ?? "").trim().replace(",", ".");
+}
+
+function isHalfMeterLength(value) {
+  const normalized = normalizeDecimal(value);
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return false;
+  const number = Number(normalized);
+  if (!(number > 0)) return false;
+  return Math.abs(Math.round(number * 2) - number * 2) < 1e-9;
+}
+
+function formatCustomLength(value) {
+  const number = Number(normalizeDecimal(value));
+  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(number)} m`;
 }
 
 function getStoredCart() {
@@ -450,12 +474,18 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
   const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos" || product.id === "discos-corte" || product.id === "trincos" || product.id === "puxadores" || product.id === "eletrodo" || product.id === "fixador-de-porta-de-piso" || product.id === "kit-n-2-rold-4" || product.id === "kit-n-3-rold-5";
-  const materialQuantityOptions = usesSimplifiedModelQuote
-    ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
-    : quantityOptions;
-  const customQuantityInvalid = usesSimplifiedModelQuote && isCustomQuantity && !isPositiveInteger(customQuantity);
-  // A variacao exata fornece peso e confirma que a combinacao existe no catalogo.
-  const selectedVariation = findSelectedVariation(product, form);
+  // Tela eletrossoldada segue o fluxo estruturado (malha/fio/altura), mas e vendida por metro, nao por unidade.
+  const isTelaEletrossoldada = product.id === "tela-eletrossoldada";
+  const materialQuantityOptions = isTelaEletrossoldada
+    ? [...telaComprimentoOptions, { value: customQuantityValue, label: "Digitar comprimento" }]
+    : usesSimplifiedModelQuote
+      ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
+      : quantityOptions;
+  const quantityFieldLabel = isTelaEletrossoldada ? "Comprimento desejado" : "Quantidade";
+  const customQuantityInvalid = (usesSimplifiedModelQuote || isTelaEletrossoldada) && isCustomQuantity
+    && (isTelaEletrossoldada ? !isHalfMeterLength(customQuantity) : !isPositiveInteger(customQuantity));
+  // A variacao exata fornece peso (ou altura, para a tela) e confirma que a combinacao existe no catalogo.
+  const selectedVariation = findSelectedVariation(product, form, { withLength: isTelaEletrossoldada });
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -473,6 +503,17 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
   };
   const updateCustomQuantity = (event) => {
     const value = event.target.value;
+
+    if (isTelaEletrossoldada) {
+      if (value && !/^[0-9]*[.,]?[0-9]*$/.test(value)) return;
+      setCustomQuantity(value);
+      setForm((current) => ({
+        ...current,
+        quantity: isHalfMeterLength(value) ? formatCustomLength(value) : "",
+      }));
+      return;
+    }
+
     if (value && !isPositiveInteger(value)) return;
 
     setCustomQuantity(value);
@@ -482,13 +523,17 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     }));
   };
   const blockInvalidQuantityInput = (event) => {
-    if (["e", "E", "+", "-", ".", ",", "/"].includes(event.key)) {
+    const blockedKeys = isTelaEletrossoldada
+      ? ["e", "E", "+", "-"]
+      : ["e", "E", "+", "-", ".", ",", "/"];
+    if (blockedKeys.includes(event.key)) {
       event.preventDefault();
     }
   };
   const blockInvalidQuantityPaste = (event) => {
     const pastedValue = event.clipboardData.getData("text");
-    if (!isPositiveInteger(pastedValue)) {
+    const valid = isTelaEletrossoldada ? isHalfMeterLength(pastedValue) : isPositiveInteger(pastedValue);
+    if (!valid) {
       event.preventDefault();
     }
   };
@@ -503,12 +548,17 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
     form,
     selectedVariation,
     hideTechnicalRows: usesSimplifiedModelQuote,
+    labels: isTelaEletrossoldada ? telaMessageLabels : undefined,
+    showLength: isTelaEletrossoldada,
+    showWeight: !isTelaEletrossoldada,
   });
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
     ? "Selecione uma opção disponível para continuar."
     : customQuantityInvalid
-      ? "Digite uma quantidade inteira maior que zero."
+      ? (isTelaEletrossoldada
+          ? "Digite um comprimento válido em metros, em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5)."
+          : "Digite uma quantidade inteira maior que zero.")
     : !isLocationReady(form)
         ? "Complete os dados para enviar a solicitação."
         : "";
@@ -544,13 +594,20 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
 
           {!usesSimplifiedModelQuote && (
             <div className="mt-8">
-              <ProductOptionSelector product={product} form={form} setForm={setForm} />
+              <ProductOptionSelector
+                product={product}
+                form={form}
+                setForm={setForm}
+                withLength={isTelaEletrossoldada}
+                labels={isTelaEletrossoldada ? telaOptionLabels : undefined}
+                showWeight={!isTelaEletrossoldada}
+              />
             </div>
           )}
 
           <div className={`${usesSimplifiedModelQuote ? "mt-6 sm:mt-8" : "mt-7 border-t border-white/[0.08] pt-6 sm:mt-9 sm:pt-8"} grid gap-4 sm:grid-cols-3 sm:gap-5`}>
             <SelectField
-              label="Quantidade"
+              label={quantityFieldLabel}
               value={isCustomQuantity ? customQuantityValue : form.quantity}
               onChange={updateQuantity}
               options={materialQuantityOptions}
@@ -560,25 +617,32 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
             <SelectField label="Estado" value={form.state} onChange={updateState} options={brazilianStates} placeholder="Selecione" required />
             <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={cityOptions} placeholder={form.state ? "Selecione" : "Selecione o estado"} required disabled={!form.state} />
           </div>
-          {usesSimplifiedModelQuote && isCustomQuantity && (
+          {(usesSimplifiedModelQuote || isTelaEletrossoldada) && isCustomQuantity && (
             <div className="mt-5 max-w-sm">
-              <Field label="Digitar quantidade" required>
+              <Field label={isTelaEletrossoldada ? "Digitar comprimento (m)" : "Digitar quantidade"} required>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode={isTelaEletrossoldada ? "decimal" : "numeric"}
+                  pattern={isTelaEletrossoldada ? "[0-9]*[.,]?[0-9]*" : "[0-9]*"}
                   value={customQuantity}
                   onChange={updateCustomQuantity}
                   onKeyDown={blockInvalidQuantityInput}
                   onPaste={blockInvalidQuantityPaste}
-                  placeholder="Ex.: 12"
+                  placeholder={isTelaEletrossoldada ? "Ex.: 2,5" : "Ex.: 12"}
                   aria-invalid={customQuantityInvalid}
                   className={inputClassName}
                 />
               </Field>
+              {isTelaEletrossoldada && !customQuantityInvalid && (
+                <p className="mt-2 text-sm leading-6 text-imesul-steel-light/60">
+                  Aceita meio metro (ex.: 0,5 / 1,5 / 2,5).
+                </p>
+              )}
               {customQuantityInvalid && (
                 <p className="mt-2 text-sm leading-6 text-[#f0c776]">
-                  Use apenas números inteiros maiores que zero.
+                  {isTelaEletrossoldada
+                    ? "Use metros em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5)."
+                    : "Use apenas números inteiros maiores que zero."}
                 </p>
               )}
             </div>
@@ -602,8 +666,11 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false }) {
           form={form}
           selectedVariation={selectedVariation}
           hideTechnicalRows={usesSimplifiedModelQuote}
+          labels={isTelaEletrossoldada ? telaSummaryLabels : undefined}
+          showLength={isTelaEletrossoldada}
+          showWeight={!isTelaEletrossoldada}
         >
-          {usesSimplifiedModelQuote ? (
+          {(usesSimplifiedModelQuote || isTelaEletrossoldada) ? (
             <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">
               <AddToCartButton
                 product={product}

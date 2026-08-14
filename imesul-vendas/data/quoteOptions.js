@@ -97,6 +97,9 @@ export const quantityOptions = [
   "Outro",
 ];
 
+// Comprimentos pre-definidos para telas vendidas por metro (incrementos de 0,5 m).
+export const telaComprimentoOptions = ["0,5 m", "1 m", "1,5 m", "2 m", "2,5 m", "5 m"];
+
 // Opcoes qualitativas usadas somente no caminho por projeto.
 export const projectSizeOptions = [
   "Pequeno",
