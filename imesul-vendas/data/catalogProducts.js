@@ -65,7 +65,7 @@ export const catalogProducts = [
     name: "Perfil U Enrijecido",
     description: "Usado em coberturas, galpões, terças e estruturas que exigem reforço.",
     usage: ["Galpões", "Coberturas", "Estruturas"],
-    image: "/catalog-products/atualizadas/viga-u.webp",
+    image: "/catalog-products/atualizadas/perfil-u-enrijecido.webp",
     specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
   }),
   product({
@@ -335,7 +335,7 @@ export const catalogProducts = [
     name: "Viga G",
     description: "Viga G com nomenclatura preservada conforme levantamento físico.",
     usage: ["Serralheria", "Estruturas", "Montagem"],
-    image: "/images/vendas/materiais/categoria-serralheria-acabamentos.webp",
+    image: "/catalog-products/atualizadas/viga-u.webp",
     specifications: catalogSpecifications.perfisSerralheria.vigaG,
   }),
   product({
