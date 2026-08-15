@@ -26,6 +26,9 @@ const carouselFallbackTargets = {
   acessorios: { categoryId: "acessorios-serralheria", productId: null },
 };
 
+// Produtos que continuam no catalogo normalmente, mas nao devem aparecer nesta vitrine.
+const carouselExcludedProductIds = new Set(["primers", "galvanizantes-frio"]);
+
 const normalizeSlug = (value) =>
   String(value)
     .normalize("NFD")
@@ -82,6 +85,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
   const products = useMemo(
     () =>
       catalogProducts
+        .filter((product) => !carouselExcludedProductIds.has(product.id))
         .map((product) => {
           const category = catalogCategories.find((categoryItem) => categoryItem.id === product.categoryId);
           const item = {
