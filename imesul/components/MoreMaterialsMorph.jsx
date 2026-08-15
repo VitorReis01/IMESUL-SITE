@@ -17,8 +17,8 @@ const WORDS = [
   "CHAPAS",
   "PERFIS",
   "ACESSÓRIOS",
-  "STEEL DECK",
-  "PAINÉIS",
+  "BOBININHAS",
+  "VARIEDADES",
   "E MUITO MAIS",
 ];
 
