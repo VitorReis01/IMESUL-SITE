@@ -70,7 +70,6 @@ export const metadata = {
     images: ["/logo/imesul-logo-completa.webp"],
   },
   alternates: { canonical: siteUrl },
-  icons: { icon: "/logo/imesul-logo-completa.webp" },
   robots: { index: true, follow: true },
 };
 
