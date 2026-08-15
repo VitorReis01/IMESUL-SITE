@@ -45,11 +45,7 @@ function StaticShowreel({ mode, videoSources, videoRef, canUseVideo }) {
       <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
 
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 text-center sm:px-8">
-        <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
-          Showroom IMESUL
-        </span>
-
-        <h2 className="mt-5 max-w-4xl font-display leading-[0.94] text-white [font-size:clamp(2rem,9vw,4rem)] sm:[font-size:clamp(2.4rem,7vw,5rem)]">
+        <h2 className="max-w-4xl font-display leading-[0.94] text-white [font-size:clamp(2rem,9vw,4rem)] sm:[font-size:clamp(2.4rem,7vw,5rem)]">
           Materiais que sustentam grandes projetos
         </h2>
 
@@ -352,18 +348,6 @@ export default function MaterialsShowreel() {
             immersive ? "py-0 lg:h-full lg:py-0" : "py-16"
           }`}
         >
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.6 }}
-            transition={{ duration: 0.6 }}
-          className={`flex items-center gap-3 ${immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[7%]" : ""}`}
-        >
-            <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
-              Showroom IMESUL
-            </span>
-          </motion.div>
-
           <h2
             className={`mt-4 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-center font-display leading-[0.94] text-white [font-size:clamp(1.85rem,9.5vw,3.15rem)] sm:[font-size:clamp(2.1rem,7vw,3.7rem)] lg:[font-size:clamp(2.2rem,5vw,4.2rem)] [@media(max-height:480px)]:mt-2 [@media(max-height:480px)]:[font-size:clamp(1.25rem,5vw,2rem)] ${
               immersive ? "lg:absolute lg:left-0 lg:right-0 lg:top-[19%] lg:mt-0" : ""
@@ -375,10 +359,10 @@ export default function MaterialsShowreel() {
 
           <div
             ref={videoBoxRef}
-            className={`relative z-20 mt-6 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] shadow-[0_34px_90px_rgba(0,0,0,0.5)] sm:mt-8 lg:mt-14 lg:rounded-[20px] lg:shadow-[0_50px_150px_rgba(0,0,0,0.55)] [@media(max-height:480px)]:mt-3 ${
+            className={`relative z-20 mt-6 aspect-video w-full max-w-3xl overflow-hidden rounded-[18px] shadow-[0_34px_90px_rgba(0,0,0,0.5)] sm:mt-8 lg:rounded-[20px] lg:shadow-[0_50px_150px_rgba(0,0,0,0.55)] [@media(max-height:480px)]:mt-3 ${
               immersive
                 ? "mx-auto lg:absolute lg:left-1/2 lg:top-1/2 lg:mx-0 lg:mt-0 lg:w-auto lg:[max-width:calc(100vw-96px)]"
-                : "mx-auto"
+                : "mx-auto lg:mt-14"
             }`}
           >
             <video
