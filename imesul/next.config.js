@@ -26,6 +26,7 @@ const nextConfig = {
   // Permite informar origens locais de desenvolvimento sem versionar IP da rede.
   allowedDevOrigins,
   productionBrowserSourceMaps: false,
+  poweredByHeader: false,
   // Mantem o Turbopack limitado a este projeto dentro do repositorio compartilhado.
   turbopack: {
     root: __dirname,
@@ -47,6 +48,10 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
         ],
       },
     ];

@@ -15,6 +15,26 @@ const suspiciousAgentPattern = /sqlmap|nikto|nmap|python-requests|curl|wget|mass
 const suspiciousPathPattern = /\/(?:\.env|\.git|wp-admin|admin|api\/internal|phpmyadmin|xmlrpc\.php|config|backup)/i;
 const suspiciousPayloadPattern = /<script|union\s+select|\.\.\/|%2e%2e|select\s+.+\s+from|drop\s+table|insert\s+into|onerror=|javascript:/i;
 
+// Limita quantos eventos um mesmo IP pode registrar por minuto neste endpoint publico.
+const trackRateWindowMs = 60 * 1000;
+const trackRateMaxRequests = 60;
+const trackRequestCounters = new Map();
+
+export const checkTrackRateLimit = (ipKey = "não identificado") => {
+  const now = Date.now();
+  const current = trackRequestCounters.get(ipKey);
+
+  if (!current || current.resetAt <= now) {
+    trackRequestCounters.set(ipKey, { count: 1, resetAt: now + trackRateWindowMs });
+    return true;
+  }
+
+  if (current.count >= trackRateMaxRequests) return false;
+
+  current.count += 1;
+  return true;
+};
+
 const safeString = (value, fallback = "", limit = 500) =>
   typeof value === "string" ? value.slice(0, limit) : fallback;
 

@@ -40,6 +40,10 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
         ],
       },
     ];

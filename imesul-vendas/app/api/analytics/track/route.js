@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addAnalyticsEvent } from "../../../../Backend.js/analyticsStore";
+import { addAnalyticsEvent, checkTrackRateLimit } from "../../../../Backend.js/analyticsStore";
 
 // Recebe eventos do site sem confiar em IP ou headers enviados pelo frontend.
 // O painel admin consome os dados processados pelo backend local de analytics.
@@ -77,6 +77,10 @@ const sanitizePayload = (payload = {}) => ({
 });
 
 export async function POST(request) {
+  if (!checkTrackRateLimit(getRequestIp(request))) {
+    return noStoreJson({ ok: false, error: "Muitas requisições. Tente novamente em instantes." }, { status: 429 });
+  }
+
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > 12_000) {
     return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 413 });
