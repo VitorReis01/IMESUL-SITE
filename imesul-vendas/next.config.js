@@ -36,8 +36,10 @@ const nextConfig = {
           { key: "X-DNS-Prefetch-Control", value: "on" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
+            // Geolocalizacao do dispositivo (Fase 2) so pode ser solicitada pela propria origem,
+            // nunca por terceiros embutidos. Camera/microfone/pagamento continuam bloqueados.
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=()",
+            value: "camera=(), microphone=(), geolocation=(self), payment=()",
           },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           {
