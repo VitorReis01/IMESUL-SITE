@@ -77,8 +77,12 @@ const sanitizePayload = (payload = {}) => ({
 });
 
 export async function POST(request) {
-  if (!checkTrackRateLimit(getRequestIp(request))) {
-    return noStoreJson({ ok: false, error: "Muitas requisições. Tente novamente em instantes." }, { status: 429 });
+  const rateLimit = checkTrackRateLimit(getRequestIp(request));
+  if (!rateLimit.allowed) {
+    return noStoreJson(
+      { ok: false, error: "Muitas requisições. Tente novamente em instantes." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);
@@ -90,6 +94,10 @@ export async function POST(request) {
   try {
     payload = await request.json();
   } catch {
+    return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
+  }
+
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
   }
 

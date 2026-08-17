@@ -19,20 +19,31 @@ const suspiciousPayloadPattern = /<script|union\s+select|\.\.\/|%2e%2e|select\s+
 const trackRateWindowMs = 60 * 1000;
 const trackRateMaxRequests = 60;
 const trackRequestCounters = new Map();
+const maxTrackedTrackKeys = 5000;
 
 export const checkTrackRateLimit = (ipKey = "não identificado") => {
   const now = Date.now();
+
+  // So varre para limpar quando o Map cresce muito (muitos IPs distintos ja vistos); evita custo a cada chamada.
+  if (trackRequestCounters.size >= maxTrackedTrackKeys) {
+    trackRequestCounters.forEach((entry, key) => {
+      if (entry.resetAt <= now) trackRequestCounters.delete(key);
+    });
+  }
+
   const current = trackRequestCounters.get(ipKey);
 
   if (!current || current.resetAt <= now) {
     trackRequestCounters.set(ipKey, { count: 1, resetAt: now + trackRateWindowMs });
-    return true;
+    return { allowed: true, retryAfterSeconds: 0 };
   }
 
-  if (current.count >= trackRateMaxRequests) return false;
+  if (current.count >= trackRateMaxRequests) {
+    return { allowed: false, retryAfterSeconds: Math.max(Math.ceil((current.resetAt - now) / 1000), 1) };
+  }
 
   current.count += 1;
-  return true;
+  return { allowed: true, retryAfterSeconds: 0 };
 };
 
 const safeString = (value, fallback = "", limit = 500) =>
