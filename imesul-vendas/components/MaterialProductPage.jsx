@@ -2,15 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Database, Home, ImageIcon } from "lucide-react";
 import { getCatalogCategoryPath, getCatalogVariantPath } from "../data/catalogRoutes";
+import { trackLocalEvent } from "../lib/localAnalytics";
 import { MaterialQuoteFlow } from "./QuoteBuilder";
 
 export default function MaterialProductPage({ category, product, backLink = null }) {
   // Alguns produtos (ex.: Colunas) trocam a imagem principal conforme a opcao selecionada no orcamento.
   // A key={product.id} no container abaixo garante que esse estado reinicia ao trocar de produto.
   const [heroImage, setHeroImage] = useState(product.image);
+
+  // Visualizacao de produto: reaproveita o tipo "visit" ja existente (sem criar novo esquema),
+  // distinguivel pelo label/detail. A guarda de duplicacao do lib/localAnalytics evita o
+  // double-fire do React StrictMode em desenvolvimento.
+  useEffect(() => {
+    trackLocalEvent({
+      type: "visit",
+      label: "Visualização de produto",
+      section: category?.name || "Materiais",
+      detail: product.name,
+    });
+  }, [category?.name, product.name]);
 
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
