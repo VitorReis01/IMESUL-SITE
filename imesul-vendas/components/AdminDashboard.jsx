@@ -24,12 +24,42 @@ import { clearLocalEvents, getAnalyticsEvents, getLocalEvents, subscribeToLocalE
 
 const filters = [
   { label: "Todos", value: "all" },
+  { label: "Visitas", value: "visit" },
   { label: "WhatsApp", value: "whatsapp" },
   { label: "Busca", value: "search" },
   { label: "Cliques", value: "click" },
   { label: "Login", value: "login" },
+  { label: "Com localização", value: "hasDeviceLocation" },
   { label: "Suspeitos", value: "suspicious" },
 ];
+
+const periodFilters = [
+  { label: "Hoje", value: "today" },
+  { label: "7 dias", value: "7d" },
+  { label: "30 dias", value: "30d" },
+  { label: "Tudo", value: "all" },
+];
+
+const pageSizeOptions = [25, 50, 100];
+
+const isWithinPeriod = (event, period) => {
+  if (period === "all") return true;
+
+  const eventDate = new Date(event.timestamp);
+  if (Number.isNaN(eventDate.getTime())) return false;
+
+  const now = new Date();
+  if (period === "today") {
+    const cutoff = new Date(now);
+    cutoff.setHours(0, 0, 0, 0);
+    return eventDate >= cutoff;
+  }
+
+  const days = period === "7d" ? 7 : 30;
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - days);
+  return eventDate >= cutoff;
+};
 
 const trackedClickTypes = new Set(["click", "whatsapp"]);
 
@@ -336,6 +366,10 @@ function MiniTable({ title, children }) {
 export default function AdminDashboard({ open, onClose, onLogout }) {
   const [events, setEvents] = useState(() => getLocalEvents());
   const [activeFilter, setActiveFilter] = useState("all");
+  const [activePeriod, setActivePeriod] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pageSize, setPageSize] = useState(pageSizeOptions[0]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
   const [selectedLocationEvent, setSelectedLocationEvent] = useState(null);
 
@@ -358,13 +392,20 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
     };
   }, [open, refreshEvents]);
 
+  // Período filtra os cards de resumo e a lista principal de eventos; a comparação "vs. mês
+  // anterior" continua olhando para todo o histórico (são eixos de análise diferentes).
+  const periodEvents = useMemo(
+    () => (activePeriod === "all" ? events : events.filter((event) => isWithinPeriod(event, activePeriod))),
+    [events, activePeriod],
+  );
+
   const analytics = useMemo(() => {
-    const lastEvent = events.at(-1);
-    const visitEvents = events.filter((event) => event.type === "visit");
-    const uniqueVisitors = new Set(events.map((event) => event.visitorId).filter(Boolean)).size;
+    const lastEvent = periodEvents.at(-1);
+    const visitEvents = periodEvents.filter((event) => event.type === "visit");
+    const uniqueVisitors = new Set(periodEvents.map((event) => event.visitorId).filter(Boolean)).size;
     const totalAccesses = visitEvents.length;
     const repeatedAccesses = Math.max(totalAccesses - uniqueVisitors, 0);
-    const visitors = groupVisitors(events);
+    const visitors = groupVisitors(periodEvents);
 
     return {
       metrics: {
@@ -372,10 +413,10 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         totalAccesses,
         repeatedAccesses,
         suspiciousVisitors: visitors.filter((visitor) => visitor.securityStatus === "Suspeito").length,
-        clicks: countMetric(events, "clicks"),
-        whatsapp: countMetric(events, "whatsapp"),
-        searches: countMetric(events, "searches"),
-        logins: countMetric(events, "logins"),
+        clicks: countMetric(periodEvents, "clicks"),
+        whatsapp: countMetric(periodEvents, "whatsapp"),
+        searches: countMetric(periodEvents, "searches"),
+        logins: countMetric(periodEvents, "logins"),
         lastActivity: lastEvent ? `${formatDate(lastEvent.timestamp)} ${formatTime(lastEvent.timestamp)}` : "Sem registro",
       },
       comparisons: {
@@ -386,17 +427,59 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         logins: getComparison(events, "logins"),
       },
       visitors,
-      buttonRanking: buildButtonRanking(events),
-      visitorRanking: buildVisitorRanking(events),
+      buttonRanking: buildButtonRanking(periodEvents),
+      visitorRanking: buildVisitorRanking(periodEvents),
       locationRanking: buildLocationRanking(visitors),
     };
-  }, [events]);
+  }, [periodEvents, events]);
 
   const filteredEvents = useMemo(() => {
-    if (activeFilter === "all") return events;
-    if (activeFilter === "suspicious") return events.filter((event) => getSecurityStatus(event) === "Suspeito");
-    return events.filter((event) => event.type === activeFilter);
-  }, [activeFilter, events]);
+    const query = searchQuery.trim().toLowerCase();
+
+    return periodEvents.filter((event) => {
+      if (activeFilter === "suspicious" && getSecurityStatus(event) !== "Suspeito") return false;
+      if (activeFilter === "hasDeviceLocation" && event.deviceLocationStatus !== "granted") return false;
+      if (!["all", "suspicious", "hasDeviceLocation"].includes(activeFilter) && event.type !== activeFilter) return false;
+
+      if (!query) return true;
+
+      const identity = getClientIdentity(event);
+      const haystack = [
+        event.visitorId,
+        identity.phone,
+        identity.email,
+        identity.name,
+        event.pagePath || event.path,
+        event.ipMasked || event.ip,
+        event.location?.city,
+        event.location?.region,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [activeFilter, periodEvents, searchQuery]);
+
+  // Volta para a primeira pagina sempre que o filtro, o periodo ou a busca mudam, para nunca
+  // deixar o admin numa pagina vazia. Ajuste de estado durante a renderizacao (nao em effect):
+  // React garante que isso substitui o render atual sem chegar a pintar a tela intermediaria.
+  const filterSignature = `${activeFilter}|${activePeriod}|${searchQuery}|${pageSize}`;
+  const [lastFilterSignature, setLastFilterSignature] = useState(filterSignature);
+  if (filterSignature !== lastFilterSignature) {
+    setLastFilterSignature(filterSignature);
+    setCurrentPage(1);
+  }
+
+  const paginatedEvents = useMemo(() => {
+    const reversed = filteredEvents.slice().reverse();
+    const totalPages = Math.max(Math.ceil(reversed.length / pageSize), 1);
+    const safePage = Math.min(currentPage, totalPages);
+    const start = (safePage - 1) * pageSize;
+
+    return { items: reversed.slice(start, start + pageSize), totalPages, safePage, total: reversed.length };
+  }, [filteredEvents, pageSize, currentPage]);
 
   const suspiciousEvents = useMemo(
     () => events.filter((event) => getSecurityStatus(event) === "Suspeito"),
@@ -534,14 +617,22 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         </header>
 
         <div className="overflow-y-auto px-5 py-5 sm:px-7">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-            <SummaryCard icon={Users} label="Visitantes únicos" value={metrics.uniqueVisitors} comparison={comparisons.uniqueVisitors} />
+          <div className="flex flex-wrap gap-2">
+            {periodFilters.map((period) => (
+              <button key={period.value} type="button" onClick={() => setActivePeriod(period.value)} className={`rounded-full border px-3.5 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${activePeriod === period.value ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] bg-white/[0.035] text-imesul-steel-light/72 hover:border-white/[0.22] hover:text-white"}`}>
+                {period.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+            <SummaryCard icon={Users} label="Visitantes únicos" value={metrics.uniqueVisitors} comparison={activePeriod === "all" ? comparisons.uniqueVisitors : null} />
             <SummaryCard icon={BarChart3} label="Total de acessos" value={metrics.totalAccesses} />
             <SummaryCard icon={BarChart3} label="Acessos repetidos" value={metrics.repeatedAccesses} />
-            <SummaryCard icon={MousePointerClick} label="Cliques em botões" value={metrics.clicks} comparison={comparisons.clicks} />
-            <SummaryCard icon={MessageCircle} label="Cliques WhatsApp" value={metrics.whatsapp} comparison={comparisons.whatsapp} />
-            <SummaryCard icon={Search} label="Pesquisas" value={metrics.searches} comparison={comparisons.searches} />
-            <SummaryCard icon={UserCheck} label="Logins/cadastros" value={metrics.logins} comparison={comparisons.logins} />
+            <SummaryCard icon={MousePointerClick} label="Cliques em botões" value={metrics.clicks} comparison={activePeriod === "all" ? comparisons.clicks : null} />
+            <SummaryCard icon={MessageCircle} label="Cliques WhatsApp" value={metrics.whatsapp} comparison={activePeriod === "all" ? comparisons.whatsapp : null} />
+            <SummaryCard icon={Search} label="Pesquisas" value={metrics.searches} comparison={activePeriod === "all" ? comparisons.searches : null} />
+            <SummaryCard icon={UserCheck} label="Logins/cadastros" value={metrics.logins} comparison={activePeriod === "all" ? comparisons.logins : null} />
             <SummaryCard icon={ShieldAlert} label="Suspeitos" value={metrics.suspiciousVisitors} />
           </div>
 
@@ -623,12 +714,19 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             </MiniTable>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap items-center gap-2">
             {filters.map((filter) => (
               <button key={filter.value} type="button" onClick={() => setActiveFilter(filter.value)} className={`rounded-full border px-4 py-2 font-condensed text-[12px] font-bold uppercase tracking-[0.12em] transition-colors ${activeFilter === filter.value ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] bg-white/[0.035] text-imesul-steel-light/72 hover:border-white/[0.22] hover:text-white"}`}>
                 {filter.label}
               </button>
             ))}
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Buscar por visitante, telefone, e-mail, página, IP ou cidade"
+              className="ml-auto h-9 w-full max-w-xs rounded-full border border-white/[0.12] bg-white/[0.035] px-4 text-[13px] text-white outline-none placeholder:text-imesul-steel-light/45 focus:border-imesul-red/60"
+            />
           </div>
 
           <div className="mt-5 overflow-hidden rounded-[10px] border border-white/[0.1]">
@@ -636,7 +734,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
               <table className="min-w-[1200px] w-full border-collapse text-left">
                 <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th><th className="px-4 py-3">Localização</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
-                  {filteredEvents.length ? filteredEvents.slice().reverse().map((event) => {
+                  {paginatedEvents.items.length ? paginatedEvents.items.map((event) => {
                     const identity = getClientIdentity(event);
                     return (
                       <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td><td className="px-4 py-3"><button type="button" onClick={() => setSelectedLocationEvent(event)} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/78 transition-colors hover:border-imesul-red/55 hover:text-white"><MapPin size={12} aria-hidden="true" /> Ver</button></td></tr>
@@ -645,6 +743,31 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                 </tbody>
               </table>
             </div>
+            {paginatedEvents.total > pageSizeOptions[0] ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] px-4 py-3">
+                <div className="flex items-center gap-2 text-xs text-imesul-steel-light/62">
+                  <span>{paginatedEvents.total} eventos</span>
+                  <select
+                    value={pageSize}
+                    onChange={(event) => setPageSize(Number(event.target.value))}
+                    className="rounded-[6px] border border-white/[0.12] bg-white/[0.035] px-2 py-1 text-xs text-white outline-none"
+                  >
+                    {pageSizeOptions.map((size) => (
+                      <option key={size} value={size} className="bg-[#0a1727]">{size} por página</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" disabled={paginatedEvents.safePage <= 1} onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                    Anterior
+                  </button>
+                  <span className="text-xs text-imesul-steel-light/62">Página {paginatedEvents.safePage} de {paginatedEvents.totalPages}</span>
+                  <button type="button" disabled={paginatedEvents.safePage >= paginatedEvents.totalPages} onClick={() => setCurrentPage((page) => Math.min(page + 1, paginatedEvents.totalPages))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
