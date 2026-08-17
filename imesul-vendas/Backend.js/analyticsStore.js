@@ -171,15 +171,40 @@ const safeUtm = (utm = {}) => ({
   term: safeString(utm.term),
 });
 
+// Classificacao por regex no user-agent, igual ao padrao ja usado no projeto (sem lib nova).
+// Ordem importa: tokens mais especificos (CLI, bots, marcas de navegador) sao checados antes
+// dos genericos, porque muitos UAs reais empilham varios tokens (ex.: Edge tambem contem "Chrome").
+// Nao inventamos categorias que o user-agent nao permite distinguir com confianca (ex.: notebook
+// vs desktop, ou Brave - que por padrao se disfarca de Chrome no proprio user-agent).
 const parseDevice = (userAgent = "") => {
   const ua = safeString(userAgent, "", 500);
-  const device = /mobile|android|iphone|ipod/i.test(ua) ? "Mobile" : /ipad|tablet/i.test(ua) ? "Tablet" : "Desktop";
+
+  const device =
+    /postmanruntime/i.test(ua) ? "Postman" :
+    /powershell/i.test(ua) ? "PowerShell" :
+    /^curl\//i.test(ua) || /\bcurl\//i.test(ua) ? "curl" :
+    /bot|crawler|spider|slurp|bingpreview|facebookexternalhit/i.test(ua) ? "Bot" :
+    /smart-tv|smarttv|tizen|web0s|webos|hbbtv|googletv|appletv/i.test(ua) ? "Smart TV" :
+    /ipad/i.test(ua) ? "iPad" :
+    /iphone|ipod/i.test(ua) ? "iPhone" :
+    /android/i.test(ua) && /mobile/i.test(ua) ? "Android" :
+    /android/i.test(ua) || /tablet|kindle|silk/i.test(ua) ? "Tablet" :
+    /mobile/i.test(ua) ? "Outro" :
+    ua ? "Desktop" : "Desconhecido";
+
   const browser =
+    /postmanruntime/i.test(ua) ? "Postman" :
+    /powershell/i.test(ua) ? "PowerShell" :
+    /^curl\//i.test(ua) || /\bcurl\//i.test(ua) ? "curl" :
+    /bot|crawler|spider|slurp|bingpreview|facebookexternalhit/i.test(ua) ? "Bot/Crawler" :
     /edg\//i.test(ua) ? "Edge" :
-    /chrome|crios/i.test(ua) ? "Chrome" :
-    /safari/i.test(ua) && !/chrome|crios/i.test(ua) ? "Safari" :
-    /firefox|fxios/i.test(ua) ? "Firefox" :
-    /bot|crawler|spider/i.test(ua) ? "Bot/Crawler" :
+    /samsungbrowser/i.test(ua) ? "Samsung Internet" :
+    /opr\/|opera/i.test(ua) ? "Opera" :
+    /(chrome|crios|chromium)/i.test(ua) && /; wv\)/i.test(ua) ? "WebView" :
+    /crios/i.test(ua) ? "Chrome" :
+    /fxios|firefox/i.test(ua) ? "Firefox" :
+    /chrome|chromium/i.test(ua) ? "Chrome" :
+    /version\/[\d.]+.*safari/i.test(ua) ? "Safari" :
     "Desconhecido";
 
   const os =
@@ -187,8 +212,10 @@ const parseDevice = (userAgent = "") => {
     /android/i.test(ua) ? "Android" :
     /iphone|ipad|ipod/i.test(ua) ? "iOS" :
     /mac os|macintosh/i.test(ua) ? "macOS" :
+    /tizen/i.test(ua) ? "Tizen" :
+    /web0s|webos/i.test(ua) ? "WebOS" :
     /linux/i.test(ua) ? "Linux" :
-    "Desconhecido";
+    ua ? "Outro" : "Desconhecido";
 
   return { device, browser, os, userAgent: ua || "Desconhecido" };
 };
