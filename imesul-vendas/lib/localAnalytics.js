@@ -6,6 +6,7 @@ const eventName = "imesul-demo-events-updated";
 const trackEndpoint = "/api/analytics/track";
 const eventsEndpoint = "/api/analytics/events";
 const clearEndpoint = "/api/analytics/clear";
+const logoutEndpoint = "/api/admin/logout";
 let adminSessionToken = "";
 
 const canUseBrowserStorage = () =>
@@ -46,7 +47,13 @@ export const startAdminSession = (token = "") => {
 };
 
 export const endAdminSession = () => {
+  const token = adminSessionToken;
   adminSessionToken = "";
+
+  // Revoga a sessao no servidor tambem: sem isso, o token continuaria valido ate o TTL natural.
+  if (token) {
+    fetch(logoutEndpoint, { method: "POST", headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
+  }
 };
 
 export const removeCurrentVisitorEvents = () => {

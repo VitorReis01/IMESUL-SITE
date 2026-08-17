@@ -34,6 +34,14 @@ export const isAdminRequest = (request) => {
   return Boolean(token && adminSessions.has(token));
 };
 
+// Revoga a sessao no servidor no logout: sem isso, um token capturado antes do logout
+// (XSS, extensao maliciosa, rede comprometida) continuaria valido ate o TTL natural (8h).
+// Idempotente: chamar sem token ou com token ja expirado nao tem efeito nem gera erro.
+export const invalidateAdminSession = (request) => {
+  const token = getBearerToken(request);
+  if (token) adminSessions.delete(token);
+};
+
 // Compara sem revelar por tempo de execução se o valor está parcialmente correto.
 // Nunca lança por tamanho diferente (isso já vazaria informação pelo tipo de erro).
 export const safeCompare = (a, b) => {
