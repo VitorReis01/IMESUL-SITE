@@ -90,6 +90,25 @@ export const getAnonymousVisitorId = () => {
   return next;
 };
 
+const utmStorageKey = "imesul_demo_utm_first_touch";
+
+const getPersistedUtm = () => {
+  try {
+    const stored = window.sessionStorage.getItem(utmStorageKey);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const persistUtm = (utm) => {
+  try {
+    window.sessionStorage.setItem(utmStorageKey, JSON.stringify(utm));
+  } catch {
+    // sessionStorage indisponivel (ex.: modo privado); segue sem persistir entre paginas.
+  }
+};
+
 const getTrafficContext = () => {
   if (typeof window === "undefined") {
     return {
@@ -101,13 +120,26 @@ const getTrafficContext = () => {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const utm = {
+  const urlUtm = {
     source: params.get("utm_source") || "",
     medium: params.get("utm_medium") || "",
     campaign: params.get("utm_campaign") || "",
     content: params.get("utm_content") || "",
     term: params.get("utm_term") || "",
   };
+  const hasUrlUtm = Object.values(urlUtm).some(Boolean);
+
+  // Mantem a campanha do primeiro clique durante a sessao (sessionStorage - some ao fechar a
+  // aba), mesmo apos navegar para paginas sem UTM na URL. Uma navegacao interna sem UTM nunca
+  // sobrescreve uma campanha ja registrada.
+  let utm = urlUtm;
+  if (hasUrlUtm) {
+    persistUtm(urlUtm);
+  } else {
+    const persisted = getPersistedUtm();
+    if (persisted) utm = persisted;
+  }
+
   const hasUtm = Object.values(utm).some(Boolean);
   const referrer = document.referrer || "";
 
