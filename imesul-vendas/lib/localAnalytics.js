@@ -136,6 +136,8 @@ const createBackendPayload = (event) => ({
   source: event.origin,
   referrer: event.referrer,
   utm: event.utm,
+  deviceLocation: event.deviceLocation || undefined,
+  deviceLocationStatus: event.deviceLocationStatus || undefined,
 });
 
 const sendEventToBackend = async (event) => {
@@ -150,6 +152,22 @@ const sendEventToBackend = async (event) => {
   return response.json();
 };
 
+// Evita reenviar o mesmo evento em sequencia (React StrictMode remonta effects em dev, e um
+// clique/efeito duplicado pode disparar a mesma chamada duas vezes). Guarda so a ULTIMA
+// assinatura + horario: eventos legitimos diferentes (label/section/path diferentes) ou o
+// mesmo evento repetido apos a janela continuam passando normalmente.
+const duplicateGuardWindowMs = 2000;
+let lastEventSignature = "";
+let lastEventAt = 0;
+
+const isDuplicateEvent = (signature) => {
+  const now = Date.now();
+  const isDuplicate = signature === lastEventSignature && now - lastEventAt < duplicateGuardWindowMs;
+  lastEventSignature = signature;
+  lastEventAt = now;
+  return isDuplicate;
+};
+
 // Registra eventos no backend local e usa localStorage somente quando a API falha.
 export function trackLocalEvent({
   type,
@@ -159,8 +177,13 @@ export function trackLocalEvent({
   origin,
   client,
   isLoggedIn = false,
+  deviceLocation,
+  deviceLocationStatus,
 }) {
   if (!canUseBrowserStorage() || isAdminSession()) return null;
+
+  const path = window.location.pathname || "/";
+  if (isDuplicateEvent(`${type}|${label}|${section}|${path}`)) return null;
 
   const now = new Date();
   const traffic = getTrafficContext();
@@ -171,7 +194,7 @@ export function trackLocalEvent({
     label,
     detail,
     section,
-    path: window.location.pathname || "/",
+    path,
     origin: origin || traffic.origin,
     referrer: traffic.referrer,
     utm: traffic.utm,
@@ -179,6 +202,8 @@ export function trackLocalEvent({
     client: sanitizeClient(client),
     timestamp: now.toISOString(),
     isLoggedIn: Boolean(isLoggedIn),
+    deviceLocation,
+    deviceLocationStatus,
   };
 
   // Futuro: enviar evento para backend/analytics real com consentimento LGPD.
