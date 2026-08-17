@@ -9,7 +9,8 @@ import path from "node:path";
 // onde o diretorio do projeto e somente leitura); os dados nao persistem entre deploys/instancias.
 const eventsPath = path.join(os.tmpdir(), "imesul-vendas-analytics-events.json");
 const maxEvents = 2000;
-const allowedTypes = new Set(["visit", "click", "whatsapp", "search", "login"]);
+const allowedTypes = new Set(["visit", "click", "whatsapp", "search", "login", "device_location"]);
+const deviceLocationStatusValues = new Set(["granted", "denied", "unavailable", "timeout", "unsupported"]);
 const staticPathPattern = /(?:^|\/)(?:_next|images|videos|models|fonts|favicon|catalogo)(?:\/|$)|\.(?:png|jpe?g|webp|gif|svg|ico|mp4|webm|glb|woff2?|ttf|otf|pdf)$/i;
 const suspiciousAgentPattern = /sqlmap|nikto|nmap|python-requests|curl|wget|masscan|zgrab|acunetix|nessus|wpscan|libwww|httpclient/i;
 const suspiciousPathPattern = /\/(?:\.env|\.git|wp-admin|admin|api\/internal|phpmyadmin|xmlrpc\.php|config|backup)/i;
@@ -52,6 +53,33 @@ const safeString = (value, fallback = "", limit = 500) =>
 const safeBoolean = (value) => Boolean(value);
 
 const normalizeUnknown = (value, fallback = "Desconhecido") => safeString(value).trim() || fallback;
+
+const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
+
+// Revalida deviceLocation de forma independente da rota (defesa em profundidade): mesmo que a
+// validacao de app/api/analytics/track/route.js mude no futuro, este modulo nunca grava
+// coordenadas fora de faixa. IP geolocation (location.*) e device geolocation NUNCA se misturam:
+// device location so existe aqui quando o proprio visitante autorizou o navegador.
+const sanitizeDeviceLocation = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const { latitude, longitude, accuracy, capturedAt } = value;
+  if (!isFiniteNumber(latitude) || latitude < -90 || latitude > 90) return null;
+  if (!isFiniteNumber(longitude) || longitude < -180 || longitude > 180) return null;
+  if (!isFiniteNumber(accuracy) || accuracy < 0 || accuracy > 1_000_000) return null;
+
+  const parsedCapturedAt = new Date(capturedAt);
+  const validCapturedAt = typeof capturedAt === "string" && !Number.isNaN(parsedCapturedAt.getTime());
+
+  return {
+    latitude,
+    longitude,
+    accuracy,
+    capturedAt: validCapturedAt ? parsedCapturedAt.toISOString() : new Date().toISOString(),
+  };
+};
+
+const sanitizeDeviceLocationStatus = (value) => (deviceLocationStatusValues.has(value) ? value : "");
 
 const maskIp = (ip = "") => {
   const value = safeString(ip, "não identificado").trim();
@@ -294,6 +322,11 @@ const sanitizeEvent = (payload = {}, previousEvents = []) => {
       organization: safeString(payload.network?.organization, "", 160),
       isp: safeString(payload.network?.isp, "", 160),
     },
+    // Localizacao do DISPOSITIVO (GPS/rede do navegador), so existe com consentimento explicito
+    // do visitante. NUNCA usar para autenticacao/autorizacao/bloqueio - e so analytics.
+    // Fica deliberadamente fora de "location" para nunca ser confundida com IP geolocation.
+    deviceLocation: sanitizeDeviceLocation(payload.deviceLocation),
+    deviceLocationStatus: sanitizeDeviceLocationStatus(payload.deviceLocationStatus),
     device,
     client: {
       name: userName,

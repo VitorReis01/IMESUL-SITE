@@ -3,10 +3,39 @@ import { addAnalyticsEvent, checkTrackRateLimit } from "../../../../Backend.js/a
 
 // Recebe eventos do site sem confiar em IP ou headers enviados pelo frontend.
 // O painel admin consome os dados processados pelo backend local de analytics.
-const allowedEventTypes = new Set(["visit", "click", "whatsapp", "search", "login"]);
+const allowedEventTypes = new Set(["visit", "click", "whatsapp", "search", "login", "device_location"]);
+const deviceLocationStatusValues = new Set(["granted", "denied", "unavailable", "timeout", "unsupported"]);
 const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
 const safeString = (value, limit = 500) =>
   typeof value === "string" ? value.slice(0, limit) : "";
+const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
+
+// deviceLocation SO pode vir do proprio dispositivo do visitante, nunca de IP/infra.
+// Por isso e o UNICO campo geografico aceito do corpo enviado pelo cliente - e so depois
+// de validacao numerica estrita (nunca confiar cegamente no frontend). Nunca usar este dado
+// para autenticacao, autorizacao, bloqueio ou qualquer decisao antifraude: e so analytics.
+const sanitizeDeviceLocation = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const { latitude, longitude, accuracy, capturedAt } = value;
+  if (!isFiniteNumber(latitude) || latitude < -90 || latitude > 90) return null;
+  if (!isFiniteNumber(longitude) || longitude < -180 || longitude > 180) return null;
+  if (!isFiniteNumber(accuracy) || accuracy < 0 || accuracy > 1_000_000) return null;
+
+  const parsedCapturedAt = new Date(capturedAt);
+  const validCapturedAt = typeof capturedAt === "string" && !Number.isNaN(parsedCapturedAt.getTime());
+
+  return {
+    latitude,
+    longitude,
+    accuracy,
+    // capturedAt e so exibido no painel; nunca usado para decisao de seguranca.
+    capturedAt: validCapturedAt ? parsedCapturedAt.toISOString() : new Date().toISOString(),
+  };
+};
+
+const sanitizeDeviceLocationStatus = (value) =>
+  deviceLocationStatusValues.has(value) ? value : "";
 
 const noStoreJson = (body, init = {}) =>
   NextResponse.json(body, {
@@ -90,6 +119,10 @@ const sanitizePayload = (payload = {}) => ({
     content: safeString(payload.utm?.content, 160),
     term: safeString(payload.utm?.term, 160),
   },
+  // Localizacao do DISPOSITIVO, consentida explicitamente pelo visitante (Fase 2).
+  // Nao confundir com a localizacao aproximada por IP (essa vem so de request.headers, nunca do body).
+  deviceLocation: sanitizeDeviceLocation(payload.deviceLocation),
+  deviceLocationStatus: sanitizeDeviceLocationStatus(payload.deviceLocationStatus),
 });
 
 export async function POST(request) {

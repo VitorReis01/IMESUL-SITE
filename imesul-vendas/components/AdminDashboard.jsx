@@ -84,13 +84,38 @@ const getSecurityDetails = (event) => event.securityDetails || {};
 // Eventos antigos nao tem location/network completos: sempre usar optional chaining + fallback.
 const getNetworkLabel = (event) => event?.network?.organization || event?.network?.isp || "Não identificado";
 
-const getCoordinates = (event) => {
+// Coordenadas por IP sao aproximadas por natureza (infraestrutura de rede, nao o dispositivo).
+// Mantidas so por compatibilidade com eventos antigos - NUNCA usadas no botao "Ver no mapa".
+const getIpCoordinates = (event) => {
   const latitude = event?.location?.latitude || "";
   const longitude = event?.location?.longitude || "";
   return latitude && longitude ? { latitude, longitude } : null;
 };
 
+// Coordenadas do DISPOSITIVO: existem somente quando o proprio visitante autorizou o navegador.
+// Sao as UNICAS coordenadas usadas no botao "Ver no mapa" (nunca misturar com localizacao por IP).
+const getDeviceCoordinates = (event) => {
+  const { latitude, longitude } = event?.deviceLocation || {};
+  return typeof latitude === "number" && typeof longitude === "number" && Number.isFinite(latitude) && Number.isFinite(longitude)
+    ? { latitude, longitude }
+    : null;
+};
+
 const getMapUrl = (coordinates) => `https://www.google.com/maps?q=${coordinates.latitude},${coordinates.longitude}`;
+
+// 6 casas decimais bastam para o painel; o valor original permanece integro no armazenamento.
+const formatCoordinate = (value) => (typeof value === "number" ? value.toFixed(6) : value);
+
+const deviceLocationStatusLabels = {
+  granted: "Autorizada pelo visitante",
+  denied: "Não autorizada pelo visitante",
+  unavailable: "Localização indisponível",
+  timeout: "Tempo limite excedido",
+  unsupported: "Não suportada pelo navegador",
+};
+
+const getDeviceLocationStatusLabel = (event) =>
+  deviceLocationStatusLabels[event?.deviceLocationStatus] || "Não solicitada / evento antigo";
 
 const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -651,7 +676,9 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
         </div>
       ) : null}
       {selectedLocationEvent ? (() => {
-        const coordinates = getCoordinates(selectedLocationEvent);
+        const ipCoordinates = getIpCoordinates(selectedLocationEvent);
+        const deviceCoordinates = getDeviceCoordinates(selectedLocationEvent);
+        const deviceStatus = selectedLocationEvent?.deviceLocationStatus || "";
         return (
           <div className="fixed inset-0 z-[230] flex items-center justify-center bg-[#020711]/82 px-4 backdrop-blur-md">
             <section className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] p-5 shadow-[0_26px_90px_rgba(0,0,0,0.55)]">
@@ -659,34 +686,54 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-imesul-red">Localização do evento</p>
                   <h3 className="mt-2 font-display text-3xl text-white">{selectedLocationEvent.label || selectedLocationEvent.type}</h3>
-                  <p className="mt-2 text-sm leading-6 text-imesul-steel-light/68">Localização aproximada baseada no endereço IP. Não representa endereço físico nem posição GPS exata.</p>
+                  <p className="mt-2 text-sm leading-6 text-imesul-steel-light/68">Horário: {formatDate(selectedLocationEvent.timestamp)} {formatTime(selectedLocationEvent.timestamp)}</p>
                 </div>
                 <button type="button" onClick={() => setSelectedLocationEvent(null)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.12] text-white hover:bg-white/[0.08]" aria-label="Fechar localização do evento">
                   <X size={17} aria-hidden="true" />
                 </button>
               </div>
 
-              <dl className="mt-5 grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">IP</dt><dd className="mt-1 break-all font-mono">{selectedLocationEvent.ipMasked || selectedLocationEvent.ip || "não identificado"}</dd></div>
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Horário</dt><dd className="mt-1">{formatDate(selectedLocationEvent.timestamp)} {formatTime(selectedLocationEvent.timestamp)}</dd></div>
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Localização</dt><dd className="mt-1">{getLocationLabel(selectedLocationEvent)}{selectedLocationEvent.location?.continent && selectedLocationEvent.location.continent !== "Desconhecido" ? ` — ${selectedLocationEvent.location.continent}` : ""}</dd></div>
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Rede / Operadora</dt><dd className="mt-1">{getNetworkLabel(selectedLocationEvent)}</dd></div>
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">ASN</dt><dd className="mt-1">{selectedLocationEvent.network?.asn || "Não identificado"}</dd></div>
-                {coordinates ? (
-                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Coordenadas aproximadas</dt><dd className="mt-1 font-mono">{coordinates.latitude}, {coordinates.longitude}</dd>
-                    <a href={getMapUrl(coordinates)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-imesul-red/45 px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-red transition-colors hover:bg-imesul-red/10">
+              <div className="mt-5 rounded-[8px] border border-white/[0.08] bg-white/[0.02] p-4">
+                <p className="font-condensed text-[12px] font-bold uppercase tracking-[0.14em] text-white/75">Localização por IP</p>
+                <p className="mt-1.5 text-xs leading-5 text-imesul-steel-light/62">Localização aproximada baseada no endereço IP. Não representa endereço físico nem posição GPS exata.</p>
+                <dl className="mt-4 grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">IP</dt><dd className="mt-1 break-all font-mono">{selectedLocationEvent.ipMasked || selectedLocationEvent.ip || "não identificado"}</dd></div>
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Cidade / Estado / País</dt><dd className="mt-1">{getLocationLabel(selectedLocationEvent)}{selectedLocationEvent.location?.continent && selectedLocationEvent.location.continent !== "Desconhecido" ? ` — ${selectedLocationEvent.location.continent}` : ""}</dd></div>
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Rede / Operadora</dt><dd className="mt-1">{getNetworkLabel(selectedLocationEvent)}</dd></div>
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">ASN</dt><dd className="mt-1">{selectedLocationEvent.network?.asn || "Não identificado"}</dd></div>
+                  {selectedLocationEvent.location?.timezone ? (
+                    <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Fuso horário (aproximado)</dt><dd className="mt-1">{selectedLocationEvent.location.timezone}</dd></div>
+                  ) : null}
+                  {selectedLocationEvent.location?.postalCode ? (
+                    <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">CEP aproximado</dt><dd className="mt-1">{selectedLocationEvent.location.postalCode}</dd></div>
+                  ) : null}
+                  {ipCoordinates ? (
+                    <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Coordenadas aproximadas por IP</dt><dd className="mt-1 font-mono">{ipCoordinates.latitude}, {ipCoordinates.longitude}</dd><dd className="mt-1 text-xs text-imesul-steel-light/55">Sem precisão de GPS — não disponível para abrir no mapa.</dd></div>
+                  ) : null}
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Origem / dispositivo</dt><dd className="mt-1">{getDeviceLabel(selectedLocationEvent)}</dd></div>
+                </dl>
+              </div>
+
+              <div className="mt-4 rounded-[8px] border border-white/[0.08] bg-white/[0.02] p-4">
+                <p className="font-condensed text-[12px] font-bold uppercase tracking-[0.14em] text-white/75">Localização do dispositivo</p>
+                {deviceStatus === "granted" && deviceCoordinates ? (
+                  <>
+                    <p className="mt-1.5 text-xs leading-5 text-imesul-steel-light/62">Localização fornecida pelo dispositivo com autorização do visitante.</p>
+                    <dl className="mt-4 grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
+                      <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Latitude</dt><dd className="mt-1 font-mono">{formatCoordinate(deviceCoordinates.latitude)}</dd></div>
+                      <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Longitude</dt><dd className="mt-1 font-mono">{formatCoordinate(deviceCoordinates.longitude)}</dd></div>
+                      <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Precisão estimada</dt><dd className="mt-1">{typeof selectedLocationEvent.deviceLocation?.accuracy === "number" ? `± ${Math.round(selectedLocationEvent.deviceLocation.accuracy)} m` : "Não informada"}</dd></div>
+                      <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Horário da captura</dt><dd className="mt-1">{selectedLocationEvent.deviceLocation?.capturedAt ? `${formatDate(selectedLocationEvent.deviceLocation.capturedAt)} ${formatTime(selectedLocationEvent.deviceLocation.capturedAt)}` : "-"}</dd></div>
+                    </dl>
+                    <a href={getMapUrl(deviceCoordinates)} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-imesul-red/45 px-3 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-red transition-colors hover:bg-imesul-red/10">
                       <MapPin size={12} aria-hidden="true" /> Ver no mapa
                     </a>
-                  </div>
-                ) : null}
-                {selectedLocationEvent.location?.timezone ? (
-                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Fuso horário</dt><dd className="mt-1">{selectedLocationEvent.location.timezone}</dd></div>
-                ) : null}
-                {selectedLocationEvent.location?.postalCode ? (
-                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">CEP aproximado</dt><dd className="mt-1">{selectedLocationEvent.location.postalCode}</dd></div>
-                ) : null}
-                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Origem / dispositivo</dt><dd className="mt-1">{getDeviceLabel(selectedLocationEvent)}</dd></div>
-              </dl>
+                    <p className="mt-2 text-[11px] leading-4 text-imesul-steel-light/50">Precisão estimada informada pelo dispositivo do visitante.</p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-imesul-steel-light/68">{getDeviceLocationStatusLabel(selectedLocationEvent)}</p>
+                )}
+              </div>
             </section>
           </div>
         );

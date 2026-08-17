@@ -2,6 +2,7 @@
 // Mostra somente os dados uteis para a equipe confirmar medida, estoque e valor.
 import { ClipboardList } from "lucide-react";
 import { formatOptionValue } from "./ProductOptionSelector";
+import DeviceLocationOptIn from "./DeviceLocationOptIn";
 
 const defaultSummaryLabels = { measure: "Medida", thickness: "Espessura", length: "Altura", quantity: "Quantidade" };
 
@@ -63,6 +64,7 @@ export default function ProductSummary({
       </dl>
 
       {children}
+      <DeviceLocationOptIn />
     </aside>
   );
 }
