@@ -281,6 +281,18 @@ const sanitizeEvent = (payload = {}, previousEvents = []) => {
       city: normalizeUnknown(payload.location?.city),
       region: normalizeUnknown(payload.location?.region),
       country: normalizeUnknown(payload.location?.country),
+      continent: normalizeUnknown(payload.location?.continent),
+      // Coordenadas/fuso/CEP ficam "" (nao "Desconhecido") quando ausentes: o painel usa isso
+      // para decidir se mostra o botao "Ver no mapa" e a linha de CEP, sem inventar valor.
+      latitude: safeString(payload.location?.latitude, "", 32),
+      longitude: safeString(payload.location?.longitude, "", 32),
+      timezone: safeString(payload.location?.timezone, "", 64),
+      postalCode: safeString(payload.location?.postalCode, "", 32),
+    },
+    network: {
+      asn: safeString(payload.network?.asn, "", 32),
+      organization: safeString(payload.network?.organization, "", 160),
+      isp: safeString(payload.network?.isp, "", 160),
     },
     device,
     client: {

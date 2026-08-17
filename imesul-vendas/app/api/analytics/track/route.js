@@ -37,11 +37,27 @@ const getRequestIp = (request) =>
   request.ip ||
   "não identificado";
 
+// Geolocalizacao aproximada por IP, lida somente de headers definidos pelo servidor/infra da Vercel.
+// Nunca aceitar latitude/longitude enviadas pelo cliente no corpo da requisicao.
 const getRequestLocation = (headers) => ({
   city: safeDecodeHeader(headers.get("x-vercel-ip-city") || headers.get("x-geo-city") || ""),
   region: safeDecodeHeader(headers.get("x-vercel-ip-country-region") || headers.get("x-geo-region") || ""),
   country: safeDecodeHeader(headers.get("x-vercel-ip-country") || headers.get("cf-ipcountry") || headers.get("x-geo-country") || ""),
+  continent: safeDecodeHeader(headers.get("x-vercel-ip-continent") || ""),
+  latitude: safeDecodeHeader(headers.get("x-vercel-ip-latitude") || ""),
+  longitude: safeDecodeHeader(headers.get("x-vercel-ip-longitude") || ""),
+  timezone: safeDecodeHeader(headers.get("x-vercel-ip-timezone") || ""),
+  postalCode: safeDecodeHeader(headers.get("x-vercel-ip-postal-code") || ""),
 });
+
+// Rede/operadora a partir de headers de infraestrutura. Sem API externa nesta etapa:
+// se a infra nao informar nome de organizacao, o painel mostra "Nao identificado" (nunca inventar).
+const getRequestNetwork = (headers) => {
+  const asn = headers.get("x-vercel-ip-as-number") || headers.get("cf-asn") || "";
+  const organization = safeDecodeHeader(headers.get("x-vercel-ip-as-name") || headers.get("cf-isp") || "");
+
+  return { asn, organization, isp: organization };
+};
 
 const getSecurityHeaders = (headers) => ({
   host: headers.get("host") || "",
@@ -112,6 +128,7 @@ export async function POST(request) {
       requestMethod: request.method,
       serverTimestamp: new Date().toISOString(),
       location: getRequestLocation(request.headers),
+      network: getRequestNetwork(request.headers),
       host: request.headers.get("host") || "",
       securityHeaders: getSecurityHeaders(request.headers),
     });

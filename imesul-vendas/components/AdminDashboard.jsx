@@ -9,6 +9,7 @@ import {
   BarChart3,
   Download,
   LogOut,
+  MapPin,
   MessageCircle,
   MousePointerClick,
   Printer,
@@ -79,6 +80,17 @@ const getDeviceLabel = (event) => {
 const getSecurityStatus = (event) => event.securityStatus || "Normal";
 
 const getSecurityDetails = (event) => event.securityDetails || {};
+
+// Eventos antigos nao tem location/network completos: sempre usar optional chaining + fallback.
+const getNetworkLabel = (event) => event?.network?.organization || event?.network?.isp || "Não identificado";
+
+const getCoordinates = (event) => {
+  const latitude = event?.location?.latitude || "";
+  const longitude = event?.location?.longitude || "";
+  return latitude && longitude ? { latitude, longitude } : null;
+};
+
+const getMapUrl = (coordinates) => `https://www.google.com/maps?q=${coordinates.latitude},${coordinates.longitude}`;
 
 const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -300,6 +312,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
   const [events, setEvents] = useState(() => getLocalEvents());
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
+  const [selectedLocationEvent, setSelectedLocationEvent] = useState(null);
 
   // Atualiza o painel com dados da API sem perder o fallback local em desenvolvimento.
   const refreshEvents = useCallback(() => {
@@ -596,14 +609,14 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           <div className="mt-5 overflow-hidden rounded-[10px] border border-white/[0.1]">
             <div className="overflow-x-auto">
               <table className="min-w-[1200px] w-full border-collapse text-left">
-                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th></tr></thead>
+                <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th><th className="px-4 py-3">Localização</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {filteredEvents.length ? filteredEvents.slice().reverse().map((event) => {
                     const identity = getClientIdentity(event);
                     return (
-                      <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td></tr>
+                      <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td><td className="px-4 py-3"><button type="button" onClick={() => setSelectedLocationEvent(event)} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/78 transition-colors hover:border-imesul-red/55 hover:text-white"><MapPin size={12} aria-hidden="true" /> Ver</button></td></tr>
                     );
-                  }) : <tr><td colSpan={12} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Ainda não há eventos para este filtro.</td></tr>}
+                  }) : <tr><td colSpan={13} className="px-4 py-10 text-center text-sm text-imesul-steel-light/62">Ainda não há eventos para este filtro.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -637,6 +650,47 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           </section>
         </div>
       ) : null}
+      {selectedLocationEvent ? (() => {
+        const coordinates = getCoordinates(selectedLocationEvent);
+        return (
+          <div className="fixed inset-0 z-[230] flex items-center justify-center bg-[#020711]/82 px-4 backdrop-blur-md">
+            <section className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] p-5 shadow-[0_26px_90px_rgba(0,0,0,0.55)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-imesul-red">Localização do evento</p>
+                  <h3 className="mt-2 font-display text-3xl text-white">{selectedLocationEvent.label || selectedLocationEvent.type}</h3>
+                  <p className="mt-2 text-sm leading-6 text-imesul-steel-light/68">Localização aproximada baseada no endereço IP. Não representa endereço físico nem posição GPS exata.</p>
+                </div>
+                <button type="button" onClick={() => setSelectedLocationEvent(null)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.12] text-white hover:bg-white/[0.08]" aria-label="Fechar localização do evento">
+                  <X size={17} aria-hidden="true" />
+                </button>
+              </div>
+
+              <dl className="mt-5 grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">IP</dt><dd className="mt-1 break-all font-mono">{selectedLocationEvent.ipMasked || selectedLocationEvent.ip || "não identificado"}</dd></div>
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Horário</dt><dd className="mt-1">{formatDate(selectedLocationEvent.timestamp)} {formatTime(selectedLocationEvent.timestamp)}</dd></div>
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Localização</dt><dd className="mt-1">{getLocationLabel(selectedLocationEvent)}{selectedLocationEvent.location?.continent && selectedLocationEvent.location.continent !== "Desconhecido" ? ` — ${selectedLocationEvent.location.continent}` : ""}</dd></div>
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Rede / Operadora</dt><dd className="mt-1">{getNetworkLabel(selectedLocationEvent)}</dd></div>
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">ASN</dt><dd className="mt-1">{selectedLocationEvent.network?.asn || "Não identificado"}</dd></div>
+                {coordinates ? (
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Coordenadas aproximadas</dt><dd className="mt-1 font-mono">{coordinates.latitude}, {coordinates.longitude}</dd>
+                    <a href={getMapUrl(coordinates)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-imesul-red/45 px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-red transition-colors hover:bg-imesul-red/10">
+                      <MapPin size={12} aria-hidden="true" /> Ver no mapa
+                    </a>
+                  </div>
+                ) : null}
+                {selectedLocationEvent.location?.timezone ? (
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Fuso horário</dt><dd className="mt-1">{selectedLocationEvent.location.timezone}</dd></div>
+                ) : null}
+                {selectedLocationEvent.location?.postalCode ? (
+                  <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">CEP aproximado</dt><dd className="mt-1">{selectedLocationEvent.location.postalCode}</dd></div>
+                ) : null}
+                <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Origem / dispositivo</dt><dd className="mt-1">{getDeviceLabel(selectedLocationEvent)}</dd></div>
+              </dl>
+            </section>
+          </div>
+        );
+      })() : null}
     </div>
   );
 }
