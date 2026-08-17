@@ -1,14 +1,15 @@
 "use client";
 
 // Abertura cinematografica e imersiva do showroom de materiais.
-// No desktop, a secao fica pinada (GSAP ScrollTrigger, pin:true) em tela cheia enquanto o usuario
-// rola: ha um hold inicial com o video ainda pequeno e o titulo parado, depois o video real da
-// fabrica expande quase full-width enquanto o fundo perde forca e o titulo se abre para os lados,
-// depois a legenda aparece por cima do video ja grande, e por fim tudo segura parado antes da
-// secao liberar o scroll normal para o ProductScrollExperience. O pin substitui o sticky CSS usado
-// antes (nao usar os dois juntos) — cleanup via gsap.context().revert(), sem preventDefault, sem
-// bloquear wheel/touch, sem window.scrollTo.
-// Mobile usa um pin curto e leve; reduced-motion cai para um card grande estatico, sem pin e sem scrub.
+// No desktop (>=1024px), a secao fica pinada (GSAP ScrollTrigger, pin:true) em tela cheia enquanto
+// o usuario rola: ha um hold inicial com o video ainda pequeno e o titulo parado, depois o video
+// real da fabrica expande quase full-width enquanto o fundo perde forca e o titulo se abre para os
+// lados, depois a legenda aparece por cima do video ja grande, e por fim tudo segura parado antes
+// da secao liberar o scroll normal para o ProductScrollExperience. O pin substitui o sticky CSS
+// usado antes (nao usar os dois juntos) — cleanup via gsap.context().revert(), sem preventDefault,
+// sem bloquear wheel/touch, sem window.scrollTo.
+// Mobile (<1024px) NAO recebe pin/scrub/scale: fica estatica, com scroll normal da pagina, usando
+// so as classes base (sem overrides de GSAP). Reduced-motion cai para um card grande estatico.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
@@ -103,6 +104,9 @@ export default function MaterialsShowreel() {
   const videoRef = useRef(null);
   const [isNear, setIsNear] = useState(false);
   const [animationFailed, setAnimationFailed] = useState(false);
+  // Controla a revelacao do video real: comeca invisivel (fundo neutro da secao) e so aparece
+  // quando o primeiro frame estiver decodificado, sem nunca mostrar o poster antigo no meio tempo.
+  const [videoReady, setVideoReady] = useState(false);
   const isFullMode = ready && mode === "full" && !animationFailed;
   const isFallbackMode = ready && mode === "fallback";
   const videoProfile = useAdaptiveVideoProfile({ enabled: isNear && !isFallbackMode });
@@ -138,10 +142,12 @@ export default function MaterialsShowreel() {
   }, [capabilities.supportsIntersectionObserver, isFallbackMode, isNear, ready]);
 
   // Recarrega o video ao trocar de perfil e remove fontes no modo de poster.
+  // videoReady volta a false a cada troca de fonte: o video fica oculto ate o novo frame chegar.
   useEffect(() => {
     if (!ready || isFallbackMode) return undefined;
 
     if (!videoRef.current) return;
+    setVideoReady(false);
     if (!videoSources) {
       videoRef.current.pause();
       videoRef.current.load();
@@ -180,59 +186,8 @@ export default function MaterialsShowreel() {
           });
         };
 
-        media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
-        const context = gsap.context(() => {
-          const landscape = window.innerWidth > window.innerHeight;
-
-          gsap.set(videoBoxRef.current, {
-            left: "auto",
-            width: landscape ? "54vw" : "calc(100vw - 40px)",
-            maxWidth: "none",
-            xPercent: 0,
-            scale: 0.96,
-            borderRadius: 18,
-            transformOrigin: "50% 50%",
-          });
-          gsap.set(bgRef.current, { opacity: 0.34, scale: 1.01 });
-          gsap.set(subtitleRef.current, { opacity: 0, y: 12 });
-          gsap.set(scrollCueRef.current, { opacity: 0.9 });
-
-          // Pin mobile curto: entrega sensacao imersiva sem prender o toque nem copiar a retencao longa do desktop.
-          const timeline = gsap.timeline({
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top top",
-              end: () => {
-                const landscape = window.innerWidth > window.innerHeight;
-                const compactHeight = window.innerHeight < 700;
-                const factor = landscape ? 0.42 : compactHeight ? 0.55 : 0.62;
-                return `+=${window.innerHeight * factor}`;
-              },
-              scrub: 0.45,
-              pin: true,
-              pinSpacing: true,
-              anticipatePin: 0.5,
-              invalidateOnRefresh: true,
-            },
-          });
-
-          timeline
-            .to(scrollCueRef.current, { opacity: 0, y: -8, ease: "none", duration: 0.14 }, 0.02)
-            .to(videoBoxRef.current, { left: "auto", width: landscape ? "64vw" : "calc(100vw - 24px)", xPercent: 0, scale: 1, borderRadius: 12, ease: "none", duration: 0.48 }, 0.1)
-            .to(bgRef.current, { opacity: 0.16, scale: 1.04, ease: "none", duration: 0.48 }, 0.1)
-            .to(titleLeftRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
-            .to(titleRightRef.current, { yPercent: -16, opacity: 0, ease: "none", duration: 0.42 }, 0.16)
-            .to(subtitleRef.current, { opacity: 1, y: 0, ease: "none", duration: 0.2 }, 0.56)
-            .to({}, { duration: 0.1 }, 0.78);
-        }, sectionRef);
-
-        refreshShowreel();
-        window.addEventListener("load", refreshShowreel, { once: true });
-        window.addEventListener("resize", refreshShowreel);
-
-        return () => context.revert();
-      });
-
+        // Mobile (<1024px) nao recebe nenhum matchMedia aqui: sem pin, sem scrub, sem scale.
+        // A secao fica com as classes base (estatica), e o scroll da pagina passa por ela normalmente.
         media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
         const context = gsap.context(() => {
           // xPercent/yPercent ficam fixos em -50 o tempo todo (nunca entram no timeline abaixo):
@@ -367,13 +322,13 @@ export default function MaterialsShowreel() {
           >
             <video
               ref={videoRef}
-              className="h-full w-full object-cover"
+              className={`h-full w-full object-cover transition-opacity duration-200 ${videoReady ? "opacity-100" : "opacity-0"}`}
               autoPlay={Boolean(videoSources)}
               muted
               loop
               playsInline
-              preload="none"
-              poster={institutionalVideo.poster}
+              preload="auto"
+              onLoadedData={() => setVideoReady(true)}
               aria-label="Movimentação de materiais e estrutura da fábrica da IMESUL"
             >
               {videoSources?.webm && <source src={videoSources.webm} type="video/webm" />}
