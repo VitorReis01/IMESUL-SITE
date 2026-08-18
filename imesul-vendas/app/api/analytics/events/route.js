@@ -18,7 +18,13 @@ const methodNotAllowed = () =>
   noStoreJson({ ok: false, message: "Método não permitido." }, { status: 405, headers: { Allow: "GET" } });
 
 export async function GET(request) {
-  if (!isAdminRequest(request)) {
+  try {
+    // Falha ao verificar a sessao (ex.: banco indisponivel) nunca deve liberar acesso -
+    // trata como nao autorizado (fail-closed), nunca deixa o erro estourar sem resposta.
+    if (!(await isAdminRequest(request))) {
+      return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
+    }
+  } catch {
     return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
   }
 

@@ -1,7 +1,13 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { isDatabaseConfigured, query } from "./db";
 
 // Centraliza a sessão admin e a proteção contra brute force/abuso do login.
 // As rotas de login e analytics usam este módulo para validar acesso administrativo.
+//
+// Sessao: Postgres (admin_sessions) quando DATABASE_URL esta configurada - qualquer instancia
+// serverless da Vercel reconhece a mesma sessao e o logout revoga de verdade em todas elas.
+// Sem DATABASE_URL, cai no Map() em memoria (so para desenvolvimento - nao sobrevive a
+// redeploy/reinicio e nao e compartilhado entre instancias).
 const adminSessions = new Map();
 const sessionTtlMs = 8 * 60 * 60 * 1000;
 
@@ -10,6 +16,11 @@ const getBearerToken = (request) => {
   return header.startsWith("Bearer ") ? header.slice(7).trim() : "";
 };
 
+// NUNCA salvar o token cru: so o hash localiza a sessao no banco. O token continua sendo
+// gerado com randomBytes (256 bits) - o hash e so uma chave de busca, nao reduz a entropia
+// nem e reversivel para o token original.
+const hashToken = (token) => createHash("sha256").update(token).digest("hex");
+
 const cleanupExpiredSessions = () => {
   const now = Date.now();
   adminSessions.forEach((session, token) => {
@@ -17,29 +28,68 @@ const cleanupExpiredSessions = () => {
   });
 };
 
-// Sessao admin de demonstracao em memoria. Em producao, usar cookies seguros e armazenamento persistente.
-export const createAdminSession = () => {
-  cleanupExpiredSessions();
+// Limpeza oportunistica (nao um DELETE pesado a cada request): so roda ocasionalmente, no
+// momento de criar uma sessao nova (login e infrequente). Remove sessoes expiradas ha mais de
+// 7 dias e sessoes revogadas ha mais de 7 dias - mantem um rastro curto para auditoria sem
+// deixar a tabela crescer indefinidamente.
+const opportunisticCleanupChance = 0.05;
+const cleanupOldSessionsInDatabase = async () => {
+  if (Math.random() > opportunisticCleanupChance) return;
+
+  try {
+    await query(
+      `DELETE FROM admin_sessions WHERE expires_at < NOW() - INTERVAL '7 days' OR (revoked_at IS NOT NULL AND revoked_at < NOW() - INTERVAL '7 days')`
+    );
+  } catch (err) {
+    console.error("[admin-security] falha na limpeza oportunistica de sessoes:", err.message);
+  }
+};
+
+// Sessao admin: token aleatorio forte enviado ao cliente; so o SHA-256 dele fica no banco.
+export const createAdminSession = async () => {
   const token = randomBytes(32).toString("hex");
-  adminSessions.set(token, {
-    createdAt: Date.now(),
-    expiresAt: Date.now() + sessionTtlMs,
-  });
+  const expiresAt = new Date(Date.now() + sessionTtlMs);
+
+  if (isDatabaseConfigured()) {
+    await query("INSERT INTO admin_sessions (token_hash, expires_at) VALUES ($1, $2)", [hashToken(token), expiresAt]);
+    cleanupOldSessionsInDatabase();
+    return token;
+  }
+
+  cleanupExpiredSessions();
+  adminSessions.set(token, { createdAt: Date.now(), expiresAt: expiresAt.getTime() });
   return token;
 };
 
-export const isAdminRequest = (request) => {
-  cleanupExpiredSessions();
+export const isAdminRequest = async (request) => {
   const token = getBearerToken(request);
-  return Boolean(token && adminSessions.has(token));
+  if (!token) return false;
+
+  if (isDatabaseConfigured()) {
+    const result = await query(
+      "SELECT 1 FROM admin_sessions WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW() LIMIT 1",
+      [hashToken(token)]
+    );
+    return result.rowCount > 0;
+  }
+
+  cleanupExpiredSessions();
+  return adminSessions.has(token);
 };
 
 // Revoga a sessao no servidor no logout: sem isso, um token capturado antes do logout
 // (XSS, extensao maliciosa, rede comprometida) continuaria valido ate o TTL natural (8h).
-// Idempotente: chamar sem token ou com token ja expirado nao tem efeito nem gera erro.
-export const invalidateAdminSession = (request) => {
+// Idempotente: chamar sem token ou com token ja expirado/revogado nao tem efeito nem gera erro.
+export const invalidateAdminSession = async (request) => {
   const token = getBearerToken(request);
-  if (token) adminSessions.delete(token);
+  if (!token) return;
+
+  if (isDatabaseConfigured()) {
+    await query("UPDATE admin_sessions SET revoked_at = NOW() WHERE token_hash = $1 AND revoked_at IS NULL", [hashToken(token)]);
+    return;
+  }
+
+  adminSessions.delete(token);
 };
 
 // Compara sem revelar por tempo de execução se o valor está parcialmente correto.

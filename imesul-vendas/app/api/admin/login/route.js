@@ -111,7 +111,7 @@ export async function POST(request) {
 
     // 7) Sessao.
     resetAdminRateLimit(ipKey, user);
-    return noStoreJson({ ok: true, adminSessionToken: createAdminSession() });
+    return noStoreJson({ ok: true, adminSessionToken: await createAdminSession() });
   } catch {
     registerFailedAdminAttempt(ipKey, "");
     return invalidRequest();

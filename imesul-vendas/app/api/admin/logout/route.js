@@ -18,7 +18,12 @@ const methodNotAllowed = () =>
 // Idempotente de proposito: sempre responde ok, mesmo sem token ou com token ja expirado.
 // Nao ha nada sensivel a proteger aqui alem do proprio token, que so o dono conhece.
 export async function POST(request) {
-  invalidateAdminSession(request);
+  try {
+    await invalidateAdminSession(request);
+  } catch {
+    // Falha ao revogar (ex.: banco indisponivel) nao pode travar o logout do lado do cliente;
+    // o token local ja e descartado independentemente da resposta desta rota.
+  }
   return noStoreJson({ ok: true });
 }
 
