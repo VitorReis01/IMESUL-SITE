@@ -474,10 +474,20 @@ export default function ProjectSelector() {
   // Revela os blocos abaixo da hero uma vez e mantém o conteúdo estável durante o scroll.
   useEffect(() => {
     document.body.classList.add("reveal-motion-ready");
+    // Fixa opacity/transform via style inline (fora do className controlado pelo React) para que
+    // a revelação sobreviva a re-renders que recalculam o className (ex.: cards com isSelected/
+    // isHighlighted dinâmicos) — o React só reconcilia propriedades de style que ele próprio
+    // declara, então estas duas nunca são apagadas por um re-render.
+    const markRevealed = (element) => {
+      element.classList.add("is-visible");
+      element.style.opacity = "1";
+      element.style.transform = "translateY(0)";
+    };
+
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       const revealElements = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
-      revealElements.forEach((element) => element.classList.add("is-visible"));
+      revealElements.forEach((element) => markRevealed(element));
       return () => document.body.classList.remove("reveal-motion-ready");
     }
 
@@ -487,7 +497,7 @@ export default function ProjectSelector() {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           visibleCount += 1;
-          entry.target.classList.add("is-visible");
+          markRevealed(entry.target);
           observer.unobserve(entry.target);
         });
       },
@@ -524,7 +534,7 @@ export default function ProjectSelector() {
     const visibilityFallback = window.setTimeout(() => {
       if (visibleCount > 0) return;
       document.querySelectorAll("[data-scroll-reveal]").forEach((element) => {
-        element.classList.add("is-visible");
+        markRevealed(element);
       });
     }, 2200);
 
