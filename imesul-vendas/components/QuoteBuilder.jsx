@@ -20,7 +20,6 @@ import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../
 import { trackLocalEvent } from "../lib/localAnalytics";
 import ProductOptionSelector, { findSelectedVariation } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
-import DeviceLocationOptIn from "./DeviceLocationOptIn";
 
 const customQuantityValue = "__custom_quantity__";
 const roldanasCartStorageKey = "imesul-vendas-cart";
@@ -460,7 +459,6 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               trackingDetail={`Projeto: ${project.name}`}
               isLoggedIn={isLoggedIn}
             />
-            <DeviceLocationOptIn />
           </aside>
         </div>
       )}

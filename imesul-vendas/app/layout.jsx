@@ -1,4 +1,5 @@
 import "./globals.css";
+import CookieConsentBanner from "../components/CookieConsentBanner";
 
 // Define o titulo e a descricao usados em compartilhamento e mecanismos de busca.
 export const metadata = {
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
       <body>
         <div className="noise-overlay" aria-hidden="true" />
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );

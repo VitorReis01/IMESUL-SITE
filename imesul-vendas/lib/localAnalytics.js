@@ -1,5 +1,7 @@
 // Cliente leve do analytics usado pela area de vendas.
 // Envia eventos para as APIs internas e usa localStorage apenas como fallback.
+import { readConsent } from "./consent";
+
 const storageKey = "imesul_demo_events";
 const visitorKey = "imesul_demo_visitor_id";
 const eventName = "imesul-demo-events-updated";
@@ -220,6 +222,13 @@ export function trackLocalEvent({
   deviceLocationStatus,
 }) {
   if (!canUseBrowserStorage() || isAdminSession()) return null;
+
+  // "device_location" tem consentimento proprio (toggle "Localizacao do dispositivo"); todo o
+  // resto (clique, busca, visita, whatsapp, login demonstrativo etc.) e analytics opcional e
+  // depende do toggle "Analytics". Sem nenhuma decisao salva ainda, nada opcional e enviado.
+  const consent = readConsent();
+  const requiredConsent = type === "device_location" ? consent?.location : consent?.analytics;
+  if (!requiredConsent) return null;
 
   const path = window.location.pathname || "/";
   if (isDuplicateEvent(`${type}|${label}|${section}|${path}`)) return null;

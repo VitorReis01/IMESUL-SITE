@@ -5,6 +5,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import { requestOpenPrivacyPreferences } from "../lib/consent";
 
 const institutionalUrl =
   process.env.NEXT_PUBLIC_INSTITUTIONAL_URL ||
@@ -236,6 +237,13 @@ export default function SalesFooter() {
           <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-600 sm:text-[10px] sm:tracking-[0.24em]">
             Dourados Matriz, Dourados Centro e Campo Grande
           </span>
+          <button
+            type="button"
+            onClick={() => requestOpenPrivacyPreferences()}
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-600 underline decoration-transparent underline-offset-4 transition-colors hover:text-imesul-red hover:decoration-imesul-red/50 sm:text-[10px] sm:tracking-[0.24em]"
+          >
+            Preferências de privacidade
+          </button>
         </div>
       </div>
     </footer>
