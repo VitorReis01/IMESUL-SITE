@@ -19,6 +19,8 @@ export const legacyCatalogCategoryRedirects = {
 
 // Produtos que migraram de categoria mantem a rota antiga funcionando via redirect.
 export const legacyCatalogProductRedirects = {
+  // Perfil U Enrijecido foi consolidado como Viga G (mesmo material, nomenclatura oficial da IMESUL).
+  "perfis-estruturais/perfil-u-enrijecido": "perfis-estruturais/viga-g",
   "serralheria-e-acabamentos/batentes-de-porta": "perfis-estruturais/batentes-de-porta",
   "serralheria-e-acabamentos/colunas": "perfis-estruturais/colunas",
   "serralheria-e-acabamentos/tampas": "perfis-estruturais/tampas",

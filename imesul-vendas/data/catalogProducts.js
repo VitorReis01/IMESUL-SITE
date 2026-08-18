@@ -60,15 +60,6 @@ export const catalogProducts = [
   }),
 
   product({
-    id: "perfil-u-enrijecido",
-    categoryId: "perfis-estruturais",
-    name: "Perfil U Enrijecido",
-    description: "Usado em coberturas, galpões, terças e estruturas que exigem reforço.",
-    usage: ["Galpões", "Coberturas", "Estruturas"],
-    image: "/catalog-products/atualizadas/perfil-u-enrijecido.webp",
-    specifications: catalogSpecifications.perfisEstruturais.uEnrijecido,
-  }),
-  product({
     id: "perfil-u-simples",
     categoryId: "perfis-estruturais",
     name: "Perfil U Simples",
