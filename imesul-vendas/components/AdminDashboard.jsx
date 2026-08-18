@@ -1,7 +1,8 @@
 "use client";
 
-// Painel administrativo do analytics local.
-// Consulta as APIs protegidas e mostra eventos, visitantes e detalhes de seguranca.
+// Painel administrativo do analytics.
+// Consulta as APIs protegidas (paginacao/metricas server-side) e mostra eventos, visitantes e
+// detalhes de seguranca.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
@@ -20,7 +21,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { clearLocalEvents, getAnalyticsEvents, getLocalEvents, subscribeToLocalEvents } from "../lib/localAnalytics";
+import { clearLocalEvents, getAnalyticsEvents, subscribeToLocalEvents } from "../lib/localAnalytics";
 
 const filters = [
   { label: "Todos", value: "all" },
@@ -42,23 +43,32 @@ const periodFilters = [
 
 const pageSizeOptions = [25, 50, 100];
 
-const isWithinPeriod = (event, period) => {
-  if (period === "all") return true;
+// Dataset usado para os rankings/agrupamento por visitante (nao a tabela paginada de eventos).
+// E um recorte recente e limitado, nao o historico inteiro - evita SELECT sem limite no
+// Postgres e mantem o painel leve. Os cards de metricas (que precisam ser exatos) vem de uma
+// consulta agregada separada (summary), independente deste recorte.
+const rankingsPageSize = 500;
 
-  const eventDate = new Date(event.timestamp);
-  if (Number.isNaN(eventDate.getTime())) return false;
-
-  const now = new Date();
-  if (period === "today") {
-    const cutoff = new Date(now);
-    cutoff.setHours(0, 0, 0, 0);
-    return eventDate >= cutoff;
-  }
-
-  const days = period === "7d" ? 7 : 30;
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - days);
-  return eventDate >= cutoff;
+const emptyComparison = { current: 0, previous: 0, label: "Sem dados anteriores", trend: "none" };
+const defaultSummary = {
+  metrics: {
+    uniqueVisitors: 0,
+    totalAccesses: 0,
+    repeatedAccesses: 0,
+    suspiciousVisitors: 0,
+    clicks: 0,
+    whatsapp: 0,
+    searches: 0,
+    logins: 0,
+    lastActivity: null,
+  },
+  comparisons: {
+    uniqueVisitors: emptyComparison,
+    clicks: emptyComparison,
+    whatsapp: emptyComparison,
+    searches: emptyComparison,
+    logins: emptyComparison,
+  },
 };
 
 const trackedClickTypes = new Set(["click", "whatsapp"]);
@@ -147,13 +157,6 @@ const deviceLocationStatusLabels = {
 const getDeviceLocationStatusLabel = (event) =>
   deviceLocationStatusLabels[event?.deviceLocationStatus] || "Não solicitada / evento antigo";
 
-const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-
-const getPreviousMonthKey = (date) => {
-  const previous = new Date(date.getFullYear(), date.getMonth() - 1, 1);
-  return getMonthKey(previous);
-};
-
 const getClientIdentity = (event) => {
   const client = event.client || {};
   const hasClientData = Boolean(client.name || client.phone || client.email || event.isLoggedIn);
@@ -180,38 +183,9 @@ const buildTrafficLabel = (event) => {
   return event.referrer || event.origin || "Direto / não informado";
 };
 
-const countMetric = (events, metric) => {
-  if (metric === "uniqueVisitors") {
-    return new Set(events.map((event) => event.visitorId).filter(Boolean)).size;
-  }
-
-  if (metric === "clicks") return events.filter((event) => trackedClickTypes.has(event.type)).length;
-  if (metric === "whatsapp") return events.filter((event) => event.type === "whatsapp").length;
-  if (metric === "searches") return events.filter((event) => event.type === "search").length;
-  if (metric === "logins") {
-    return events.filter((event) => event.type === "login" && !String(event.label).toLowerCase().includes("erro")).length;
-  }
-  return 0;
-};
-
-const getComparison = (events, metric) => {
-  const now = new Date();
-  const currentMonth = getMonthKey(now);
-  const previousMonth = getPreviousMonthKey(now);
-  const current = countMetric(events.filter((event) => getMonthKey(new Date(event.timestamp)) === currentMonth), metric);
-  const previous = countMetric(events.filter((event) => getMonthKey(new Date(event.timestamp)) === previousMonth), metric);
-
-  if (!previous) return { current, previous, label: "Sem dados anteriores", trend: "none" };
-
-  const percent = Math.round(((current - previous) / previous) * 100);
-  return {
-    current,
-    previous,
-    label: `${percent > 0 ? "+" : ""}${percent}% vs. mês anterior`,
-    trend: percent > 0 ? "up" : percent < 0 ? "down" : "flat",
-  };
-};
-
+// Rankings/agrupamento por visitante: calculados client-side sobre o recorte "rankingEvents"
+// (recente, limitado - ver rankingsPageSize acima). Os cards de metricas NAO usam nada disto;
+// vem prontos do backend (summary) para ficarem corretos independente desse recorte.
 const groupVisitors = (events) => {
   const visitors = new Map();
 
@@ -362,9 +336,18 @@ function MiniTable({ title, children }) {
   );
 }
 
-// Mostra eventos do backend local no painel administrativo e usa localStorage como fallback.
+// Mostra eventos vindos das APIs protegidas (paginacao/metricas server-side) no painel admin.
 export default function AdminDashboard({ open, onClose, onLogout }) {
-  const [events, setEvents] = useState(() => getLocalEvents());
+  // Recorte usado para rankings/agrupamento por visitante (ver rankingsPageSize acima).
+  const [rankingEvents, setRankingEvents] = useState([]);
+  // Eventos ja marcados suspeitos, buscados a parte para nao depender do recorte de rankings.
+  const [suspiciousEvents, setSuspiciousEvents] = useState([]);
+  // Tabela principal de eventos: paginada de verdade pelo backend.
+  const [tableEvents, setTableEvents] = useState([]);
+  const [tablePagination, setTablePagination] = useState({ page: 1, pageSize: pageSizeOptions[0], total: 0, totalPages: 1 });
+  // Metricas dos cards: agregadas no backend, corretas independente da paginacao/recorte acima.
+  const [summary, setSummary] = useState(defaultSummary);
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [activePeriod, setActivePeriod] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -373,94 +356,65 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
   const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
   const [selectedLocationEvent, setSelectedLocationEvent] = useState(null);
 
-  // Atualiza o painel com dados da API sem perder o fallback local em desenvolvimento.
-  const refreshEvents = useCallback(() => {
-    getAnalyticsEvents()
-      .then(setEvents)
-      .catch(() => setEvents(getLocalEvents()));
-  }, []);
+  // Cards + rankings dependem so do periodo selecionado (nao do filtro/busca/pagina da tabela).
+  const refreshOverview = useCallback(() => {
+    getAnalyticsEvents({ period: activePeriod, pageSize: rankingsPageSize })
+      .then((result) => {
+        setRankingEvents(result.events);
+        if (result.summary) setSummary(result.summary);
+      })
+      .catch(() => {});
+
+    getAnalyticsEvents({ type: "suspicious", pageSize: 100 })
+      .then((result) => setSuspiciousEvents(result.events))
+      .catch(() => {});
+  }, [activePeriod]);
+
+  // Tabela principal: paginacao/filtro/busca reais no backend.
+  const refreshTable = useCallback(() => {
+    getAnalyticsEvents({
+      page: currentPage,
+      pageSize,
+      type: activeFilter === "hasDeviceLocation" ? "all" : activeFilter,
+      period: activePeriod,
+      search: searchQuery,
+      hasDeviceLocation: activeFilter === "hasDeviceLocation",
+    })
+      .then((result) => {
+        setTableEvents(result.events);
+        setTablePagination(result.pagination);
+      })
+      .catch(() => {});
+  }, [currentPage, pageSize, activeFilter, activePeriod, searchQuery]);
 
   useEffect(() => {
     if (!open) return undefined;
 
-    const timer = window.setTimeout(refreshEvents, 0);
-    const unsubscribe = subscribeToLocalEvents(refreshEvents);
+    const timer = window.setTimeout(() => {
+      refreshOverview();
+      refreshTable();
+    }, 0);
+    const unsubscribe = subscribeToLocalEvents(() => {
+      refreshOverview();
+      refreshTable();
+    });
 
     return () => {
       window.clearTimeout(timer);
       unsubscribe();
     };
-  }, [open, refreshEvents]);
-
-  // Período filtra os cards de resumo e a lista principal de eventos; a comparação "vs. mês
-  // anterior" continua olhando para todo o histórico (são eixos de análise diferentes).
-  const periodEvents = useMemo(
-    () => (activePeriod === "all" ? events : events.filter((event) => isWithinPeriod(event, activePeriod))),
-    [events, activePeriod],
-  );
+  }, [open, refreshOverview, refreshTable]);
 
   const analytics = useMemo(() => {
-    const lastEvent = periodEvents.at(-1);
-    const visitEvents = periodEvents.filter((event) => event.type === "visit");
-    const uniqueVisitors = new Set(periodEvents.map((event) => event.visitorId).filter(Boolean)).size;
-    const totalAccesses = visitEvents.length;
-    const repeatedAccesses = Math.max(totalAccesses - uniqueVisitors, 0);
-    const visitors = groupVisitors(periodEvents);
+    const visitors = groupVisitors(rankingEvents);
 
     return {
-      metrics: {
-        uniqueVisitors,
-        totalAccesses,
-        repeatedAccesses,
-        suspiciousVisitors: visitors.filter((visitor) => visitor.securityStatus === "Suspeito").length,
-        clicks: countMetric(periodEvents, "clicks"),
-        whatsapp: countMetric(periodEvents, "whatsapp"),
-        searches: countMetric(periodEvents, "searches"),
-        logins: countMetric(periodEvents, "logins"),
-        lastActivity: lastEvent ? `${formatDate(lastEvent.timestamp)} ${formatTime(lastEvent.timestamp)}` : "Sem registro",
-      },
-      comparisons: {
-        uniqueVisitors: getComparison(events, "uniqueVisitors"),
-        clicks: getComparison(events, "clicks"),
-        whatsapp: getComparison(events, "whatsapp"),
-        searches: getComparison(events, "searches"),
-        logins: getComparison(events, "logins"),
-      },
       visitors,
-      buttonRanking: buildButtonRanking(periodEvents),
-      visitorRanking: buildVisitorRanking(periodEvents),
+      buttonRanking: buildButtonRanking(rankingEvents),
+      visitorRanking: buildVisitorRanking(rankingEvents),
       locationRanking: buildLocationRanking(visitors),
     };
-  }, [periodEvents, events]);
-
-  const filteredEvents = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    return periodEvents.filter((event) => {
-      if (activeFilter === "suspicious" && getSecurityStatus(event) !== "Suspeito") return false;
-      if (activeFilter === "hasDeviceLocation" && event.deviceLocationStatus !== "granted") return false;
-      if (!["all", "suspicious", "hasDeviceLocation"].includes(activeFilter) && event.type !== activeFilter) return false;
-
-      if (!query) return true;
-
-      const identity = getClientIdentity(event);
-      const haystack = [
-        event.visitorId,
-        identity.phone,
-        identity.email,
-        identity.name,
-        event.pagePath || event.path,
-        event.ipMasked || event.ip,
-        event.location?.city,
-        event.location?.region,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(query);
-    });
-  }, [activeFilter, periodEvents, searchQuery]);
+  }, [rankingEvents]);
 
   // Volta para a primeira pagina sempre que o filtro, o periodo ou a busca mudam, para nunca
   // deixar o admin numa pagina vazia. Ajuste de estado durante a renderizacao (nao em effect):
@@ -472,23 +426,10 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
     setCurrentPage(1);
   }
 
-  const paginatedEvents = useMemo(() => {
-    const reversed = filteredEvents.slice().reverse();
-    const totalPages = Math.max(Math.ceil(reversed.length / pageSize), 1);
-    const safePage = Math.min(currentPage, totalPages);
-    const start = (safePage - 1) * pageSize;
-
-    return { items: reversed.slice(start, start + pageSize), totalPages, safePage, total: reversed.length };
-  }, [filteredEvents, pageSize, currentPage]);
-
-  const suspiciousEvents = useMemo(
-    () => events.filter((event) => getSecurityStatus(event) === "Suspeito"),
-    [events],
-  );
-
   const exportEventsAsJson = () => {
-    // Exporta apenas a visao comum; detalhes sensiveis ficam restritos ao modal de seguranca.
-    const sanitizedEvents = events.map(({ securityDetails, ...event }) => event);
+    // Exporta o recorte de rankings (periodo atual, ate rankingsPageSize eventos) - a mesma
+    // base usada pelos rankings do painel. Detalhes sensiveis ficam restritos ao modal de seguranca.
+    const sanitizedEvents = rankingEvents.map(({ securityDetails, ...event }) => event);
     const file = new Blob([JSON.stringify(sanitizedEvents, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");
@@ -518,7 +459,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   const printReport = () => {
     const generatedAt = new Date();
-    const { metrics, comparisons, visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
+    const { metrics, comparisons } = summary;
+    const { visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) return;
 
@@ -572,7 +514,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           </tbody></table>
           <h2>Eventos</h2>
           <table><thead><tr><th>Data</th><th>Hora</th><th>Tipo</th><th>Seção</th><th>Ação</th><th>Detalhe</th><th>Origem</th><th>IP mascarado</th><th>Visitor ID</th><th>Telefone</th><th>Logado?</th></tr></thead><tbody>
-            ${buildTableRows(events.slice().reverse()) || '<tr><td colspan="11">Nenhum evento registrado.</td></tr>'}
+            ${buildTableRows(rankingEvents.slice().reverse()) || '<tr><td colspan="11">Nenhum evento registrado.</td></tr>'}
           </tbody></table>
           <script>window.onload = () => window.print();</script>
         </body>
@@ -583,7 +525,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   if (!open) return null;
 
-  const { metrics, comparisons, visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
+  const { metrics, comparisons } = summary;
+  const { visitors, buttonRanking, visitorRanking, locationRanking } = analytics;
   const selectedSecurityDetails = getSecurityDetails(selectedSecurityEvent || {});
 
   return (
@@ -604,7 +547,15 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             <button type="button" onClick={exportEventsAsJson} className="inline-flex h-10 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] text-white transition-colors hover:border-white/25 hover:bg-white/[0.07]">
               <Download size={15} aria-hidden="true" /> Exportar dados
             </button>
-            <button type="button" onClick={async () => { await clearLocalEvents(); setEvents([]); }} className="inline-flex h-10 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] text-white transition-colors hover:border-imesul-red/55 hover:bg-imesul-red/[0.12]">
+            <button
+              type="button"
+              onClick={async () => {
+                await clearLocalEvents();
+                refreshOverview();
+                refreshTable();
+              }}
+              className="inline-flex h-10 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] text-white transition-colors hover:border-imesul-red/55 hover:bg-imesul-red/[0.12]"
+            >
               <Trash2 size={15} aria-hidden="true" /> Limpar eventos
             </button>
             <button type="button" onClick={onLogout} className="inline-flex h-10 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] text-white transition-colors hover:border-white/25 hover:bg-white/[0.07]">
@@ -734,7 +685,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
               <table className="min-w-[1200px] w-full border-collapse text-left">
                 <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Data</th><th className="px-4 py-3">Hora</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Página/seção</th><th className="px-4 py-3">Ação</th><th className="px-4 py-3">Detalhe</th><th className="px-4 py-3">Origem</th><th className="px-4 py-3">IP mascarado</th><th className="px-4 py-3">Visitor ID</th><th className="px-4 py-3">Telefone</th><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Logado?</th><th className="px-4 py-3">Localização</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
-                  {paginatedEvents.items.length ? paginatedEvents.items.map((event) => {
+                  {tableEvents.length ? tableEvents.map((event) => {
                     const identity = getClientIdentity(event);
                     return (
                       <tr key={event.id} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3">{formatDate(event.timestamp)}</td><td className="px-4 py-3">{formatTime(event.timestamp)}</td><td className="px-4 py-3 font-semibold text-white">{event.type}</td><td className="px-4 py-3">{event.section || "-"}</td><td className="px-4 py-3">{event.label || "-"}</td><td className="px-4 py-3">{event.detail || "-"}</td><td className="px-4 py-3">{buildTrafficLabel(event)}</td><td className="px-4 py-3">{event.ipMasked || event.ip || "não identificado"}</td><td className="px-4 py-3">{event.visitorId || "-"}</td><td className="px-4 py-3">{identity.phone}</td><td className="px-4 py-3">{identity.name}</td><td className="px-4 py-3">{event.isLoggedIn ? "Sim" : "Não"}</td><td className="px-4 py-3"><button type="button" onClick={() => setSelectedLocationEvent(event)} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/78 transition-colors hover:border-imesul-red/55 hover:text-white"><MapPin size={12} aria-hidden="true" /> Ver</button></td></tr>
@@ -743,10 +694,10 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                 </tbody>
               </table>
             </div>
-            {paginatedEvents.total > pageSizeOptions[0] ? (
+            {tablePagination.total > pageSizeOptions[0] ? (
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] px-4 py-3">
                 <div className="flex items-center gap-2 text-xs text-imesul-steel-light/62">
-                  <span>{paginatedEvents.total} eventos</span>
+                  <span>{tablePagination.total} eventos</span>
                   <select
                     value={pageSize}
                     onChange={(event) => setPageSize(Number(event.target.value))}
@@ -758,11 +709,11 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button type="button" disabled={paginatedEvents.safePage <= 1} onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" disabled={tablePagination.page <= 1} onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
                     Anterior
                   </button>
-                  <span className="text-xs text-imesul-steel-light/62">Página {paginatedEvents.safePage} de {paginatedEvents.totalPages}</span>
-                  <button type="button" disabled={paginatedEvents.safePage >= paginatedEvents.totalPages} onClick={() => setCurrentPage((page) => Math.min(page + 1, paginatedEvents.totalPages))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                  <span className="text-xs text-imesul-steel-light/62">Página {tablePagination.page} de {tablePagination.totalPages}</span>
+                  <button type="button" disabled={tablePagination.page >= tablePagination.totalPages} onClick={() => setCurrentPage((page) => Math.min(page + 1, tablePagination.totalPages))} className="rounded-full border border-white/[0.12] px-3 py-1 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/[0.25] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
                     Próxima
                   </button>
                 </div>

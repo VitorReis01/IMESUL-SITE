@@ -253,20 +253,43 @@ export function trackLocalEvent({
   return event;
 }
 
-export async function getAnalyticsEvents() {
-  if (!canUseBrowserStorage()) return [];
+const defaultPagination = { page: 1, pageSize: 25, total: 0, totalPages: 1 };
+
+// Busca eventos paginados/filtrados server-side. params: page, pageSize, type, period, search,
+// hasDeviceLocation - todos opcionais, sanitizados de novo no servidor independente do que
+// chega aqui. Se a API falhar (rede/servidor fora do ar), cai para o cache local (sem paginacao
+// real - so um retrato do que ja estava salvo no navegador).
+export async function getAnalyticsEvents(params = {}) {
+  if (!canUseBrowserStorage()) return { events: [], pagination: defaultPagination, summary: null };
 
   try {
-    const response = await fetch(eventsEndpoint, {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", String(params.page));
+    if (params.pageSize) query.set("pageSize", String(params.pageSize));
+    if (params.type) query.set("type", params.type);
+    if (params.period) query.set("period", params.period);
+    if (params.search) query.set("search", params.search);
+    if (params.hasDeviceLocation) query.set("hasDeviceLocation", "true");
+
+    const response = await fetch(`${eventsEndpoint}?${query.toString()}`, {
       cache: "no-store",
       headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
     });
     if (!response.ok) throw new Error("Falha ao consultar analytics.");
 
     const data = await response.json();
-    return Array.isArray(data.events) ? data.events : [];
+    return {
+      events: Array.isArray(data.events) ? data.events : [],
+      pagination: data.pagination || defaultPagination,
+      summary: data.summary || null,
+    };
   } catch {
-    return readStoredEvents();
+    const events = readStoredEvents();
+    return {
+      events,
+      pagination: { page: 1, pageSize: events.length || 25, total: events.length, totalPages: 1 },
+      summary: null,
+    };
   }
 }
 
