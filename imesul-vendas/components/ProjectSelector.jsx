@@ -1042,9 +1042,9 @@ export default function ProjectSelector() {
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-imesul-red/45 bg-imesul-red text-white shadow-[0_8px_22px_rgba(212,43,43,0.22)]">
                 <Building2 size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
-              <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-red sm:text-[12px]">
+              <strong className="relative mt-5 font-display text-[1.68rem] font-bold leading-[0.96] text-imesul-red sm:text-[1.82rem]">
                 NÃO SEI QUAL MATERIAL
-              </span>
+              </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
                 Escolha onde o material será usado e veja opções indicadas.
               </span>
@@ -1071,9 +1071,9 @@ export default function ProjectSelector() {
               <span className="relative flex h-9 w-9 items-center justify-center rounded-[6px] border border-white/[0.14] bg-[#1f5fb0]/55 text-white">
                 <PackageSearch size={18} strokeWidth={1.8} aria-hidden="true" />
               </span>
-              <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-steel sm:text-[12px]">
+              <strong className="relative mt-5 font-display text-[1.78rem] font-bold leading-[0.96] text-white sm:text-[1.95rem]">
                 JÁ SEI O QUE PRECISO
-              </span>
+              </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
                 Acesse categorias, produtos e medidas disponíveis para solicitar orçamento.
               </span>
