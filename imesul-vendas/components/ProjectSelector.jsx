@@ -1045,9 +1045,6 @@ export default function ProjectSelector() {
               <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-red sm:text-[12px]">
                 NÃO SEI QUAL MATERIAL
               </span>
-              <strong className="relative mt-1 font-display text-[1.68rem] font-normal leading-[0.96] text-imesul-red sm:text-[1.82rem]">
-                COMEÇAR PELA APLICAÇÃO
-              </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
                 Escolha onde o material será usado e veja opções indicadas.
               </span>
@@ -1077,9 +1074,6 @@ export default function ProjectSelector() {
               <span className="relative mt-5 font-mono text-[11px] font-semibold tracking-[0.18em] text-imesul-steel sm:text-[12px]">
                 JÁ SEI O QUE PRECISO
               </span>
-              <strong className="relative mt-1 font-display text-[1.78rem] font-normal leading-[0.96] text-white sm:text-[1.95rem]">
-                CATÁLOGO DIRETO
-              </strong>
               <span className="relative mt-3 max-w-[220px] text-[13px] leading-5 text-imesul-steel-light/74">
                 Acesse categorias, produtos e medidas disponíveis para solicitar orçamento.
               </span>

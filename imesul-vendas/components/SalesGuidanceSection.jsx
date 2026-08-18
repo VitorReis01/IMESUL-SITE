@@ -176,7 +176,10 @@ export default function SalesGuidanceSection() {
                 Precisa de ajuda?
               </h3>
               <p className="mt-4 text-sm leading-6 text-imesul-steel-light/72">
-                Não sabe qual medida pedir? Envie sua dúvida e fale com a equipe comercial da IMESUL.
+                <span className="sm:hidden">Não sabe qual medida pedir? fale com a IMESUL.</span>
+                <span className="hidden sm:inline">
+                  Não sabe qual medida pedir? Envie sua dúvida e fale com a equipe comercial da IMESUL.
+                </span>
               </p>
               <a
                 href={whatsappUrl}

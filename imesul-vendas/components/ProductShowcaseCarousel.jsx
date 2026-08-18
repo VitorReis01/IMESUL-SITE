@@ -364,7 +364,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
                   handleProductClick(product);
                 }
               }}
-              className="premium-soft-sheen group relative flex h-[260px] w-[218px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[10px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(10,24,41,0.94),rgba(4,11,20,0.98))] text-left shadow-[0_22px_62px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow,transform] duration-300 will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[#f0c776]/42 hover:shadow-[0_24px_70px_rgba(240,199,118,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0c776] focus-visible:ring-offset-2 focus-visible:ring-offset-[#06101d] sm:h-[315px] sm:w-[270px]"
+              className="premium-soft-sheen group relative flex h-auto min-h-[260px] w-[218px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[10px] border border-white/[0.1] bg-[linear-gradient(145deg,rgba(10,24,41,0.94),rgba(4,11,20,0.98))] text-left shadow-[0_22px_62px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow,transform] duration-300 will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[#f0c776]/42 hover:shadow-[0_24px_70px_rgba(240,199,118,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0c776] focus-visible:ring-offset-2 focus-visible:ring-offset-[#06101d] sm:h-[315px] sm:w-[270px]"
             >
               <span className="relative h-36 overflow-hidden border-b border-white/[0.08] bg-[#eef1f4] sm:h-44">
                 <Image
@@ -381,7 +381,7 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
                 <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#f0c776]">
                   {product.showcaseCategoryName}
                 </span>
-                <strong className="mt-3 line-clamp-2 font-condensed text-[1.35rem] font-semibold leading-none text-white">
+                <strong className="mt-3 whitespace-normal break-words font-condensed text-[1.35rem] font-semibold leading-tight text-white sm:line-clamp-2 sm:leading-none">
                   {product.showcaseName}
                 </strong>
                 <span className="mt-auto inline-flex items-center gap-2 pt-5 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
