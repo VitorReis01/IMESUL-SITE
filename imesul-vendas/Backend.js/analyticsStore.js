@@ -2,11 +2,17 @@ import { promises as fs } from "node:fs";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
+import { isDatabaseConfigured, query } from "./db";
 
-// Armazena eventos locais do analytics e prepara os dados exibidos no painel admin.
-// As rotas em app/api/analytics usam este módulo como backend simples de desenvolvimento.
-// Usa o diretorio temporario do SO (gravavel mesmo em runtimes serverless como a Vercel,
-// onde o diretorio do projeto e somente leitura); os dados nao persistem entre deploys/instancias.
+// Armazena eventos de analytics e prepara os dados exibidos no painel admin.
+// As rotas em app/api/analytics usam este modulo, que decide o backend em tempo de execucao:
+//
+// - DATABASE_URL configurada: Postgres (analytics_events) - persistente, funciona igual em
+//   qualquer instancia serverless da Vercel.
+// - DATABASE_URL ausente: arquivo JSON em os.tmpdir() - APENAS para desenvolvimento local.
+//   NAO E PERSISTENTE em producao serverless: instancias diferentes podem ter arquivos
+//   diferentes, e um novo deploy apaga o arquivo. Nunca tratar isso como armazenamento de
+//   producao (ver docs/analytics-storage.md).
 const eventsPath = path.join(os.tmpdir(), "imesul-vendas-analytics-events.json");
 const maxEvents = 2000;
 const allowedTypes = new Set(["visit", "click", "whatsapp", "search", "login", "device_location"]);
@@ -259,7 +265,9 @@ const writeEventsFile = async (events) => {
   await fs.writeFile(eventsPath, JSON.stringify(events.slice(-maxEvents), null, 2), "utf8");
 };
 
-const getSuspiciousReasons = (event, previousEvents = []) => {
+// recentSameVisitorCount vem de fora (contagem no array local em dev, COUNT(*) no Postgres em
+// producao) para nao obrigar este modulo a carregar todo o historico so para checar um numero.
+const getSuspiciousReasons = (event, recentSameVisitorCount = 0) => {
   const reasons = [];
   const searchablePayload = [
     event.path,
@@ -275,20 +283,36 @@ const getSuspiciousReasons = (event, previousEvents = []) => {
   if (suspiciousAgentPattern.test(event.device.userAgent)) reasons.push("User-agent suspeito");
   if (suspiciousPathPattern.test(event.path) || suspiciousPathPattern.test(event.pagePath)) reasons.push("Caminho sensível");
   if (suspiciousPayloadPattern.test(searchablePayload)) reasons.push("Payload suspeito");
-
-  const cutoff = Date.now() - 60_000;
-  const sameVisitorRecentEvents = previousEvents.filter((item) => {
-    const sameVisitor = item.visitorId === event.visitorId || (event.ipHash && item.ipHash === event.ipHash);
-    return sameVisitor && new Date(item.timestamp).getTime() >= cutoff;
-  });
-
-  if (sameVisitorRecentEvents.length >= 30) reasons.push("Muitas requisições em pouco tempo");
+  if (recentSameVisitorCount >= 30) reasons.push("Muitas requisições em pouco tempo");
 
   return reasons;
 };
 
+// Conta eventos dos ultimos 60s do mesmo visitante/IP dentro de um array ja carregado (fallback local).
+const countRecentSameVisitorFromArray = (event, previousEvents = []) => {
+  const cutoff = Date.now() - 60_000;
+  return previousEvents.filter((item) => {
+    const sameVisitor = item.visitorId === event.visitorId || (event.ipHash && item.ipHash === event.ipHash);
+    return sameVisitor && new Date(item.timestamp).getTime() >= cutoff;
+  }).length;
+};
+
+// Mesma contagem, mas como consulta pontual e indexada no Postgres - nunca carrega o historico
+// inteiro so para checar isso (ver Backend.js/db.js e migration idx_analytics_events_visitor_id/ip_hash).
+const countRecentSameVisitorFromDatabase = async (event) => {
+  const result = await query(
+    `SELECT COUNT(*)::int AS count FROM analytics_events
+     WHERE event_timestamp >= NOW() - INTERVAL '60 seconds'
+       AND (visitor_id = $1 OR ($2 <> '' AND ip_hash = $2))`,
+    [event.visitorId, event.ipHash || ""]
+  );
+  return result.rows[0]?.count || 0;
+};
+
 // Normaliza o payload recebido da API e remove campos que nao devem entrar no painel.
-const sanitizeEvent = (payload = {}, previousEvents = []) => {
+// Nao decide ainda se o evento e suspeito - isso depende de recentSameVisitorCount, calculado
+// separadamente por addAnalyticsEvent conforme o backend ativo (ver funcoes acima).
+const buildEventFields = (payload = {}) => {
   const now = new Date();
   const userName = safeString(payload.userName || payload.client?.name);
   const userPhone = safeString(payload.userPhone || payload.client?.phone);
@@ -365,7 +389,12 @@ const sanitizeEvent = (payload = {}, previousEvents = []) => {
     isLoggedIn,
   };
 
-  const suspiciousReasons = getSuspiciousReasons(event, previousEvents);
+  return event;
+};
+
+// Aplica a checagem de atividade suspeita sobre um evento ja construido e devolve a versao final.
+const finalizeEvent = (event, recentSameVisitorCount) => {
+  const suspiciousReasons = getSuspiciousReasons(event, recentSameVisitorCount);
   return {
     ...event,
     securityStatus: suspiciousReasons.length ? "Suspeito" : "Normal",
@@ -373,13 +402,56 @@ const sanitizeEvent = (payload = {}, previousEvents = []) => {
   };
 };
 
-// Armazenamento local apenas para desenvolvimento; na Vercel, usar banco/KV para persistencia confiavel.
+// Cada chamada e um INSERT independente - nunca lemos a tabela inteira, modificamos em memoria
+// e regravamos (isso e exatamente o problema que o arquivo JSON tinha sob concorrencia).
+const insertEventToDatabase = async (event) => {
+  await query(
+    `INSERT INTO analytics_events (
+      event_timestamp, server_timestamp, type, label, detail, section, path, page_path, method,
+      visitor_id, is_logged_in, user_name, user_phone, user_email, client_status,
+      origin_label, traffic_source, referrer, referer_domain, host, utm,
+      ip_masked, ip_hash, ip_protected,
+      device, location, network, security_headers,
+      device_latitude, device_longitude, device_accuracy, device_location_captured_at, device_location_status,
+      suspicious, suspicious_reasons
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9,
+      $10, $11, $12, $13, $14, $15,
+      $16, $17, $18, $19, $20, $21,
+      $22, $23, $24,
+      $25, $26, $27, $28,
+      $29, $30, $31, $32, $33,
+      $34, $35
+    )`,
+    [
+      event.timestamp, event.serverTimestamp, event.type, event.label, event.detail, event.section, event.path, event.pagePath, event.method,
+      event.visitorId, event.isLoggedIn, event.client.name, event.client.phone, event.client.email, event.client.status,
+      event.origin, event.trafficSource, event.referrer, event.refererDomain, event.host, JSON.stringify(event.utm),
+      event.ipMasked, event.ipHash, event.ipFullProtected,
+      JSON.stringify(event.device), JSON.stringify(event.location), JSON.stringify(event.network), JSON.stringify(event.securityHeaders),
+      event.deviceLocation?.latitude ?? null, event.deviceLocation?.longitude ?? null, event.deviceLocation?.accuracy ?? null, event.deviceLocation?.capturedAt ?? null, event.deviceLocationStatus,
+      event.securityStatus === "Suspeito", JSON.stringify(event.suspiciousReasons),
+    ]
+  );
+};
+
 export async function addAnalyticsEvent(payload) {
   const requestPath = safeString(payload.requestPath || payload.path || "");
   if (staticPathPattern.test(requestPath)) return null;
 
+  if (isDatabaseConfigured()) {
+    const baseEvent = buildEventFields(payload);
+    const recentCount = await countRecentSameVisitorFromDatabase(baseEvent);
+    const event = finalizeEvent(baseEvent, recentCount);
+    await insertEventToDatabase(event);
+    return event;
+  }
+
+  // Fallback local: arquivo JSON em os.tmpdir(), so para desenvolvimento (ver aviso no topo do arquivo).
   const events = await readEventsFile();
-  const event = sanitizeEvent(payload, events);
+  const baseEvent = buildEventFields(payload);
+  const recentCount = countRecentSameVisitorFromArray(baseEvent, events);
+  const event = finalizeEvent(baseEvent, recentCount);
   await writeEventsFile([...events, event]);
   return event;
 }

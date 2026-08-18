@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   user_email TEXT NOT NULL DEFAULT '',
   client_status TEXT NOT NULL DEFAULT 'Visitante sem login',
 
-  source TEXT NOT NULL DEFAULT '',
+  -- "source" enviado pelo cliente e "origin" calculado no servidor sao o mesmo conceito no
+  -- codigo atual (ver lib/localAnalytics.js createBackendPayload -> sanitizeEvent); uma unica
+  -- coluna evita duplicar o mesmo valor em dois lugares.
   origin_label TEXT NOT NULL DEFAULT '',
   traffic_source TEXT NOT NULL DEFAULT '',
   referrer TEXT NOT NULL DEFAULT '',
