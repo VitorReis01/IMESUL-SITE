@@ -51,6 +51,29 @@ export const query = async (text, params = []) => {
   return activePool.query(text, params);
 };
 
+// Executa uma serie de queries na MESMA conexao, dentro de uma transacao (BEGIN/COMMIT/ROLLBACK).
+// Necessario sempre que a operacao precisa de SELECT ... FOR UPDATE seguido de UPDATE/INSERT
+// coerentes entre si (ex.: rodizio de vendedores em salesLeadsStore.js) - pool.query() sozinho
+// nao garante que duas chamadas usem a mesma conexao, entao o lock do FOR UPDATE nao "gruda"
+// entre chamadas separadas. callback recebe um client com sua propria query(text, params).
+export const withTransaction = async (callback) => {
+  const activePool = getPool();
+  if (!activePool) throw new Error("DATABASE_URL nao configurada.");
+
+  const client = await activePool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
 // Helper de diagnostico para uso em script/CLI (ex.: scripts/migrate-db.mjs). Nao expor como
 // endpoint publico - se algum dia precisar de um endpoint de health check, exigir sessao admin.
 export const checkDatabaseConnection = async () => {

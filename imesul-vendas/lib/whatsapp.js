@@ -84,8 +84,11 @@ export function buildProductMessage({
 }
 
 // Limita a mensagem a 4.000 caracteres e codifica o texto para a URL do WhatsApp.
-export function createWhatsAppUrl(message) {
-  const phone = String(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || fallbackPhone).replace(/\D/g, "");
+// phoneOverride e opcional (ex.: vendedor escolhido pelo rodizio da automacao comercial) - sem
+// ele, o comportamento e exatamente o mesmo de antes (numero padrao da variavel de ambiente).
+export function createWhatsAppUrl(message, phoneOverride) {
+  const rawPhone = phoneOverride || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || fallbackPhone;
+  const phone = String(rawPhone).replace(/\D/g, "");
   const safeMessage = String(message ?? "").slice(0, 4000);
   return `https://wa.me/${phone || fallbackPhone}?text=${encodeURIComponent(safeMessage)}`;
 }

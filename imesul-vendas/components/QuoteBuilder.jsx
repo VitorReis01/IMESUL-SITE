@@ -3,7 +3,7 @@
 // Fluxos de pre-orcamento por projeto e por material.
 // Monta formularios, resumo e envio ao WhatsApp sem finalizar compra no site.
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler, ShoppingCart } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
 import { getCatalogCategory } from "../data/catalogCategories";
@@ -17,7 +17,8 @@ import {
   telaComprimentoOptions,
 } from "../data/quoteOptions";
 import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../lib/whatsapp";
-import { trackLocalEvent } from "../lib/localAnalytics";
+import { trackLocalEvent, getAnonymousVisitorId } from "../lib/localAnalytics";
+import { createLead } from "../lib/leads";
 import ProductOptionSelector, { findSelectedVariation } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
 
@@ -222,9 +223,58 @@ function SummaryRow({ label, value }) {
   );
 }
 
-// Gera o link somente quando as regras minimas do fluxo foram atendidas.
-function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8" }) {
+// Le UTM da URL atual so no momento do clique - nao duplica a logica de "primeiro toque
+// persistido" do analytics (lib/localAnalytics.js), que fica intocada. Um lead reflete o
+// contexto do pedido em si, nao a sessao inteira do visitante.
+const readCurrentUtm = () => {
+  if (typeof window === "undefined") return {};
+  const params = new URLSearchParams(window.location.search);
+  return {
+    source: params.get("utm_source") || "",
+    medium: params.get("utm_medium") || "",
+    campaign: params.get("utm_campaign") || "",
+    content: params.get("utm_content") || "",
+    term: params.get("utm_term") || "",
+  };
+};
+
+// Cria o lead (Lead ID + rodizio de vendedor) antes de abrir o WhatsApp. Abre uma aba em branco
+// de forma SINCRONA (dentro do clique) e so preenche a URL depois que o lead responde - isso
+// evita bloqueio de pop-up, que a maioria dos navegadores aplica a window.open() chamado depois
+// de um await. Qualquer falha (banco fora do ar, sem vendedor, requisicao caiu) cai no WhatsApp
+// padrao ja existente - o orcamento nunca fica bloqueado por causa deste recurso.
+const openWhatsAppWithLead = async ({ message, trackingDetail, originUnit }) => {
+  const fallbackUrl = createWhatsAppUrl(message);
+  const popup = typeof window !== "undefined" ? window.open("", "_blank") : null;
+
+  try {
+    const lead = await createLead({
+      visitorId: getAnonymousVisitorId(),
+      quoteSummary: message,
+      product: trackingDetail,
+      origin: originUnit || (typeof document !== "undefined" ? document.referrer : "") || "",
+      source: "site",
+      utm: readCurrentUtm(),
+    });
+
+    const finalUrl = lead.ok && lead.seller?.whatsapp
+      ? createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp)
+      : fallbackUrl;
+
+    if (popup && !popup.closed) popup.location.href = finalUrl;
+    else window.open(finalUrl, "_blank", "noopener,noreferrer");
+  } catch {
+    if (popup && !popup.closed) popup.location.href = fallbackUrl;
+    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+  }
+};
+
+// Gera o link somente quando as regras minimas do fluxo foram atendidas. O href continua sendo
+// o WhatsApp padrao (fallback nativo do navegador para clique do meio/abrir em nova aba sem JS);
+// o clique normal (botao esquerdo) e interceptado para criar o lead antes de abrir a conversa.
+function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8", originUnit = "" }) {
   const disabled = Boolean(disabledReason);
+  const submittingRef = useRef(false);
 
   return (
     <div className={className}>
@@ -239,12 +289,29 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
             return;
           }
 
+          // Clique com modificador (abrir em nova aba/janela) ou botao diferente do esquerdo:
+          // deixa o navegador seguir o href padrao normalmente, sem interceptar.
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+          }
+
+          event.preventDefault();
+
           trackLocalEvent({
             type: "whatsapp",
             label: "Solicitar cotação no WhatsApp",
             section: "Resumo da solicitação",
             detail: trackingDetail,
             isLoggedIn,
+          });
+
+          // Protege contra clique duplo: enquanto a primeira solicitacao ainda esta em
+          // andamento, cliques adicionais sao ignorados (a aba ja foi aberta pelo primeiro).
+          if (submittingRef.current) return;
+          submittingRef.current = true;
+
+          openWhatsAppWithLead({ message, trackingDetail, originUnit }).finally(() => {
+            submittingRef.current = false;
           });
         }}
         className={`group relative flex min-h-[62px] w-full items-center justify-center gap-3 overflow-hidden rounded-[10px] border px-5 py-4 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 sm:px-6 ${
@@ -325,7 +392,7 @@ function AddToCartButton({ product, quantity, disabledReason = "" }) {
 const isLocationReady = (form) => Boolean(form.quantity && form.city && form.state);
 
 // Monta o pre-orcamento a partir do projeto, subtipo e materiais recomendados.
-export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
+export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" }) {
   const [subtype, setSubtype] = useState("");
   const [form, setForm] = useState(projectInitialForm);
 
@@ -458,6 +525,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false }) {
               disabledReason={disabledReason}
               trackingDetail={`Projeto: ${project.name}`}
               isLoggedIn={isLoggedIn}
+              originUnit={originUnit}
             />
           </aside>
         </div>
