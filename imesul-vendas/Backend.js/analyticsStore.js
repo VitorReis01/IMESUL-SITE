@@ -456,41 +456,383 @@ export async function addAnalyticsEvent(payload) {
   return event;
 }
 
-export async function getAnalyticsEvents() {
+// IP completo so e anexado para eventos ja marcados suspeitos, e so aqui (nunca na listagem
+// comum) - preserva a mesma separacao de privacidade que o formato anterior ja tinha.
+const attachSecurityDetails = (event) => {
+  if (event.securityStatus !== "Suspeito") return event;
+
+  const ipFull = decryptProtectedValue(event.ipFullProtected);
+
+  return {
+    ...event,
+    securityDetails: {
+      ipFull: ipFull || "Indisponivel: configure ANALYTICS_SECURITY_KEY no servidor.",
+      userAgentFull: event.device?.userAgent || "Desconhecido",
+      refererFull: event.referrer || "Nao informado",
+      refererDomain: event.refererDomain || "Nao informado",
+      host: event.host || event.securityHeaders?.host || "Nao informado",
+      method: event.method || "-",
+      path: event.pagePath || event.path || "-",
+      requestPath: event.path || "-",
+      serverTimestamp: event.serverTimestamp || event.timestamp,
+      reasons: event.suspiciousReasons || [],
+      headers: event.securityHeaders || {},
+    },
+  };
+};
+
+// Mesma logica de corte de periodo usada no painel (ja corrigida o bug do "Hoje": zera a hora
+// sem subtrair um dia antes). Calculada uma vez aqui para o backend nunca divergir do frontend.
+const validPeriods = new Set(["today", "7d", "30d", "all"]);
+const getPeriodCutoff = (period) => {
+  if (period === "all") return null;
+
+  const now = new Date();
+  if (period === "today") {
+    const cutoff = new Date(now);
+    cutoff.setHours(0, 0, 0, 0);
+    return cutoff;
+  }
+
+  const days = period === "7d" ? 7 : 30;
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - days);
+  return cutoff;
+};
+
+const clampPageSize = (value) => Math.min(Math.max(Number(value) || 25, 1), 100);
+const clampPage = (value) => Math.max(Math.floor(Number(value)) || 1, 1);
+
+const normalizeEventsQuery = (params = {}) => ({
+  page: clampPage(params.page),
+  pageSize: clampPageSize(params.pageSize),
+  type: safeString(params.type, "all", 40) || "all",
+  period: validPeriods.has(params.period) ? params.period : "all",
+  search: safeString(params.search, "", 120).trim(),
+  hasDeviceLocation: Boolean(params.hasDeviceLocation),
+});
+
+// Converte uma linha de analytics_events (snake_case, Postgres) para o mesmo formato de evento
+// usado pelo painel (camelCase) - o AdminDashboard nao precisa saber que existe SQL por tras.
+const rowToEvent = (row) => {
+  const hasDeviceCoords = row.device_latitude !== null && row.device_longitude !== null;
+
+  return {
+    id: String(row.id),
+    timestamp: row.event_timestamp.toISOString(),
+    serverTimestamp: (row.server_timestamp || row.event_timestamp).toISOString(),
+    type: row.type,
+    label: row.label,
+    detail: row.detail,
+    section: row.section,
+    path: row.path,
+    pagePath: row.page_path,
+    method: row.method,
+    visitorId: row.visitor_id,
+    isLoggedIn: row.is_logged_in,
+    client: { name: row.user_name, phone: row.user_phone, email: row.user_email, status: row.client_status },
+    origin: row.origin_label,
+    trafficSource: row.traffic_source,
+    referrer: row.referrer,
+    refererDomain: row.referer_domain,
+    host: row.host,
+    utm: row.utm || {},
+    ip: row.ip_masked,
+    ipMasked: row.ip_masked,
+    ipHash: row.ip_hash,
+    ipFullProtected: row.ip_protected,
+    device: row.device || {},
+    location: row.location || {},
+    network: row.network || {},
+    securityHeaders: row.security_headers || {},
+    deviceLocation: hasDeviceCoords
+      ? {
+          latitude: row.device_latitude,
+          longitude: row.device_longitude,
+          accuracy: row.device_accuracy,
+          capturedAt: row.device_location_captured_at ? row.device_location_captured_at.toISOString() : null,
+        }
+      : null,
+    deviceLocationStatus: row.device_location_status,
+    securityStatus: row.suspicious ? "Suspeito" : "Normal",
+    suspiciousReasons: row.suspicious_reasons || [],
+  };
+};
+
+const buildEventsWhereClause = ({ type, period, search, hasDeviceLocation }, params) => {
+  const conditions = [];
+  const cutoff = getPeriodCutoff(period);
+
+  if (cutoff) {
+    params.push(cutoff);
+    conditions.push(`event_timestamp >= $${params.length}`);
+  }
+
+  if (hasDeviceLocation) {
+    conditions.push(`device_location_status = 'granted'`);
+  } else if (type === "suspicious") {
+    conditions.push(`suspicious = TRUE`);
+  } else if (type !== "all") {
+    params.push(type);
+    conditions.push(`type = $${params.length}`);
+  }
+
+  if (search) {
+    // Campos seguros e ja existentes no painel de busca; sempre via parametro do driver,
+    // nunca concatenado na string SQL.
+    params.push(`%${search}%`);
+    const idx = params.length;
+    conditions.push(
+      `(visitor_id ILIKE $${idx} OR user_name ILIKE $${idx} OR user_email ILIKE $${idx} OR user_phone ILIKE $${idx} OR page_path ILIKE $${idx} OR ip_masked ILIKE $${idx} OR (location->>'city') ILIKE $${idx})`
+    );
+  }
+
+  return conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+};
+
+const getAnalyticsEventsPageFromDatabase = async ({ page, pageSize, type, period, search, hasDeviceLocation }) => {
+  const whereParams = [];
+  const whereClause = buildEventsWhereClause({ type, period, search, hasDeviceLocation }, whereParams);
+
+  const countResult = await query(`SELECT COUNT(*)::int AS total FROM analytics_events ${whereClause}`, whereParams);
+  const total = countResult.rows[0]?.total || 0;
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+  const safePage = Math.min(page, totalPages);
+  const offset = (safePage - 1) * pageSize;
+
+  const rowsParams = [...whereParams, pageSize, offset];
+  const rowsResult = await query(
+    `SELECT * FROM analytics_events ${whereClause} ORDER BY event_timestamp DESC LIMIT $${rowsParams.length - 1} OFFSET $${rowsParams.length}`,
+    rowsParams
+  );
+
+  return {
+    events: rowsResult.rows.map(rowToEvent).map(attachSecurityDetails),
+    pagination: { page: safePage, pageSize, total, totalPages },
+  };
+};
+
+const eventMatchesSearch = (event, search) => {
+  if (!search) return true;
+
+  const identity = event.client || {};
+  const haystack = [
+    event.visitorId,
+    identity.phone,
+    identity.email,
+    identity.name,
+    event.pagePath || event.path,
+    event.ipMasked || event.ip,
+    event.location?.city,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(search.toLowerCase());
+};
+
+const getAnalyticsEventsPageFromFile = async ({ page, pageSize, type, period, search, hasDeviceLocation }) => {
   const events = await readEventsFile();
+  const cutoff = getPeriodCutoff(period);
 
-  return events.map((event) => {
-    if (event.securityStatus !== "Suspeito") return event;
-
-    const ipFull = decryptProtectedValue(event.ipFullProtected);
-
-    return {
-      ...event,
-      securityDetails: {
-        ipFull: ipFull || "Indisponivel: configure ANALYTICS_SECURITY_KEY no servidor.",
-        userAgentFull: event.device?.userAgent || "Desconhecido",
-        refererFull: event.referrer || "Nao informado",
-        refererDomain: event.refererDomain || "Nao informado",
-        host: event.host || event.securityHeaders?.host || "Nao informado",
-        method: event.method || "-",
-        path: event.pagePath || event.path || "-",
-        requestPath: event.path || "-",
-        serverTimestamp: event.serverTimestamp || event.timestamp,
-        reasons: event.suspiciousReasons || [],
-        headers: event.securityHeaders || {},
-      },
-    };
+  const filtered = events.filter((event) => {
+    if (cutoff && new Date(event.timestamp) < cutoff) return false;
+    if (hasDeviceLocation) return event.deviceLocationStatus === "granted";
+    if (type === "suspicious") return event.securityStatus === "Suspeito";
+    if (type !== "all" && event.type !== type) return false;
+    return eventMatchesSearch(event, search);
   });
+
+  const sorted = filtered.slice().sort((left, right) => new Date(right.timestamp) - new Date(left.timestamp));
+  const total = sorted.length;
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+  const safePage = Math.min(page, totalPages);
+  const offset = (safePage - 1) * pageSize;
+
+  return {
+    events: sorted.slice(offset, offset + pageSize).map(attachSecurityDetails),
+    pagination: { page: safePage, pageSize, total, totalPages },
+  };
+};
+
+// Lista paginada de eventos para a tabela principal do painel. Nunca retorna a tabela inteira
+// de uma vez (evita SELECT sem limite); filtros viram WHERE parametrizado no Postgres ou
+// filtro equivalente em memoria no fallback local.
+export async function getAnalyticsEventsPage(params = {}) {
+  const normalized = normalizeEventsQuery(params);
+
+  return isDatabaseConfigured()
+    ? getAnalyticsEventsPageFromDatabase(normalized)
+    : getAnalyticsEventsPageFromFile(normalized);
+}
+
+const buildComparison = (current, previous) => {
+  if (!previous) return { current, previous, label: "Sem dados anteriores", trend: "none" };
+
+  const percent = Math.round(((current - previous) / previous) * 100);
+  return {
+    current,
+    previous,
+    label: `${percent > 0 ? "+" : ""}${percent}% vs. mês anterior`,
+    trend: percent > 0 ? "up" : percent < 0 ? "down" : "flat",
+  };
+};
+
+// Metricas dos cards do painel: sempre calculadas por agregacao (COUNT/GROUP BY no Postgres, ou
+// reduce equivalente no fallback), nunca a partir de uma pagina de eventos - assim os numeros
+// continuam corretos independente da paginacao/filtro ativo na tabela de eventos.
+const getAnalyticsSummaryFromDatabase = async ({ period }) => {
+  const cutoff = getPeriodCutoff(period);
+  const periodParams = cutoff ? [cutoff] : [];
+  const periodWhere = cutoff ? "WHERE event_timestamp >= $1" : "";
+
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const [summaryResult, comparisonResult] = await Promise.all([
+    query(
+      `SELECT
+        COUNT(*) FILTER (WHERE type = 'visit') AS total_accesses,
+        COUNT(DISTINCT visitor_id) AS unique_visitors,
+        COUNT(DISTINCT visitor_id) FILTER (WHERE suspicious) AS suspicious_visitors,
+        COUNT(*) FILTER (WHERE type IN ('click','whatsapp')) AS clicks,
+        COUNT(*) FILTER (WHERE type = 'whatsapp') AS whatsapp,
+        COUNT(*) FILTER (WHERE type = 'search') AS searches,
+        COUNT(*) FILTER (WHERE type = 'login' AND label NOT ILIKE '%erro%') AS logins,
+        MAX(event_timestamp) AS last_activity
+      FROM analytics_events ${periodWhere}`,
+      periodParams
+    ),
+    query(
+      `SELECT
+        COUNT(DISTINCT visitor_id) FILTER (WHERE event_timestamp >= $1 AND event_timestamp < $2) AS current_unique_visitors,
+        COUNT(DISTINCT visitor_id) FILTER (WHERE event_timestamp >= $3 AND event_timestamp < $1) AS previous_unique_visitors,
+        COUNT(*) FILTER (WHERE type IN ('click','whatsapp') AND event_timestamp >= $1 AND event_timestamp < $2) AS current_clicks,
+        COUNT(*) FILTER (WHERE type IN ('click','whatsapp') AND event_timestamp >= $3 AND event_timestamp < $1) AS previous_clicks,
+        COUNT(*) FILTER (WHERE type = 'whatsapp' AND event_timestamp >= $1 AND event_timestamp < $2) AS current_whatsapp,
+        COUNT(*) FILTER (WHERE type = 'whatsapp' AND event_timestamp >= $3 AND event_timestamp < $1) AS previous_whatsapp,
+        COUNT(*) FILTER (WHERE type = 'search' AND event_timestamp >= $1 AND event_timestamp < $2) AS current_searches,
+        COUNT(*) FILTER (WHERE type = 'search' AND event_timestamp >= $3 AND event_timestamp < $1) AS previous_searches,
+        COUNT(*) FILTER (WHERE type = 'login' AND label NOT ILIKE '%erro%' AND event_timestamp >= $1 AND event_timestamp < $2) AS current_logins,
+        COUNT(*) FILTER (WHERE type = 'login' AND label NOT ILIKE '%erro%' AND event_timestamp >= $3 AND event_timestamp < $1) AS previous_logins
+      FROM analytics_events
+      WHERE event_timestamp >= $3`,
+      [currentMonthStart, nextMonthStart, previousMonthStart]
+    ),
+  ]);
+
+  const row = summaryResult.rows[0];
+  const cmp = comparisonResult.rows[0];
+  const totalAccesses = Number(row.total_accesses) || 0;
+  const uniqueVisitors = Number(row.unique_visitors) || 0;
+
+  return {
+    metrics: {
+      uniqueVisitors,
+      totalAccesses,
+      repeatedAccesses: Math.max(totalAccesses - uniqueVisitors, 0),
+      suspiciousVisitors: Number(row.suspicious_visitors) || 0,
+      clicks: Number(row.clicks) || 0,
+      whatsapp: Number(row.whatsapp) || 0,
+      searches: Number(row.searches) || 0,
+      logins: Number(row.logins) || 0,
+      lastActivity: row.last_activity ? row.last_activity.toISOString() : null,
+    },
+    comparisons: {
+      uniqueVisitors: buildComparison(Number(cmp.current_unique_visitors) || 0, Number(cmp.previous_unique_visitors) || 0),
+      clicks: buildComparison(Number(cmp.current_clicks) || 0, Number(cmp.previous_clicks) || 0),
+      whatsapp: buildComparison(Number(cmp.current_whatsapp) || 0, Number(cmp.previous_whatsapp) || 0),
+      searches: buildComparison(Number(cmp.current_searches) || 0, Number(cmp.previous_searches) || 0),
+      logins: buildComparison(Number(cmp.current_logins) || 0, Number(cmp.previous_logins) || 0),
+    },
+  };
+};
+
+const getAnalyticsSummaryFromFile = async ({ period }) => {
+  const events = await readEventsFile();
+  const cutoff = getPeriodCutoff(period);
+  const periodEvents = cutoff ? events.filter((event) => new Date(event.timestamp) >= cutoff) : events;
+
+  const totalAccesses = periodEvents.filter((event) => event.type === "visit").length;
+  const uniqueVisitors = new Set(periodEvents.map((event) => event.visitorId).filter(Boolean)).size;
+  const suspiciousVisitors = new Set(
+    periodEvents.filter((event) => event.securityStatus === "Suspeito").map((event) => event.visitorId)
+  ).size;
+  const clicks = periodEvents.filter((event) => event.type === "click" || event.type === "whatsapp").length;
+  const whatsapp = periodEvents.filter((event) => event.type === "whatsapp").length;
+  const searches = periodEvents.filter((event) => event.type === "search").length;
+  const logins = periodEvents.filter(
+    (event) => event.type === "login" && !String(event.label).toLowerCase().includes("erro")
+  ).length;
+  const lastActivity = periodEvents.reduce((max, event) => (!max || event.timestamp > max ? event.timestamp : max), "");
+
+  const monthKey = (timestamp) => {
+    const date = new Date(timestamp);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  };
+  const now = new Date();
+  const currentMonthKey = monthKey(now);
+  const previousMonthKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+  const countMetricForMonth = (targetMonthKey, metric) => {
+    const monthEvents = events.filter((event) => monthKey(event.timestamp) === targetMonthKey);
+    if (metric === "uniqueVisitors") return new Set(monthEvents.map((event) => event.visitorId).filter(Boolean)).size;
+    if (metric === "clicks") return monthEvents.filter((event) => event.type === "click" || event.type === "whatsapp").length;
+    if (metric === "whatsapp") return monthEvents.filter((event) => event.type === "whatsapp").length;
+    if (metric === "searches") return monthEvents.filter((event) => event.type === "search").length;
+    if (metric === "logins") {
+      return monthEvents.filter((event) => event.type === "login" && !String(event.label).toLowerCase().includes("erro")).length;
+    }
+    return 0;
+  };
+
+  const comparisons = {};
+  ["uniqueVisitors", "clicks", "whatsapp", "searches", "logins"].forEach((metric) => {
+    comparisons[metric] = buildComparison(countMetricForMonth(currentMonthKey, metric), countMetricForMonth(previousMonthKey, metric));
+  });
+
+  return {
+    metrics: {
+      uniqueVisitors,
+      totalAccesses,
+      repeatedAccesses: Math.max(totalAccesses - uniqueVisitors, 0),
+      suspiciousVisitors,
+      clicks,
+      whatsapp,
+      searches,
+      logins,
+      lastActivity: lastActivity || null,
+    },
+    comparisons,
+  };
+};
+
+export async function getAnalyticsSummary(params = {}) {
+  const period = validPeriods.has(params.period) ? params.period : "all";
+
+  return isDatabaseConfigured() ? getAnalyticsSummaryFromDatabase({ period }) : getAnalyticsSummaryFromFile({ period });
 }
 
 export async function clearAnalyticsEvents({ visitorId } = {}) {
+  if (isDatabaseConfigured()) {
+    if (visitorId) {
+      await query("DELETE FROM analytics_events WHERE visitor_id = $1", [visitorId]);
+    } else {
+      // "Limpar tudo" so afeta analytics_events - admin_sessions e um dominio separado
+      // (autenticacao), nunca apagado por esta rota.
+      await query("DELETE FROM analytics_events");
+    }
+    return;
+  }
+
   if (visitorId) {
     const events = await readEventsFile();
-    const remainingEvents = events.filter((event) => event.visitorId !== visitorId);
-    await writeEventsFile(remainingEvents);
-    return remainingEvents;
+    await writeEventsFile(events.filter((event) => event.visitorId !== visitorId));
+    return;
   }
 
   await writeEventsFile([]);
-  return [];
 }

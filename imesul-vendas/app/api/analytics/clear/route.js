@@ -23,13 +23,9 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const visitorId = (searchParams.get("visitorId") || "").slice(0, 120);
-    const events = await clearAnalyticsEvents({ visitorId });
+    await clearAnalyticsEvents({ visitorId });
 
-    return noStoreJson({
-      ok: true,
-      source: "backend-local-json",
-      events,
-    });
+    return noStoreJson({ ok: true });
   } catch {
     return noStoreJson({ ok: false, message: "Não foi possível limpar os eventos." }, { status: 500 });
   }
