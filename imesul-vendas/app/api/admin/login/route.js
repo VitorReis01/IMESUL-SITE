@@ -7,6 +7,7 @@ import {
   resetAdminRateLimit,
   safeCompare,
 } from "../../../../Backend.js/adminSecurity";
+import { checkGlobalApiRateLimit } from "../../../../Backend.js/rateLimiter";
 import {
   checkOrigin,
   forbidden,
@@ -56,7 +57,17 @@ export async function POST(request) {
     return noStoreJson({ ok: false, message: genericErrorMessage }, { status: 415 });
   }
 
-  // 1) Rate limit por IP (Postgres, distribuido - ver adminSecurity.js). FAIL CLOSED: se a
+  // 1) Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do
+  // limite especifico abaixo, nunca no lugar dele. Ver Backend.js/rateLimiter.js.
+  let globalLimit;
+  try {
+    globalLimit = await checkGlobalApiRateLimit(request);
+  } catch {
+    return serviceUnavailable();
+  }
+  if (!globalLimit.allowed) return tooManyRequests(globalLimit.retryAfterSeconds);
+
+  // 2) Rate limit por IP (Postgres, distribuido - ver adminSecurity.js). FAIL CLOSED: se a
   // checagem falhar (banco indisponivel), trata como bloqueado, nunca como liberado.
   let ipLimit;
   try {
@@ -67,14 +78,14 @@ export async function POST(request) {
   if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds);
 
   try {
-    // 2) Tamanho do corpo, antes de fazer parse.
+    // 3) Tamanho do corpo, antes de fazer parse.
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > maxBodyBytes) {
       registerFailedAdminAttempt(ipKey, "");
       return invalidRequest();
     }
 
-    // 3) Parse e schema.
+    // 4) Parse e schema.
     let body;
     try {
       body = await request.json();
@@ -91,8 +102,8 @@ export async function POST(request) {
 
     const { user, password } = credentials;
 
-    // 4) Camada por IP+usuario (Postgres), agora que ja sabemos o usuario informado. Mesma
-    // politica fail-closed do passo 1.
+    // 5) Camada por IP+usuario (Postgres), agora que ja sabemos o usuario informado. Mesma
+    // politica fail-closed dos passos 1 e 2.
     let usernameLimit;
     try {
       usernameLimit = await checkUsernameRateLimit(ipKey, user);
@@ -101,11 +112,11 @@ export async function POST(request) {
     }
     if (!usernameLimit.allowed) return tooManyRequests(usernameLimit.retryAfterSeconds);
 
-    // 5) Atraso proporcional se essa CONTA estiver sob ataque distribuido (varios IPs). Nunca bloqueia.
+    // 6) Atraso proporcional se essa CONTA estiver sob ataque distribuido (varios IPs). Nunca bloqueia.
     const frictionDelayMs = getAccountFrictionDelayMs(user);
     if (frictionDelayMs > 0) await sleep(frictionDelayMs);
 
-    // 6) Comparacao de credenciais, resistente a timing attack.
+    // 7) Comparacao de credenciais, resistente a timing attack.
     const expectedUser = process.env.ADMIN_DEMO_USER || "";
     const expectedPassword = process.env.ADMIN_DEMO_PASSWORD || "";
     const validCredentials =
@@ -116,7 +127,7 @@ export async function POST(request) {
       return noStoreJson({ ok: false, message: genericErrorMessage }, { status: 401 });
     }
 
-    // 7) Sessao.
+    // 8) Sessao.
     await resetAdminRateLimit(ipKey, user);
     return noStoreJson({ ok: true, adminSessionToken: await createAdminSession() });
   } catch {

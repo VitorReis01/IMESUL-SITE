@@ -1,5 +1,5 @@
 import { invalidateAdminSession } from "../../../../Backend.js/adminSecurity";
-import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Revoga a sessao admin no servidor. Sem isto, o botao "Sair do admin" so limpava o token
@@ -10,6 +10,22 @@ const methodNotAllowed = () => sharedMethodNotAllowed("POST");
 // Nao ha nada sensivel a proteger aqui alem do proprio token, que so o dono conhece. Rate limit
 // generoso so para nunca aceitar rajada infinita (defesa em profundidade, nao critico aqui).
 export async function POST(request) {
+  // Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do limite
+  // especifico abaixo, nunca no lugar dele. Fail closed aqui (diferente do limite especifico
+  // logo abaixo, que permanece fail-open de proposito - ver comentario): a garantia global de
+  // "20 req/s nunca passam" nao pode ter excecao so porque o endpoint em si e de baixo risco.
+  try {
+    const globalLimit = await checkGlobalApiRateLimit(request);
+    if (!globalLimit.allowed) {
+      return noStoreJson(
+        { ok: false, message: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(globalLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false, message: "Serviço temporariamente indisponível." }, { status: 503 });
+  }
+
   try {
     const rateLimit = await checkRateLimitLayers([
       { key: `admin-logout:${getRequestIp(request)}`, windowMs: 60_000, max: 30 },

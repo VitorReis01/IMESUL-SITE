@@ -1,5 +1,5 @@
 import { addAnalyticsEvent } from "../../../../Backend.js/analyticsStore";
-import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
 import {
   checkOrigin,
   forbidden,
@@ -125,6 +125,21 @@ export async function POST(request) {
   if (!checkOrigin(request, { requireOriginInProduction: true }).allowed) return forbidden();
   if (!hasValidJsonContentType(request)) {
     return noStoreJson({ ok: false, error: "Content-Type inválido." }, { status: 415 });
+  }
+
+  // Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do limite
+  // especifico abaixo, nunca no lugar dele. Ver Backend.js/rateLimiter.js.
+  let globalLimit;
+  try {
+    globalLimit = await checkGlobalApiRateLimit(request);
+  } catch {
+    return serviceUnavailable();
+  }
+  if (!globalLimit.allowed) {
+    return noStoreJson(
+      { ok: false, error: "Muitas requisições. Tente novamente em instantes." },
+      { status: 429, headers: { "Retry-After": String(globalLimit.retryAfterSeconds) } }
+    );
   }
 
   const ip = getRequestIp(request);

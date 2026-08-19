@@ -1,5 +1,5 @@
 import { createLead } from "../../../Backend.js/salesLeadsStore";
-import { checkRateLimitLayers } from "../../../Backend.js/rateLimiter";
+import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../Backend.js/rateLimiter";
 import {
   checkOrigin,
   forbidden,
@@ -51,7 +51,18 @@ export async function POST(request) {
     return noStoreJson({ ok: false, error: "Content-Type inválido." }, { status: 415 });
   }
 
-  // 2) Rate limit distribuido (Postgres) - muito restritivo, leads sao caros (consomem rodizio).
+  // 2) Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do limite
+  // especifico abaixo, nunca no lugar dele. Ver Backend.js/rateLimiter.js.
+  let globalLimit;
+  try {
+    globalLimit = await checkGlobalApiRateLimit(request);
+  } catch {
+    return serviceUnavailable();
+  }
+  if (!globalLimit.allowed) return tooManyRequests(globalLimit.retryAfterSeconds);
+
+  // 3) Rate limit especifico deste endpoint (Postgres) - muito restritivo, leads sao caros
+  // (consomem rodizio).
   const ip = getRequestIp(request);
   let rateLimit;
   try {

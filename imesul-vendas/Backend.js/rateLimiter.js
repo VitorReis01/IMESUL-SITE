@@ -1,5 +1,6 @@
 import "server-only";
 import { query } from "./db";
+import { getRequestIp } from "./requestGuards";
 
 // Rate limit DISTRIBUIDO via Postgres - substitui limitadores baseados so em Map() para as
 // checagens que realmente bloqueiam uma requisicao (ver auditoria de seguranca). Cada instancia
@@ -70,6 +71,23 @@ export const checkRateLimitLayers = async (layers) => {
   const blocked = results.find((result) => !result.allowed);
   return blocked || { allowed: true, retryAfterSeconds: 0 };
 };
+
+// Camada GLOBAL, compartilhada por TODAS as rotas /api - a mesma chave por IP, independente do
+// endpoint. Sem isso, um atacante poderia alternar entre /api/leads, /api/analytics/track,
+// /api/admin/login etc. para contornar o limite especifico de cada rota (cada endpoint tem sua
+// propria chave/janela, entao um IP bloqueado em um continuaria livre nos outros). Esta camada
+// roda ALEM dos limites especificos de cada endpoint, nunca no lugar deles - ver chamadas em
+// cada route.js. Politica inicial: 10 requisicoes em 10 segundos por IP (garante que 20
+// requisicoes/segundo do mesmo IP nunca sejam todas aceitas, em nenhuma rota).
+const globalApiRateLimitWindowMs = 10_000;
+const globalApiRateLimitMax = 10;
+
+export const checkGlobalApiRateLimit = (request) =>
+  checkRateLimit({
+    key: `api:global:${getRequestIp(request)}`,
+    windowMs: globalApiRateLimitWindowMs,
+    max: globalApiRateLimitMax,
+  });
 
 // Remove os contadores das chaves informadas - usado quando uma tentativa teve sucesso (ex.:
 // login admin correto) e nao deve continuar contando contra o limite de tentativas com erro.

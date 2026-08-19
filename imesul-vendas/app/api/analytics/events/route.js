@@ -1,6 +1,6 @@
 import { isAdminRequest } from "../../../../Backend.js/adminSecurity";
 import { getAnalyticsEventsPage, getAnalyticsSummary } from "../../../../Backend.js/analyticsStore";
-import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Entrega eventos paginados (server-side) e metricas agregadas somente para uma sessao admin
@@ -17,6 +17,20 @@ export async function GET(request) {
     }
   } catch {
     return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
+  }
+
+  // Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do limite
+  // especifico abaixo, nunca no lugar dele. Ver Backend.js/rateLimiter.js.
+  try {
+    const globalLimit = await checkGlobalApiRateLimit(request);
+    if (!globalLimit.allowed) {
+      return noStoreJson(
+        { ok: false, message: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(globalLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false, message: "Serviço temporariamente indisponível." }, { status: 503 });
   }
 
   // Defesa em profundidade: mesmo com sessao valida, limita a frequencia de consultas.
