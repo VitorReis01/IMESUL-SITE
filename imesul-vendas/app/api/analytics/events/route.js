@@ -1,21 +1,12 @@
-import { NextResponse } from "next/server";
 import { isAdminRequest } from "../../../../Backend.js/adminSecurity";
 import { getAnalyticsEventsPage, getAnalyticsSummary } from "../../../../Backend.js/analyticsStore";
+import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Entrega eventos paginados (server-side) e metricas agregadas somente para uma sessao admin
 // valida; impede cache de dados sensiveis. Todos os parametros vem sanitizados/normalizados
 // dentro de analyticsStore.js (allowlist de periodo/tipo, LIMIT de pageSize, etc.).
-const noStoreJson = (body, init = {}) =>
-  NextResponse.json(body, {
-    ...init,
-    headers: {
-      "Cache-Control": "no-store",
-      ...(init.headers || {}),
-    },
-  });
-
-const methodNotAllowed = () =>
-  noStoreJson({ ok: false, message: "Método não permitido." }, { status: 405, headers: { Allow: "GET" } });
+const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 
 export async function GET(request) {
   try {
@@ -26,6 +17,21 @@ export async function GET(request) {
     }
   } catch {
     return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
+  }
+
+  // Defesa em profundidade: mesmo com sessao valida, limita a frequencia de consultas.
+  try {
+    const rateLimit = await checkRateLimitLayers([
+      { key: `analytics-events:${getRequestIp(request)}`, windowMs: 60_000, max: 60 },
+    ]);
+    if (!rateLimit.allowed) {
+      return noStoreJson(
+        { ok: false, message: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false, message: "Serviço temporariamente indisponível." }, { status: 503 });
   }
 
   try {

@@ -30,10 +30,15 @@ const notifyEventsUpdated = () => {
   window.dispatchEvent(new CustomEvent(eventName));
 };
 
+// So um pequeno buffer de curto prazo para quando o POST ao backend falhar - o Postgres e o
+// armazenamento de verdade agora, entao o navegador nao precisa (nem deve) guardar um "historico"
+// grande. 50 eventos e suficiente para uma instabilidade breve sem virar retencao de dados.
+const maxFallbackEvents = 50;
+
 const writeStoredEvents = (events) => {
   if (!canUseBrowserStorage()) return;
 
-  window.localStorage.setItem(storageKey, JSON.stringify(events.slice(-500)));
+  window.localStorage.setItem(storageKey, JSON.stringify(events.slice(-maxFallbackEvents)));
   notifyEventsUpdated();
 };
 
@@ -257,10 +262,21 @@ export function trackLocalEvent({
   // Futuro: enviar evento para backend/analytics real com consentimento LGPD.
   sendEventToBackend(event)
     .then(() => notifyEventsUpdated())
-    .catch(() => writeStoredEvents([...readStoredEvents(), event]));
+    .catch(() => writeStoredEvents([...readStoredEvents(), stripSensitiveFieldsForLocalFallback(event)]));
 
   return event;
 }
+
+// O fallback local so existe para quando o POST ao backend falha (rede/servidor fora do ar) -
+// o Postgres, nao o navegador, e o armazenamento de verdade. Por isso o localStorage nunca
+// precisa (nem deve) guardar dados pessoais: nome/telefone/e-mail e coordenadas de localizacao
+// do dispositivo saem do evento antes de cair no fallback (auditoria de seguranca, minimizacao
+// de dados agora que o Postgres esta em producao).
+const stripSensitiveFieldsForLocalFallback = (event) => ({
+  ...event,
+  client: { status: event.client?.status || "Visitante sem login" },
+  deviceLocation: undefined,
+});
 
 const defaultPagination = { page: 1, pageSize: 25, total: 0, totalPages: 1 };
 

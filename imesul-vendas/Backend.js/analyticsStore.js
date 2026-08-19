@@ -1,3 +1,4 @@
+import "server-only";
 import { promises as fs } from "node:fs";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import os from "node:os";
@@ -22,36 +23,10 @@ const suspiciousAgentPattern = /sqlmap|nikto|nmap|python-requests|curl|wget|mass
 const suspiciousPathPattern = /\/(?:\.env|\.git|wp-admin|admin|api\/internal|phpmyadmin|xmlrpc\.php|config|backup)/i;
 const suspiciousPayloadPattern = /<script|union\s+select|\.\.\/|%2e%2e|select\s+.+\s+from|drop\s+table|insert\s+into|onerror=|javascript:/i;
 
-// Limita quantos eventos um mesmo IP pode registrar por minuto neste endpoint publico.
-const trackRateWindowMs = 60 * 1000;
-const trackRateMaxRequests = 60;
-const trackRequestCounters = new Map();
-const maxTrackedTrackKeys = 5000;
-
-export const checkTrackRateLimit = (ipKey = "não identificado") => {
-  const now = Date.now();
-
-  // So varre para limpar quando o Map cresce muito (muitos IPs distintos ja vistos); evita custo a cada chamada.
-  if (trackRequestCounters.size >= maxTrackedTrackKeys) {
-    trackRequestCounters.forEach((entry, key) => {
-      if (entry.resetAt <= now) trackRequestCounters.delete(key);
-    });
-  }
-
-  const current = trackRequestCounters.get(ipKey);
-
-  if (!current || current.resetAt <= now) {
-    trackRequestCounters.set(ipKey, { count: 1, resetAt: now + trackRateWindowMs });
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-
-  if (current.count >= trackRateMaxRequests) {
-    return { allowed: false, retryAfterSeconds: Math.max(Math.ceil((current.resetAt - now) / 1000), 1) };
-  }
-
-  current.count += 1;
-  return { allowed: true, retryAfterSeconds: 0 };
-};
+// Rate limit deste endpoint agora e feito em app/api/analytics/track/route.js via
+// Backend.js/rateLimiter.js (Postgres, distribuido entre instancias serverless - ver auditoria
+// de seguranca). O limitador em memoria que existia aqui foi removido por nao ser suficiente
+// nesse cenario (instancias diferentes nao compartilhavam o Map()).
 
 const safeString = (value, fallback = "", limit = 500) =>
   typeof value === "string" ? value.slice(0, limit) : fallback;

@@ -1,3 +1,4 @@
+import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { isDatabaseConfigured, query, withTransaction } from "./db";
 
@@ -182,36 +183,10 @@ export const createLead = async (payload = {}) => {
   }
 };
 
-// --- Rate limit (mesmo padrao de checkTrackRateLimit em analyticsStore.js) -------------------
-
-const leadsRateWindowMs = 60 * 1000;
-const leadsRateMaxRequests = 12;
-const leadsRequestCounters = new Map();
-const maxTrackedLeadsKeys = 5000;
-
-export const checkLeadsRateLimit = (ipKey = "não identificado") => {
-  const now = Date.now();
-
-  if (leadsRequestCounters.size >= maxTrackedLeadsKeys) {
-    leadsRequestCounters.forEach((entry, key) => {
-      if (entry.resetAt <= now) leadsRequestCounters.delete(key);
-    });
-  }
-
-  const current = leadsRequestCounters.get(ipKey);
-
-  if (!current || current.resetAt <= now) {
-    leadsRequestCounters.set(ipKey, { count: 1, resetAt: now + leadsRateWindowMs });
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-
-  if (current.count >= leadsRateMaxRequests) {
-    return { allowed: false, retryAfterSeconds: Math.max(Math.ceil((current.resetAt - now) / 1000), 1) };
-  }
-
-  current.count += 1;
-  return { allowed: true, retryAfterSeconds: 0 };
-};
+// Rate limit deste endpoint agora e feito em app/api/leads/route.js via
+// Backend.js/rateLimiter.js (Postgres, distribuido entre instancias serverless - ver auditoria
+// de seguranca). O limitador em memoria que existia aqui foi removido por nao ser suficiente
+// nesse cenario (instancias diferentes nao compartilhavam o Map()).
 
 // --- Diagnostico (uso interno/CLI futuro - nao expor como endpoint publico) ------------------
 

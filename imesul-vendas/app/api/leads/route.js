@@ -1,32 +1,27 @@
-import { NextResponse } from "next/server";
-import { checkLeadsRateLimit, createLead } from "../../../Backend.js/salesLeadsStore";
+import { createLead } from "../../../Backend.js/salesLeadsStore";
+import { checkRateLimitLayers } from "../../../Backend.js/rateLimiter";
+import {
+  checkOrigin,
+  forbidden,
+  getRequestIp,
+  hasValidJsonContentType,
+  methodNotAllowed as sharedMethodNotAllowed,
+  noStoreJson,
+  tooManyRequests,
+} from "../../../Backend.js/requestGuards";
 
 // Recebe a criacao de leads comerciais (Fase 1: Lead ID + rodizio de vendedores). O frontend
 // NUNCA escolhe seller_id nem status: sanitizePayload abaixo nem aceita esses campos do corpo
 // enviado, e createLead sempre cria o lead como NEGOCIANDO, escolhendo o vendedor no backend.
-const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
 const safeString = (value, limit = 500) => (typeof value === "string" ? value.slice(0, limit) : "");
 
-const noStoreJson = (body, init = {}) =>
-  NextResponse.json(body, {
-    ...init,
-    headers: {
-      "Cache-Control": "no-store",
-      ...(init.headers || {}),
-    },
-  });
+const methodNotAllowed = () => sharedMethodNotAllowed("POST");
 
-const methodNotAllowed = () =>
-  noStoreJson({ ok: false, error: "Método não permitido." }, { status: 405, headers: { Allow: "POST" } });
-
-const getRequestIp = (request) =>
-  getFirstForwardedIp(request.headers.get("x-forwarded-for") || "") ||
-  request.headers.get("x-real-ip") ||
-  request.headers.get("cf-connecting-ip") ||
-  request.headers.get("fastly-client-ip") ||
-  getFirstForwardedIp(request.headers.get("x-vercel-forwarded-for") || "") ||
-  request.ip ||
-  "não identificado";
+// Fail closed: leads e endpoint sensivel (auditoria de seguranca). Se o rate limiter (Postgres)
+// estiver indisponivel, nao libera sem limite - o orcamento do cliente nao quebra mesmo assim,
+// porque o frontend cai no WhatsApp padrao quando /api/leads falha (ver lib/leads.js).
+const serviceUnavailable = () =>
+  noStoreJson({ ok: false, error: "Serviço temporariamente indisponível." }, { status: 503 });
 
 // So aceita os campos que o cliente realmente precisa enviar. seller_id, status, lead_code e
 // idempotency_key nao existem aqui de proposito - sao decididos/gerados so no backend.
@@ -49,13 +44,25 @@ const sanitizePayload = (payload = {}) => ({
 });
 
 export async function POST(request) {
-  const rateLimit = checkLeadsRateLimit(getRequestIp(request));
-  if (!rateLimit.allowed) {
-    return noStoreJson(
-      { ok: false, error: "Muitas solicitações. Tente novamente em instantes." },
-      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
-    );
+  // 1) Camadas baratas primeiro: Origin (endpoint so e chamado pelo fetch() do proprio site) e
+  // Content-Type. Nenhuma das duas e autenticacao - so mais uma camada (ver auditoria).
+  if (!checkOrigin(request, { requireOriginInProduction: true }).allowed) return forbidden();
+  if (!hasValidJsonContentType(request)) {
+    return noStoreJson({ ok: false, error: "Content-Type inválido." }, { status: 415 });
   }
+
+  // 2) Rate limit distribuido (Postgres) - muito restritivo, leads sao caros (consomem rodizio).
+  const ip = getRequestIp(request);
+  let rateLimit;
+  try {
+    rateLimit = await checkRateLimitLayers([
+      { key: `leads:burst:${ip}`, windowMs: 10_000, max: 2 },
+      { key: `leads:minute:${ip}`, windowMs: 60_000, max: 5 },
+    ]);
+  } catch {
+    return serviceUnavailable();
+  }
+  if (!rateLimit.allowed) return tooManyRequests(rateLimit.retryAfterSeconds);
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > 12_000) {

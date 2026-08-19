@@ -1,5 +1,7 @@
+import "server-only";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { isDatabaseConfigured, query } from "./db";
+import { checkRateLimitLayers, resetRateLimitKeys } from "./rateLimiter";
 
 // Centraliza a sessão admin e a proteção contra brute force/abuso do login.
 // As rotas de login e analytics usam este módulo para validar acesso administrativo.
@@ -153,19 +155,22 @@ const createSlidingWindowLimiter = ({ windowMs, max }) => {
   return { check, hit, reset };
 };
 
-// Camadas de rate limit do login, cada uma cobrindo uma escala de tempo diferente.
-// Não depender de um único limite: a camada mais restritiva no momento decide o bloqueio.
+// Camadas de rate limit do login que REALMENTE bloqueiam (IP e IP+usuário) agora rodam no
+// Postgres via Backend.js/rateLimiter.js (ver auditoria de seguranca): um limitador so em
+// memoria permite que um atacante distribuido entre instancias serverless da Vercel multiplique
+// a vazao permitida. As camadas abaixo, que NUNCA bloqueiam sozinhas (so atraso/telemetria),
+// continuam em memoria de proposito - sao sinais de observabilidade, nao controles de acesso, e
+// o custo de tambem distribui-las nao se justifica.
+//
 // Números pensados para um painel administrativo usado por poucas pessoas (não um SaaS público):
 // - burst: barra scripts disparando dezenas de requisições por segundo.
 // - medium: barra brute force sustentado por alguns minutos, mas ainda tolera alguns typos reais.
 // - long: pega abuso lento/persistente que tenta escapar das janelas curtas.
-const burstLimiter = createSlidingWindowLimiter({ windowMs: 10 * 1000, max: 5 });
-const mediumLimiter = createSlidingWindowLimiter({ windowMs: 10 * 60 * 1000, max: 10 });
-const longLimiter = createSlidingWindowLimiter({ windowMs: 60 * 60 * 1000, max: 30 });
-
-// IP + usuário informado: pega brute force contra UMA conta específica vindo de UM IP,
-// mesmo quando o limite geral por IP ainda não estourou (ex.: IP compartilhado por várias pessoas).
-const ipUsernameLimiter = createSlidingWindowLimiter({ windowMs: 10 * 60 * 1000, max: 6 });
+const ipRateLimitLayers = (ipKey) => [
+  { key: `admin-login:burst:${ipKey}`, windowMs: 10 * 1000, max: 5 },
+  { key: `admin-login:medium:${ipKey}`, windowMs: 10 * 60 * 1000, max: 10 },
+  { key: `admin-login:long:${ipKey}`, windowMs: 60 * 60 * 1000, max: 30 },
+];
 
 // Usuário informado, independente do IP: sinaliza brute force distribuído (muitos IPs, mesma conta).
 // Propositalmente NUNCA bloqueia o login — só aciona atraso e telemetria (ver getAccountFrictionDelayMs).
@@ -180,26 +185,25 @@ let globalAlertLoggedAt = 0;
 
 const normalizeUsernameKey = (user = "") => String(user).trim().toLowerCase().slice(0, 190) || "(vazio)";
 
-// Checagem barata (só IP), feita ANTES de tocar no corpo da requisição.
-export const checkIpRateLimit = (ipKey = "unknown") => {
-  const checks = [burstLimiter.check(ipKey), mediumLimiter.check(ipKey), longLimiter.check(ipKey)];
-  const blocked = checks.find((item) => !item.allowed);
-  return blocked ? { allowed: false, retryAfterSeconds: blocked.retryAfterSeconds } : { allowed: true, retryAfterSeconds: 0 };
-};
+// Cada chamada JA CONTA como uma tentativa (o UPSERT no Postgres confere e incrementa juntos) -
+// por isso so e chamada uma vez por tentativa de login (ver route.js). FAIL CLOSED: se o Postgres
+// estiver indisponivel, propaga a excecao - quem chama (route.js) trata como bloqueado, nunca
+// como liberado (ver requisito da auditoria contra "autorizacao ilimitada silenciosa").
+export const checkIpRateLimit = (ipKey = "unknown") => checkRateLimitLayers(ipRateLimitLayers(ipKey));
 
 // Checagem por IP+usuário, feita depois de validar o corpo (já sabemos o usuário informado).
 export const checkUsernameRateLimit = (ipKey = "unknown", username = "") => {
   const usernameKey = normalizeUsernameKey(username);
-  return ipUsernameLimiter.check(`${ipKey}::${usernameKey}`);
+  return checkRateLimitLayers([
+    { key: `admin-login:ip-user:${ipKey}::${usernameKey}`, windowMs: 10 * 60 * 1000, max: 6 },
+  ]);
 };
 
-// Chamar somente após uma tentativa que efetivamente rodou (nunca depois de já ter bloqueado antes).
+// Chamar somente após uma tentativa que efetivamente rodou (nunca depois de já ter bloqueado
+// antes). As camadas por IP já foram contadas em checkIpRateLimit/checkUsernameRateLimit -
+// aqui só registra os sinais que continuam em memória (conta e telemetria global).
 export const registerFailedAdminAttempt = (ipKey = "unknown", username = "") => {
   const usernameKey = normalizeUsernameKey(username);
-  burstLimiter.hit(ipKey);
-  mediumLimiter.hit(ipKey);
-  longLimiter.hit(ipKey);
-  ipUsernameLimiter.hit(`${ipKey}::${usernameKey}`);
   accountLimiter.hit(usernameKey);
   globalFailureLimiter.hit("*");
 
@@ -211,12 +215,16 @@ export const registerFailedAdminAttempt = (ipKey = "unknown", username = "") => 
   }
 };
 
-export const resetAdminRateLimit = (ipKey = "unknown", username = "") => {
+// Login com sucesso: limpa os contadores de FALHA (Postgres + memória) para essa combinação de
+// IP/usuário, para que erros de digitação anteriores não continuem contra o admin legítimo.
+export const resetAdminRateLimit = async (ipKey = "unknown", username = "") => {
   const usernameKey = normalizeUsernameKey(username);
-  burstLimiter.reset(ipKey);
-  mediumLimiter.reset(ipKey);
-  longLimiter.reset(ipKey);
-  ipUsernameLimiter.reset(`${ipKey}::${usernameKey}`);
+  await resetRateLimitKeys([
+    `admin-login:burst:${ipKey}`,
+    `admin-login:medium:${ipKey}`,
+    `admin-login:long:${ipKey}`,
+    `admin-login:ip-user:${ipKey}::${usernameKey}`,
+  ]);
   accountLimiter.reset(usernameKey);
 };
 

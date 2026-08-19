@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   checkIpRateLimit,
   checkUsernameRateLimit,
@@ -8,40 +7,29 @@ import {
   resetAdminRateLimit,
   safeCompare,
 } from "../../../../Backend.js/adminSecurity";
+import {
+  checkOrigin,
+  forbidden,
+  getRequestIp,
+  hasValidJsonContentType,
+  methodNotAllowed as sharedMethodNotAllowed,
+  noStoreJson,
+  tooManyRequests,
+} from "../../../../Backend.js/requestGuards";
 
 // Valida o login admin no servidor para manter usuario e senha fora do bundle do navegador.
 const genericErrorMessage = "Usuário ou senha inválidos.";
 const maxBodyBytes = 4096;
 const maxFieldLength = 256;
 
-const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
-
-const getRequestIp = (request) =>
-  getFirstForwardedIp(request.headers.get("x-forwarded-for") || "") ||
-  request.headers.get("x-real-ip") ||
-  request.headers.get("cf-connecting-ip") ||
-  request.ip ||
-  "unknown";
-
-const noStoreJson = (body, init = {}) =>
-  NextResponse.json(body, {
-    ...init,
-    headers: {
-      "Cache-Control": "no-store",
-      ...(init.headers || {}),
-    },
-  });
-
-const tooManyRequests = (retryAfterSeconds) =>
-  noStoreJson(
-    { ok: false, message: "Muitas tentativas. Tente novamente em instantes." },
-    { status: 429, headers: { "Retry-After": String(Math.max(retryAfterSeconds, 1)) } }
-  );
-
 const invalidRequest = () => noStoreJson({ ok: false, message: genericErrorMessage }, { status: 400 });
 
-const methodNotAllowed = () =>
-  noStoreJson({ ok: false, message: "Método não permitido." }, { status: 405, headers: { Allow: "POST" } });
+const methodNotAllowed = () => sharedMethodNotAllowed("POST");
+
+// Fail closed: se o rate limiter (Postgres) estiver indisponivel, trata como bloqueado - nunca
+// libera o login sem limite so porque o rate limiter caiu (ver auditoria de seguranca).
+const serviceUnavailable = () =>
+  noStoreJson({ ok: false, message: "Serviço temporariamente indisponível. Tente novamente em instantes." }, { status: 503 });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -61,11 +49,24 @@ const readCredentialsFromBody = (body) => {
 export async function POST(request) {
   const ipKey = getRequestIp(request);
 
-  try {
-    // 1) Camada barata: so IP, antes de tocar no corpo da requisicao.
-    const ipLimit = checkIpRateLimit(ipKey);
-    if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds);
+  // 0) Camadas mais baratas primeiro: Origin (so navegador chama este endpoint) e Content-Type.
+  // Nenhuma das duas e autenticacao - so mais uma camada, a sessao/senha continuam obrigatorias.
+  if (!checkOrigin(request, { requireOriginInProduction: true }).allowed) return forbidden();
+  if (!hasValidJsonContentType(request)) {
+    return noStoreJson({ ok: false, message: genericErrorMessage }, { status: 415 });
+  }
 
+  // 1) Rate limit por IP (Postgres, distribuido - ver adminSecurity.js). FAIL CLOSED: se a
+  // checagem falhar (banco indisponivel), trata como bloqueado, nunca como liberado.
+  let ipLimit;
+  try {
+    ipLimit = await checkIpRateLimit(ipKey);
+  } catch {
+    return serviceUnavailable();
+  }
+  if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds);
+
+  try {
     // 2) Tamanho do corpo, antes de fazer parse.
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > maxBodyBytes) {
@@ -90,8 +91,14 @@ export async function POST(request) {
 
     const { user, password } = credentials;
 
-    // 4) Camada por IP+usuario, agora que ja sabemos o usuario informado.
-    const usernameLimit = checkUsernameRateLimit(ipKey, user);
+    // 4) Camada por IP+usuario (Postgres), agora que ja sabemos o usuario informado. Mesma
+    // politica fail-closed do passo 1.
+    let usernameLimit;
+    try {
+      usernameLimit = await checkUsernameRateLimit(ipKey, user);
+    } catch {
+      return serviceUnavailable();
+    }
     if (!usernameLimit.allowed) return tooManyRequests(usernameLimit.retryAfterSeconds);
 
     // 5) Atraso proporcional se essa CONTA estiver sob ataque distribuido (varios IPs). Nunca bloqueia.
@@ -110,7 +117,7 @@ export async function POST(request) {
     }
 
     // 7) Sessao.
-    resetAdminRateLimit(ipKey, user);
+    await resetAdminRateLimit(ipKey, user);
     return noStoreJson({ ok: true, adminSessionToken: await createAdminSession() });
   } catch {
     registerFailedAdminAttempt(ipKey, "");

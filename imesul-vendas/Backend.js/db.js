@@ -1,3 +1,4 @@
+import "server-only";
 import { Pool } from "pg";
 
 // Camada minima de acesso ao Postgres. So cria conexao se DATABASE_URL existir; sem ela, o

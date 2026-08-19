@@ -1,11 +1,19 @@
-import { NextResponse } from "next/server";
-import { addAnalyticsEvent, checkTrackRateLimit } from "../../../../Backend.js/analyticsStore";
+import { addAnalyticsEvent } from "../../../../Backend.js/analyticsStore";
+import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import {
+  checkOrigin,
+  forbidden,
+  getFirstForwardedIp,
+  getRequestIp,
+  hasValidJsonContentType,
+  methodNotAllowed as sharedMethodNotAllowed,
+  noStoreJson,
+} from "../../../../Backend.js/requestGuards";
 
 // Recebe eventos do site sem confiar em IP ou headers enviados pelo frontend.
 // O painel admin consome os dados processados pelo backend local de analytics.
 const allowedEventTypes = new Set(["visit", "click", "whatsapp", "search", "login", "device_location"]);
 const deviceLocationStatusValues = new Set(["granted", "denied", "unavailable", "timeout", "unsupported"]);
-const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
 const safeString = (value, limit = 500) =>
   typeof value === "string" ? value.slice(0, limit) : "";
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
@@ -37,17 +45,12 @@ const sanitizeDeviceLocation = (value) => {
 const sanitizeDeviceLocationStatus = (value) =>
   deviceLocationStatusValues.has(value) ? value : "";
 
-const noStoreJson = (body, init = {}) =>
-  NextResponse.json(body, {
-    ...init,
-    headers: {
-      "Cache-Control": "no-store",
-      ...(init.headers || {}),
-    },
-  });
+const methodNotAllowed = () => sharedMethodNotAllowed("POST");
 
-const methodNotAllowed = () =>
-  noStoreJson({ ok: false, message: "Método não permitido." }, { status: 405, headers: { Allow: "POST" } });
+// Analytics: falha do rate limiter descarta o evento (nao quebra o site, nao registra sem
+// limite - ver auditoria de seguranca, "nunca autorizacao ilimitada silenciosa").
+const serviceUnavailable = () =>
+  noStoreJson({ ok: false, error: "Serviço temporariamente indisponível." }, { status: 503 });
 
 const safeDecodeHeader = (value = "") => {
   try {
@@ -56,15 +59,6 @@ const safeDecodeHeader = (value = "") => {
     return value;
   }
 };
-
-const getRequestIp = (request) =>
-  getFirstForwardedIp(request.headers.get("x-forwarded-for") || "") ||
-  request.headers.get("x-real-ip") ||
-  request.headers.get("cf-connecting-ip") ||
-  request.headers.get("fastly-client-ip") ||
-  getFirstForwardedIp(request.headers.get("x-vercel-forwarded-for") || "") ||
-  request.ip ||
-  "não identificado";
 
 // Geolocalizacao aproximada por IP, lida somente de headers definidos pelo servidor/infra da Vercel.
 // Nunca aceitar latitude/longitude enviadas pelo cliente no corpo da requisicao.
@@ -126,7 +120,20 @@ const sanitizePayload = (payload = {}) => ({
 });
 
 export async function POST(request) {
-  const rateLimit = checkTrackRateLimit(getRequestIp(request));
+  // Camadas baratas primeiro: Origin (endpoint so e chamado pelo fetch() do proprio site) e
+  // Content-Type. Nenhuma das duas e autenticacao - so mais uma camada (ver auditoria).
+  if (!checkOrigin(request, { requireOriginInProduction: true }).allowed) return forbidden();
+  if (!hasValidJsonContentType(request)) {
+    return noStoreJson({ ok: false, error: "Content-Type inválido." }, { status: 415 });
+  }
+
+  const ip = getRequestIp(request);
+  let rateLimit;
+  try {
+    rateLimit = await checkRateLimitLayers([{ key: `analytics-track:${ip}`, windowMs: 60_000, max: 60 }]);
+  } catch {
+    return serviceUnavailable();
+  }
   if (!rateLimit.allowed) {
     return noStoreJson(
       { ok: false, error: "Muitas requisições. Tente novamente em instantes." },
