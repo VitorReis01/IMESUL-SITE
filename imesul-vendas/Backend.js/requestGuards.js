@@ -39,6 +39,11 @@ const getAllowedOrigins = () => {
 
   if (process.env.VERCEL_URL) origins.add(`https://${process.env.VERCEL_URL}`);
 
+  // VERCEL_URL e o deployment UNICO (muda a cada push); VERCEL_BRANCH_URL e a URL ESTAVEL da
+  // branch de Preview (a mesma entre deployments sucessivos daquela branch) - com os dois, um
+  // preview novo funciona sem precisar cadastrar cada deployment manualmente em ALLOWED_ORIGINS.
+  if (process.env.VERCEL_BRANCH_URL) origins.add(`https://${process.env.VERCEL_BRANCH_URL}`);
+
   if (process.env.NEXT_PUBLIC_SALES_SITE_URL) {
     try {
       origins.add(new URL(process.env.NEXT_PUBLIC_SALES_SITE_URL).origin);
