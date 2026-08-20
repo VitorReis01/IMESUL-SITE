@@ -12,6 +12,9 @@ import {
   Timer,
 } from "lucide-react";
 import { trackLocalEvent } from "../lib/localAnalytics";
+import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
+import { createWhatsAppUrl } from "../lib/whatsapp";
 
 const howItWorks = [
   {
@@ -48,7 +51,7 @@ const benefits = [
   {
     icon: MapPin,
     title: "Dourados e Campo Grande",
-    description: "Dourados Matriz, Dourados Centro e Campo Grande.",
+    description: "Dourados Centro, Dourados Fábrica e Campo Grande.",
   },
   {
     icon: Timer,
@@ -62,8 +65,9 @@ const benefits = [
   },
 ];
 
-const whatsappUrl =
-  "https://wa.me/556733125600?text=Ol%C3%A1%2C%20vim%20pela%20%C3%81rea%20de%20Vendas%20da%20IMESUL%20e%20preciso%20de%20ajuda%20de%20um%20especialista.";
+// CTA generico de "fale com um especialista" - classificacao DIRECT_CONTACT (lib/leadFlow.js).
+const helpCardMessage = "Olá, vim pela Área de Vendas da IMESUL e preciso de ajuda de um especialista.";
+const whatsappUrl = createWhatsAppUrl(helpCardMessage);
 
 // Complementa a home com orientacao comercial sem alterar os fluxos de orcamento.
 export default function SalesGuidanceSection() {
@@ -188,13 +192,25 @@ export default function SalesGuidanceSection() {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackLocalEvent({
-                  type: "whatsapp",
-                  label: "Falar com a equipe",
-                  section: "Precisa de ajuda",
-                  detail: "Card do mascote",
-                  isLoggedIn: false,
-                })}
+                onClick={(event) => {
+                  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                  }
+                  event.preventDefault();
+                  trackLocalEvent({
+                    type: "whatsapp",
+                    label: "Falar com a equipe",
+                    section: "Precisa de ajuda",
+                    detail: "Card do mascote",
+                    isLoggedIn: false,
+                  });
+                  openWhatsAppWithLead({
+                    message: helpCardMessage,
+                    flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
+                    product: "Card do mascote",
+                    pagePath: "precisa-de-ajuda-card",
+                  });
+                }}
                 className="mt-6 inline-flex min-h-12 items-center justify-center rounded-[8px] bg-imesul-red px-5 py-3 font-condensed text-xs font-bold uppercase tracking-[0.13em] text-white shadow-[0_14px_40px_rgba(212,43,43,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_18px_52px_rgba(212,43,43,0.34)] sm:mt-7"
               >
                 FALAR COM A EQUIPE

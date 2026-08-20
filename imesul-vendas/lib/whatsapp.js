@@ -1,4 +1,10 @@
-// Garante um destino comercial valido quando a variavel publica nao foi configurada.
+// Garante um destino comercial valido quando a variavel publica nao foi configurada. Este numero
+// vai se tornar o IMEbot (assistente interno, nunca fala com cliente - ver relatorio desta
+// fase). Continua sendo usado aqui SO como ultimo recurso quando a criacao do lead falha por
+// completo (banco fora do ar) ou para fluxos sem unidade/Dourados, que preservam o
+// comportamento comercial atual. Para leads de Campo Grande criados com sucesso mas sem
+// vendedor no rodizio, lib/leadWhatsApp.js NUNCA usa este fallback - ver
+// lib/commercialContactAlert.js.
 const fallbackPhone = "556733125600";
 
 // Normaliza campos opcionais antes de inseri-los na mensagem.

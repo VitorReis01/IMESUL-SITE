@@ -1,5 +1,8 @@
 import "./globals.css";
 import { Barlow, Barlow_Condensed, Bebas_Neue, JetBrains_Mono } from "next/font/google";
+import CookieConsentBanner from "../components/CookieConsentBanner";
+import UnitPickerModal from "../components/UnitPickerModal";
+import CommercialContactAlert from "../components/CommercialContactAlert";
 
 // Carrega somente os pesos usados e publica cada familia como variavel CSS.
 const displayFont = Bebas_Neue({
@@ -112,7 +115,7 @@ const structuredData = {
       telephone: "+55 67 3427-5700",
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Rua Pedro Rigotti, 258 - Jardim São Pedro",
+        streetAddress: "Rua Pedro Rigotti, 248 - Jardim São Pedro",
         addressLocality: "Dourados",
         addressRegion: "MS",
         addressCountry: "BR",
@@ -135,6 +138,9 @@ export default function RootLayout({ children }) {
       <body className={`${displayFont.variable} ${bodyFont.variable} ${condensedFont.variable} ${monoFont.variable}`}>
         <div className="noise-overlay" aria-hidden="true" />
         {children}
+        <UnitPickerModal />
+        <CommercialContactAlert />
+        <CookieConsentBanner />
       </body>
     </html>
   );

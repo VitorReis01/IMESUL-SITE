@@ -19,16 +19,21 @@ const navigationLinks = [
   { label: "Site Institucional", href: institutionalUrl },
 ];
 
+// Rótulos corrigidos em 2026-08-20 (dados oficiais confirmados pelo usuário): a unidade da Rua
+// Pedro Rigotti é "Dourados — Centro" (endereço "258" estava desatualizado, correto é "248");
+// a segunda unidade (Av. Marcelino Pires) é a "Loja de Fábrica" - estava mal rotulada como
+// "Dourados Centro" antes desta correção, o que também estava errado (endereço nunca mudou,
+// só o rótulo).
 const units = [
   {
-    name: "Dourados — Matriz",
-    address: "Rua Pedro Rigotti, 258 – Jardim São Pedro, Dourados/MS",
+    name: "Dourados — Centro",
+    address: "Rua Pedro Rigotti, 248 – Jd. São Pedro, Dourados/MS",
     phone: "(67) 3427-5700",
     phoneHref: "tel:+556734275700",
     mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
   {
-    name: "Dourados Centro",
+    name: "Dourados — Loja de Fábrica",
     address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
     phone: "(67) 3411-5700",
     phoneHref: "tel:+556734115700",
@@ -235,7 +240,7 @@ export default function SalesFooter() {
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>
           <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-600 sm:text-[10px] sm:tracking-[0.24em]">
-            Dourados Matriz, Dourados Centro e Campo Grande
+            Dourados Centro, Dourados Fábrica e Campo Grande
           </span>
           <button
             type="button"

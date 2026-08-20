@@ -1,10 +1,16 @@
+"use client";
+
+// CTA genérico "falar com um vendedor" (DIRECT_CONTACT) - resolve unidade, cria o lead e abre o
+// WhatsApp do vendedor sorteado pelo rodízio (ver lib/commercialContact.js). Botão em vez de link
+// direto: precisa rodar lógica antes de abrir o WhatsApp, sem quebrar o fallback já existente.
+import { openCommercialWhatsApp } from "../lib/commercialContact";
+
 // Mantem o contato comercial acessivel e aplica profundidade ao botao, nao ao icone.
 export default function WhatsAppFloat() {
   return (
-    <a
-      href="https://wa.me/556733125600"
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
+      onClick={() => openCommercialWhatsApp({ pagePath: "whatsapp-flutuante" })}
       aria-label="Falar com a IMESUL no WhatsApp"
       className="group fixed bottom-5 right-5 z-[140] flex h-14 w-14 items-center justify-center rounded-full text-[#25d366] transition-transform duration-300 ease-out hover:-translate-y-1 hover:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#25d366] motion-reduce:transform-none sm:bottom-7 sm:right-7 sm:h-16 sm:w-16"
     >
@@ -34,6 +40,6 @@ export default function WhatsAppFloat() {
           fill="currentColor"
         />
       </svg>
-    </a>
+    </button>
   );
 }

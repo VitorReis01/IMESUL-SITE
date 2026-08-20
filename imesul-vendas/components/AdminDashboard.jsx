@@ -8,6 +8,7 @@ import {
   ArrowDown,
   ArrowUp,
   BarChart3,
+  Briefcase,
   Download,
   LogOut,
   MapPin,
@@ -22,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { clearLocalEvents, getAnalyticsEvents, subscribeToLocalEvents } from "../lib/localAnalytics";
+import CommercialReportPanel from "./CommercialReportPanel";
 
 const filters = [
   { label: "Todos", value: "all" },
@@ -355,6 +357,9 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
   const [selectedLocationEvent, setSelectedLocationEvent] = useState(null);
+  // Aba "Comercial" (Lead ID, rodízio, IMEbot, carrinho) - renderizada como camada por cima do
+  // analytics existente, sem depender do estado dele (ver CommercialReportPanel.jsx).
+  const [activeTab, setActiveTab] = useState("analytics");
 
   // Cards + rankings dependem so do periodo selecionado (nao do filtro/busca/pagina da tabela).
   const refreshOverview = useCallback(() => {
@@ -531,7 +536,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   return (
     <div className="fixed inset-0 z-[210] bg-[#030811]/88 px-4 py-5 backdrop-blur-lg">
-      <section className="mx-auto flex max-h-[94vh] w-full max-w-[1320px] flex-col overflow-hidden rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
+      <section className="relative mx-auto flex max-h-[94vh] w-full max-w-[1320px] flex-col overflow-hidden rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
         <header className="flex flex-col gap-4 border-b border-white/[0.08] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-imesul-red">Área restrita</p>
@@ -539,6 +544,22 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             <p className="mt-3 max-w-3xl text-sm leading-6 text-imesul-steel-light/68">
               Este painel registra eventos para análise de uso do site. IPs são mascarados e não são armazenados CPF, senha ou tokens. Para produção, use política de privacidade e consentimento conforme LGPD.
             </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("analytics")}
+                className={`inline-flex h-9 items-center gap-2 rounded-[7px] border px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] transition-colors ${activeTab === "analytics" ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] text-imesul-steel-light/72 hover:border-white/25 hover:text-white"}`}
+              >
+                <BarChart3 size={14} aria-hidden="true" /> Analytics
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("commercial")}
+                className={`inline-flex h-9 items-center gap-2 rounded-[7px] border px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] transition-colors ${activeTab === "commercial" ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] text-imesul-steel-light/72 hover:border-white/25 hover:text-white"}`}
+              >
+                <Briefcase size={14} aria-hidden="true" /> Comercial
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={printReport} className="inline-flex h-10 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] text-white transition-colors hover:border-white/25 hover:bg-white/[0.07]">
@@ -566,6 +587,12 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             </button>
           </div>
         </header>
+
+        {activeTab === "commercial" && (
+          <div className="absolute inset-x-0 bottom-0 top-[145px] z-30 sm:top-[125px]">
+            <CommercialReportPanel />
+          </div>
+        )}
 
         <div className="overflow-y-auto px-5 py-5 sm:px-7">
           <div className="flex flex-wrap gap-2">

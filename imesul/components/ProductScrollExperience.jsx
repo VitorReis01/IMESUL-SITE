@@ -3,9 +3,10 @@
 // Showroom institucional dos produtos principais.
 // Usa dados de products.js e direciona o cliente para a area de vendas.
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { products, salesSiteUrl } from "../data/products";
 import useCompatibility from "../hooks/useCompatibility";
+import { getServerUnitRaw, getStoredUnitRaw, subscribeToUnit } from "../lib/unitPreference";
 
 // Mantem o tratamento visual das imagens consistente nos cards e no palco desktop.
 function ProductImage({ product, compact = false }) {
@@ -46,9 +47,14 @@ function ProductImage({ product, compact = false }) {
 
 // Leva a selecao para o site comercial sem simular compra no institucional.
 function SalesLink({ compact = false }) {
+  // useSyncExternalStore evita tanto o mismatch de hidratacao quanto setState dentro de efeito
+  // (mesmo padrão de FinalCTA.jsx e imesul-vendas/lib/consent.js).
+  const unit = useSyncExternalStore(subscribeToUnit, getStoredUnitRaw, getServerUnitRaw);
+  const href = unit ? `${salesSiteUrl}?unidade=${unit}` : salesSiteUrl;
+
   return (
     <a
-      href={salesSiteUrl}
+      href={href}
       className={`group/link inline-flex min-h-12 items-center justify-between gap-5 border border-imesul-red bg-imesul-red font-condensed font-bold text-white uppercase transition duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] hover:shadow-[0_16px_34px_rgba(212,43,43,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red ${
         compact
           ? "mt-4 w-full px-4 py-2.5 text-[10px] tracking-[0.1em] sm:px-5 sm:py-3 sm:text-xs [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:py-2"

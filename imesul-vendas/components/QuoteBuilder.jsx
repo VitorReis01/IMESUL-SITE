@@ -17,13 +17,14 @@ import {
   telaComprimentoOptions,
 } from "../data/quoteOptions";
 import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../lib/whatsapp";
-import { trackLocalEvent, getAnonymousVisitorId } from "../lib/localAnalytics";
-import { createLead } from "../lib/leads";
-import ProductOptionSelector, { findSelectedVariation } from "./ProductOptionSelector";
+import { trackLocalEvent } from "../lib/localAnalytics";
+import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
+import { addCartItem } from "../lib/cart";
+import ProductOptionSelector, { findSelectedVariation, formatOptionValue } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
 
 const customQuantityValue = "__custom_quantity__";
-const roldanasCartStorageKey = "imesul-vendas-cart";
 
 // Campos do caminho por projeto; medidas tecnicas sao confirmadas pela equipe comercial.
 const projectInitialForm = {
@@ -86,21 +87,6 @@ function formatCustomLength(value) {
   return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(number)} m`;
 }
 
-function getStoredCart() {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const stored = window.localStorage.getItem(roldanasCartStorageKey);
-    const parsed = stored ? JSON.parse(stored) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCart(items) {
-  window.localStorage.setItem(roldanasCartStorageKey, JSON.stringify(items));
-}
 
 // Mantem labels e indicacao de obrigatoriedade iguais em todos os controles.
 function Field({ label, children, required = false }) {
@@ -223,56 +209,10 @@ function SummaryRow({ label, value }) {
   );
 }
 
-// Le UTM da URL atual so no momento do clique - nao duplica a logica de "primeiro toque
-// persistido" do analytics (lib/localAnalytics.js), que fica intocada. Um lead reflete o
-// contexto do pedido em si, nao a sessao inteira do visitante.
-const readCurrentUtm = () => {
-  if (typeof window === "undefined") return {};
-  const params = new URLSearchParams(window.location.search);
-  return {
-    source: params.get("utm_source") || "",
-    medium: params.get("utm_medium") || "",
-    campaign: params.get("utm_campaign") || "",
-    content: params.get("utm_content") || "",
-    term: params.get("utm_term") || "",
-  };
-};
-
-// Cria o lead (Lead ID + rodizio de vendedor) antes de abrir o WhatsApp. Abre uma aba em branco
-// de forma SINCRONA (dentro do clique) e so preenche a URL depois que o lead responde - isso
-// evita bloqueio de pop-up, que a maioria dos navegadores aplica a window.open() chamado depois
-// de um await. Qualquer falha (banco fora do ar, sem vendedor, requisicao caiu) cai no WhatsApp
-// padrao ja existente - o orcamento nunca fica bloqueado por causa deste recurso.
-const openWhatsAppWithLead = async ({ message, trackingDetail, originUnit }) => {
-  const fallbackUrl = createWhatsAppUrl(message);
-  const popup = typeof window !== "undefined" ? window.open("", "_blank") : null;
-
-  try {
-    const lead = await createLead({
-      visitorId: getAnonymousVisitorId(),
-      quoteSummary: message,
-      product: trackingDetail,
-      origin: originUnit || (typeof document !== "undefined" ? document.referrer : "") || "",
-      source: "site",
-      utm: readCurrentUtm(),
-    });
-
-    const finalUrl = lead.ok && lead.seller?.whatsapp
-      ? createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp)
-      : fallbackUrl;
-
-    if (popup && !popup.closed) popup.location.href = finalUrl;
-    else window.open(finalUrl, "_blank", "noopener,noreferrer");
-  } catch {
-    if (popup && !popup.closed) popup.location.href = fallbackUrl;
-    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
-  }
-};
-
 // Gera o link somente quando as regras minimas do fluxo foram atendidas. O href continua sendo
 // o WhatsApp padrao (fallback nativo do navegador para clique do meio/abrir em nova aba sem JS);
 // o clique normal (botao esquerdo) e interceptado para criar o lead antes de abrir a conversa.
-function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8", originUnit = "" }) {
+function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8", originUnit = "", flowType = LEAD_FLOW_TYPES.GUIDED_QUOTE, pagePath = "" }) {
   const disabled = Boolean(disabledReason);
   const submittingRef = useRef(false);
 
@@ -310,7 +250,13 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
           if (submittingRef.current) return;
           submittingRef.current = true;
 
-          openWhatsAppWithLead({ message, trackingDetail, originUnit }).finally(() => {
+          openWhatsAppWithLead({
+            message,
+            flowType,
+            product: trackingDetail,
+            unit: originUnit,
+            pagePath,
+          }).finally(() => {
             submittingRef.current = false;
           });
         }}
@@ -334,26 +280,32 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
   );
 }
 
-function AddToCartButton({ product, quantity, disabledReason = "" }) {
+function AddToCartButton({ category, product, form, quantity, disabledReason = "" }) {
   const [added, setAdded] = useState(false);
   const disabled = Boolean(disabledReason);
 
   const addToCart = () => {
     if (disabled) return;
 
-    const slug = product.slug || product.id;
-    const nextItem = {
-      name: product.name,
-      slug,
-      quantity,
-    };
-    const currentCart = getStoredCart();
-    const itemIndex = currentCart.findIndex((item) => item.slug === slug);
-    const nextCart = itemIndex >= 0
-      ? currentCart.map((item, index) => (index === itemIndex ? { ...item, ...nextItem } : item))
-      : [...currentCart, nextItem];
+    addCartItem({
+      categoryId: category?.id || "",
+      categoryName: category?.name || "",
+      productId: product.slug || product.id,
+      productName: product.name,
+      measure: form?.measure ? formatOptionValue(form.measure, "measure") : "",
+      thickness: form?.thickness ? formatOptionValue(form.thickness, "thickness") : "",
+      length: form?.length ? formatOptionValue(form.length, "length") : "",
+      details: form?.details || "",
+      quantity: Number(quantity) || 1,
+    });
 
-    saveCart(nextCart);
+    trackLocalEvent({
+      type: "click",
+      label: "Adicionar ao carrinho",
+      section: "Resumo da solicitação",
+      detail: product.name,
+    });
+
     setAdded(true);
   };
 
@@ -526,6 +478,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
               trackingDetail={`Projeto: ${project.name}`}
               isLoggedIn={isLoggedIn}
               originUnit={originUnit}
+              pagePath="project-quote-flow"
             />
           </aside>
         </div>
@@ -743,7 +696,9 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
           {(usesSimplifiedModelQuote || isTelaEletrossoldada) ? (
             <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">
               <AddToCartButton
+                category={category}
                 product={product}
+                form={form}
                 quantity={form.quantity}
                 disabledReason={disabledReason}
               />
@@ -753,6 +708,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
                 trackingDetail={`Material: ${product.name}`}
                 isLoggedIn={isLoggedIn}
                 className="mt-0"
+                pagePath="material-quote-flow"
               />
             </div>
           ) : (
@@ -761,6 +717,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
               disabledReason={disabledReason}
               trackingDetail={`Material: ${product.name}`}
               isLoggedIn={isLoggedIn}
+              pagePath="material-quote-flow"
             />
           )}
         </ProductSummary>

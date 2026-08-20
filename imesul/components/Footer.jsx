@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { navLinks, officialUnits } from "../data/products";
+import { setStoredUnit } from "../lib/unitPreference";
+import { requestOpenPrivacyPreferences } from "../lib/consent";
 
 const socialLinks = [
   {
@@ -115,6 +117,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    onClick={link.unit ? () => setStoredUnit(link.unit) : undefined}
                     className="group inline-flex items-center gap-2 font-condensed text-sm font-semibold uppercase tracking-[0.13em] text-slate-700 transition-colors hover:text-imesul-red"
                   >
                     {link.label}
@@ -180,6 +183,20 @@ export default function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <a href="/politica-de-privacidade" className="text-sm text-slate-700 transition-colors hover:text-imesul-red">
+                  Política de Privacidade
+                </a>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => requestOpenPrivacyPreferences()}
+                  className="text-left text-sm text-slate-700 transition-colors hover:text-imesul-red"
+                >
+                  Preferências de privacidade
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -189,7 +206,7 @@ export default function Footer() {
             © {year} IMESUL Distribuição. Todos os direitos reservados.
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-slate-600">
-            Dourados Matriz, Dourados Centro e Campo Grande
+            Dourados Centro, Dourados Fábrica e Campo Grande
           </span>
         </div>
       </div>

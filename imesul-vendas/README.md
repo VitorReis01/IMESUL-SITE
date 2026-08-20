@@ -43,7 +43,7 @@ Nos dois caminhos, `ProductSummary` mostra a solicitacao antes do envio. `lib/wh
 ## Variaveis de ambiente
 
 ```env
-NEXT_PUBLIC_INSTITUTIONAL_SITE_URL=https://grupoimesul.com.br
+NEXT_PUBLIC_INSTITUTIONAL_SITE_URL=https://imesul-site.vercel.app/
 NEXT_PUBLIC_WHATSAPP_NUMBER=556733125600
 ADMIN_DEMO_USER=
 ADMIN_DEMO_PASSWORD=

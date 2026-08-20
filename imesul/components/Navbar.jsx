@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { m as motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { navLinks } from "../data/products";
+import { setStoredUnit } from "../lib/unitPreference";
 
 // Exibe a marca, os links institucionais, o menu mobile e o progresso da pagina.
 export default function Navbar() {
@@ -86,6 +87,7 @@ export default function Navbar() {
                 <a
                   key={link.label}
                   href={link.href}
+                  onClick={link.unit ? () => setStoredUnit(link.unit) : undefined}
                   className="group relative px-3 py-2"
                 >
                   <span className="font-condensed text-[12px] font-bold tracking-[0.18em] text-slate-800 transition-colors duration-300 group-hover:text-imesul-red">
@@ -122,7 +124,10 @@ export default function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={closeMenu}
+                onClick={() => {
+                  if (link.unit) setStoredUnit(link.unit);
+                  closeMenu();
+                }}
                 className="flex items-center gap-3 border-b border-slate-200 py-3"
               >
                 <span className="h-px w-5 bg-imesul-red" />

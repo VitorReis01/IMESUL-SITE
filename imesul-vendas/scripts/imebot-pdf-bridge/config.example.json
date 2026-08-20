@@ -1,0 +1,6 @@
+{
+  "backendBaseUrl": "https://SEU-DOMINIO-DE-PRODUCAO",
+  "bridgeSecretEnvVar": "IMEBOT_BRIDGE_SECRET",
+  "basePath": "Y:\\ORC-SITE-IMESUL",
+  "pollIntervalWarningNote": "Este arquivo e um EXEMPLO. Copie para config.json (ja no .gitignore) e preencha os valores reais. NUNCA coloque o segredo em texto puro aqui - configure a variavel de ambiente indicada em bridgeSecretEnvVar no PC da Bridge (ex.: via 'setx IMEBOT_BRIDGE_SECRET valor /M' rodando como administrador, ou nas variaveis de ambiente do proprio Agendador de Tarefas)."
+}

@@ -7,7 +7,7 @@ const trustItems = [
   },
   {
     icon: Building2,
-    text: <>Unidades em Dourados Matriz, Dourados Centro e Campo Grande</>,
+    text: <>Unidades em Dourados Centro, Dourados Fábrica e Campo Grande</>,
   },
   {
     icon: Headphones,

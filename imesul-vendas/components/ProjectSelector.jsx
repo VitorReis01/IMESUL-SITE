@@ -27,6 +27,9 @@ import { catalogProducts, getCatalogProduct } from "../data/catalogProducts";
 import { getCatalogCategoryPath } from "../data/catalogRoutes";
 import { createWhatsAppUrl } from "../lib/whatsapp";
 import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
+import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
+import { captureUnitFromUrl } from "../lib/unitPreference";
 import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
 import { ProjectQuoteFlow } from "./QuoteBuilder";
@@ -239,6 +242,7 @@ export default function ProjectSelector() {
   const [highlightedCategoryId, setHighlightedCategoryId] = useState(null);
   const [highlightedProductId, setHighlightedProductId] = useState(null);
   const [originUnit, setOriginUnit] = useState("");
+  const [unitKey, setUnitKey] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [heroIntroReady, setHeroIntroReady] = useState(false);
@@ -256,7 +260,9 @@ export default function ProjectSelector() {
   const carouselScrollTimeoutRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
-  const sellerWhatsAppUrl = createWhatsAppUrl(sellerMessage);
+  // Fallback nativo do link (clique do meio/nova aba/sem JS) - o clique normal e interceptado
+  // por handleDirectContactClick, que cria o lead (DIRECT_CONTACT) antes de abrir o WhatsApp.
+  const directContactFallbackUrl = createWhatsAppUrl(sellerMessage);
 
   const isUserVisuallyLoggedIn = authVisualActive || adminVisualActive;
 
@@ -267,6 +273,26 @@ export default function ProjectSelector() {
       isLoggedIn: isUserVisuallyLoggedIn,
     });
   }, [isUserVisuallyLoggedIn]);
+
+  // CTAs genericos de "fale com um vendedor" (nao ligados a um material/orcamento especifico) -
+  // classificacao DIRECT_CONTACT (ver lib/leadFlow.js). Cria o lead + rodizio antes de abrir o
+  // WhatsApp, com o mesmo popup+fallback do fluxo guiado (lib/leadWhatsApp.js). Protecao contra
+  // clique duplo ja existe no backend (idempotency key por visitante+mensagem+janela curta -
+  // ver Backend.js/salesLeadsStore.js), entao nao precisa de guarda extra aqui.
+  const handleDirectContactClick = (event, { section, detail, pagePath }) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    trackInteraction({ type: "whatsapp", label: "Contato/WhatsApp", section, detail });
+    openWhatsAppWithLead({
+      message: sellerMessage,
+      flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
+      product: detail,
+      unit: unitKey,
+      pagePath,
+    });
+  };
 
   // Consolida categorias e produtos em uma lista unica de sugestoes do topo.
   const searchItems = useMemo(() => {
@@ -324,10 +350,14 @@ export default function ProjectSelector() {
   }, [searchItems, searchTerm]);
 
   // Captura a unidade enviada pelo site institucional e mantém o dado no fluxo comercial.
+  // originUnit = rotulo legivel (vai no campo "origin" do lead); unitKey = chave validada
+  // ("dourados"/"campo-grande", persistida como preferencia necessaria - ver lib/unitPreference)
+  // usada no campo "unit" do lead e no rodizio por unidade.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const unitParam = new URLSearchParams(window.location.search).get("unidade");
       setOriginUnit(salesUnits[unitParam] || "");
+      setUnitKey(captureUnitFromUrl());
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -743,10 +773,10 @@ export default function ProjectSelector() {
               Sobre a Imesul
             </a>
             <a
-              href={sellerWhatsAppUrl}
+              href={directContactFallbackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackInteraction({ type: "whatsapp", label: "Contato/WhatsApp", section: "Navbar", detail: "Contato" })}
+              onClick={(event) => handleDirectContactClick(event, { section: "Navbar", detail: "Contato", pagePath: "navbar-contato" })}
               className={navLinkClassName}
             >
               Contato
@@ -823,10 +853,10 @@ export default function ProjectSelector() {
               )}
             </button>
             <a
-              href={sellerWhatsAppUrl}
+              href={directContactFallbackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackInteraction({ type: "whatsapp", label: "Falar com vendedor", section: "Navbar", detail: "Botão superior" })}
+              onClick={(event) => handleDirectContactClick(event, { section: "Navbar", detail: "Botão superior", pagePath: "navbar-falar-com-vendedor" })}
               className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red bg-imesul-red px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
             >
               <MessageCircle
@@ -907,11 +937,11 @@ export default function ProjectSelector() {
               <ArrowRight size={16} aria-hidden="true" />
             </a>
             <a
-              href={sellerWhatsAppUrl}
+              href={directContactFallbackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
-                trackInteraction({ type: "whatsapp", label: "Contato/WhatsApp", section: "Navbar mobile", detail: "Contato" });
+              onClick={(event) => {
+                handleDirectContactClick(event, { section: "Navbar mobile", detail: "Contato", pagePath: "navbar-mobile-contato" });
                 closeMobileMenu();
               }}
               className={mobileMenuLinkClassName}
@@ -941,11 +971,11 @@ export default function ProjectSelector() {
               )}
             </button>
             <a
-              href={sellerWhatsAppUrl}
+              href={directContactFallbackUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
-                trackInteraction({ type: "whatsapp", label: "Falar com vendedor", section: "Navbar mobile", detail: "Botão menu mobile" });
+              onClick={(event) => {
+                handleDirectContactClick(event, { section: "Navbar mobile", detail: "Botão menu mobile", pagePath: "navbar-mobile-falar-com-vendedor" });
                 closeMobileMenu();
               }}
               className="mt-1 flex min-h-12 items-center justify-center gap-2 rounded-[7px] border border-[#25D366]/50 bg-[#25D366] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_16px_42px_rgba(37,211,102,0.22)]"

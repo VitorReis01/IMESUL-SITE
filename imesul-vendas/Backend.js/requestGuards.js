@@ -52,6 +52,23 @@ const getAllowedOrigins = () => {
     }
   }
 
+  // Site institucional (app separado, dominio proprio) chama /api/leads cross-origin para os
+  // CTAs "Falar no WhatsApp" (DIRECT_CONTACT) - ver lib/leadFlow.js LEAD_SITE_ORIGIN. Confere as
+  // DUAS variaveis publicas que ja existem no projeto para esse dominio (NEXT_PUBLIC_INSTITUTIONAL_URL
+  // e NEXT_PUBLIC_INSTITUTIONAL_SITE_URL - esta ultima e a documentada em README.md/.env.example e
+  // ja usada por SalesFooter.jsx) - evita que a allowlist de CORS fique vazia so por causa da
+  // divergencia de nome ja existente no codigo (ver relatorio desta fase). Nunca adivinha o
+  // dominio real (grupoimesul.com.br vs imesul-site.vercel.app sao candidatos vistos no codigo)
+  // - so confia no que estiver configurado explicitamente em uma das duas.
+  [process.env.NEXT_PUBLIC_INSTITUTIONAL_URL, process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL].forEach((value) => {
+    if (!value) return;
+    try {
+      origins.add(new URL(value).origin);
+    } catch {
+      // valor invalido na env - ignora silenciosamente, nao adiciona origem quebrada.
+    }
+  });
+
   if (process.env.NODE_ENV !== "production") {
     origins.add("http://localhost:3000");
   }
@@ -79,6 +96,18 @@ export const checkOrigin = (request, { requireOriginInProduction = false } = {})
   if (allowedOrigins.has(origin)) return { allowed: true, reason: "origin permitida" };
 
   return { allowed: false, reason: "origin fora da allowlist" };
+};
+
+// CORS de verdade (headers de RESPOSTA), so para rotas explicitamente chamadas cross-origin pelo
+// site institucional (hoje: /api/leads, para o CTA "Falar no WhatsApp" -> DIRECT_CONTACT). O
+// checkOrigin acima valida a REQUISICAO; sem estes headers na RESPOSTA, o navegador do
+// institucional bloquearia a leitura da resposta mesmo com o servidor permitindo - CORS e
+// decidido pelos dois lados. Nunca "*": so ecoa de volta a origem exata se ela estiver na mesma
+// allowlist de checkOrigin, e sempre com Vary: Origin (a resposta muda dependendo de quem pediu).
+export const getCorsHeaders = (request) => {
+  const origin = request.headers.get("origin");
+  if (!origin || !getAllowedOrigins().has(origin)) return {};
+  return { "Access-Control-Allow-Origin": origin, Vary: "Origin" };
 };
 
 export const hasValidJsonContentType = (request) => {

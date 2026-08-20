@@ -13,6 +13,7 @@ import { useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
 import { reviews } from "../data/googleReviews";
 import { whatsapp } from "../data/products";
+import { openCommercialWhatsApp } from "../lib/commercialContact";
 
 const COLUMN_DEFS = [
   { rotate: 0, duration: 26 },
@@ -290,6 +291,13 @@ export default function GoogleReviews() {
         >
           <a
             href={waUrl}
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                return;
+              }
+              event.preventDefault();
+              openCommercialWhatsApp({ pagePath: "avaliacoes-google" });
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-2 border-b border-imesul-red/40 pb-1 font-condensed text-sm font-semibold uppercase tracking-[0.14em] text-imesul-steel-light transition-colors duration-300 hover:border-imesul-red hover:text-white"

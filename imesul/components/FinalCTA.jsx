@@ -1,15 +1,35 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { m as motion } from "framer-motion";
 import { salesSiteUrl, whatsapp } from "../data/products";
 import PremiumGlowButton from "./PremiumGlowButton";
+import { openCommercialWhatsApp } from "../lib/commercialContact";
+import { getServerUnitRaw, getStoredUnitRaw, subscribeToUnit } from "../lib/unitPreference";
 
 // Encerra a apresentacao com acesso ao WhatsApp e a Area de Vendas.
 export default function FinalCTA() {
   const sectionRef = useRef(null);
   const ringRef = useRef(null);
+  // Fallback simples para clique com modificador (nova aba/janela) ou falha no fluxo comercial -
+  // a intercepcao abaixo (handleWhatsAppClick) cobre o clique normal, criando o lead antes.
   const waUrl = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsapp.message)}`;
+
+  // useSyncExternalStore (não useState+useEffect) evita tanto o mismatch de hidratação quanto
+  // setState dentro de efeito - o servidor sempre vê "" (sem unidade), o cliente atualiza para o
+  // valor real do localStorage assim que hidrata (mesmo padrão de imesul-vendas/lib/consent.js).
+  const unit = useSyncExternalStore(subscribeToUnit, getStoredUnitRaw, getServerUnitRaw);
+  const salesUrl = unit ? `${salesSiteUrl}?unidade=${unit}` : salesSiteUrl;
+
+  // Mesmo padrao de intercepcao usado no site de vendas (ProjectSelector.jsx
+  // handleDirectContactClick): deixa clique com modificador (nova aba, etc.) seguir o href normal.
+  const handleWhatsAppClick = (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    openCommercialWhatsApp({ pagePath: "cta-final" });
+  };
 
   // Usa a rolagem para dar profundidade ao anel e remove o contexto ao desmontar.
   useEffect(() => {
@@ -98,6 +118,7 @@ export default function FinalCTA() {
         >
           <PremiumGlowButton
             href={waUrl}
+            onClick={handleWhatsAppClick}
             target="_blank"
             rel="noopener noreferrer"
             variant="whatsapp"
@@ -110,7 +131,7 @@ export default function FinalCTA() {
           </PremiumGlowButton>
 
           <PremiumGlowButton
-            href={salesSiteUrl}
+            href={salesUrl}
             variant="secondary"
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >

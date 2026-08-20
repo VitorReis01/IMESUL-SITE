@@ -126,11 +126,32 @@ const sections = [
     title: "Compartilhamento de dados",
     body: (
       <>
-        <p>A IMESUL não vende dados pessoais a terceiros. Ainda assim, dados podem ser compartilhados quando necessário:</p>
+        <p>
+          A IMESUL não vende dados pessoais de seus usuários. Ainda assim, dados podem ser
+          processados ou compartilhados com fornecedores de tecnologia quando necessário para o
+          funcionamento do site:
+        </p>
         <ul className="list-disc space-y-1.5 pl-5 marker:text-imesul-red">
           <li>Com a equipe interna de atendimento e comercial da IMESUL, para dar seguimento a solicitações;</li>
-          <li>Com fornecedores técnicos que auxiliem na hospedagem, segurança, manutenção ou funcionamento do site (por exemplo, provedores de infraestrutura em nuvem);</li>
-          <li>Com plataformas externas acessadas pelo próprio usuário, como WhatsApp, Google Maps, Instagram e Facebook, quando ele escolhe utilizá-las;</li>
+          <li>
+            Com a <strong>Vercel</strong>, responsável pela hospedagem deste site, e com a{" "}
+            <strong>Neon</strong>, responsável pelo banco de dados utilizado — ambos operadores
+            técnicos que processam dados necessários ao funcionamento do site, nunca com
+            finalidade própria de uso desses dados;
+          </li>
+          <li>
+            Com o <strong>Google</strong>, quando o usuário opta por entrar com sua conta Google
+            (login), e para o carregamento de fontes tipográficas (Google Fonts) — nesses casos, o
+            Google pode receber e processar informações técnicas da requisição conforme sua
+            própria política de privacidade;
+          </li>
+          <li>
+            Com o <strong>WhatsApp/Meta</strong>, quando o usuário opta por iniciar uma conversa
+            comercial pelo WhatsApp — os dados necessários para essa comunicação (como número de
+            telefone e conteúdo da conversa) passam a ser tratados também pela Meta, conforme a
+            política de privacidade do WhatsApp;
+          </li>
+          <li>Com plataformas externas acessadas pelo próprio usuário, como Google Maps, Instagram e Facebook, quando ele escolhe utilizá-las;</li>
           <li>Por obrigação legal ou determinação de autoridade competente;</li>
           <li>Para proteção dos direitos da IMESUL, de usuários ou de terceiros, quando necessário.</li>
         </ul>
@@ -161,14 +182,28 @@ const sections = [
     body: (
       <>
         <p>
-          O site pode utilizar identificadores técnicos, registros de navegação e ferramentas
-          próprias para funcionamento, segurança, análise de uso e melhoria da experiência do
-          usuário.
+          Ao acessar o site, um banner solicita a decisão do usuário: <strong>Aceitar</strong> ou{" "}
+          <strong>Rejeitar</strong>. Enquanto essa decisão não for dada, apenas os recursos
+          estritamente necessários ao funcionamento do site — como o carrinho de orçamento —
+          ficam ativos. Rejeitar não impede o uso do site: o carrinho, a escolha manual de
+          unidade e a navegação continuam funcionando normalmente.
         </p>
         <p>
-          Caso ferramentas adicionais de terceiros venham a ser incorporadas no futuro, esta
-          política será atualizada para refletir essa mudança antes ou no momento em que passarem
-          a ser usadas.
+          Ao <strong>aceitar</strong>, o site pode ativar registros próprios de navegação
+          (analytics interno da IMESUL, sem ferramentas de terceiros de rastreamento hoje) e, se o
+          usuário autorizar explicitamente pelo navegador, o uso da localização aproximada do
+          dispositivo — usada apenas para direcionar o atendimento à unidade correta, nunca de
+          forma automática ou sem essa autorização explícita.
+        </p>
+        <p>
+          A decisão pode ser revista a qualquer momento pelo link de preferências de privacidade
+          disponível no rodapé do site.
+        </p>
+        <p>
+          Caso ferramentas adicionais de terceiros (como Google Analytics) venham a ser
+          incorporadas no futuro, elas só serão carregadas após o usuário aceitar, e esta política
+          será atualizada para refletir essa mudança antes ou no momento em que passarem a ser
+          usadas.
         </p>
       </>
     ),
@@ -291,7 +326,7 @@ const sections = [
   {
     id: "ultima-atualizacao",
     title: "Data da última atualização",
-    body: <p>Última atualização: julho de 2026.</p>,
+    body: <p>Última atualização: agosto de 2026.</p>,
   },
 ];
 

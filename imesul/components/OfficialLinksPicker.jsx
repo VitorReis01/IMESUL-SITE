@@ -7,7 +7,7 @@
 // whatsapp) vem de data/products.js — nada aqui e inventado; se um canal nao existir para a
 // unidade, o botao correspondente simplesmente nao aparece.
 //
-// Estrutura: dois cards separados — Dourados (com seletor Matriz/Loja de Fábrica) e Campo Grande
+// Estrutura: dois cards separados — Dourados (com seletor Centro/Loja de Fábrica) e Campo Grande
 // (unidade unica, sem seletor, conteudo estatico). Cada card com seletor usa a mesma logica segura
 // de troca: existe APENAS UM bloco de conteudo no DOM (nao remonta via key, nao usa AnimatePresence,
 // nao usa position:absolute); o texto so muda enquanto o bloco esta invisivel, entao nunca ha duas
@@ -17,10 +17,11 @@ import Image from "next/image";
 import { useReducedMotion } from "framer-motion";
 import { officialUnits, officialSocialLinks, whatsapp } from "../data/products";
 import PremiumGlowButton from "./PremiumGlowButton";
+import { openCommercialWhatsApp } from "../lib/commercialContact";
 
 // Rotulo curto so para o botao seletor; o nome completo continua vindo de officialUnits.
 const SHORT_LABELS = {
-  "dourados-matriz": "Matriz",
+  "dourados-matriz": "Centro",
   "dourados-fabrica": "Loja de Fábrica",
   "campo-grande": "Campo Grande",
 };
@@ -48,10 +49,20 @@ const DOURADOS_UNITS = UNITS.filter((unit) => unit.id.startsWith("dourados"));
 const CAMPO_GRANDE_UNIT = UNITS.find((unit) => unit.id === "campo-grande");
 
 function buildChannels(unit) {
+  // channelUnit: a unidade já é conhecida pelo card em que o botão está (Dourados ou Campo
+  // Grande) - o clique no WhatsApp aqui nunca precisa abrir o modal de escolha de unidade.
+  const channelUnit = unit.id.startsWith("dourados") ? "dourados" : "campo-grande";
+
   return [
     { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon /> },
     { key: "phone", href: unit.phoneHref, label: `Ligar para ${unit.phone}`, icon: <PhoneIcon /> },
-    unit.whatsappHref && { key: "whatsapp", href: unit.whatsappHref, label: "Falar no WhatsApp", icon: <WhatsAppIcon /> },
+    unit.whatsappHref && {
+      key: "whatsapp",
+      href: unit.whatsappHref,
+      label: "Falar no WhatsApp",
+      icon: <WhatsAppIcon />,
+      unit: channelUnit,
+    },
     unit.instagram && { key: "instagram", href: unit.instagram, label: "Instagram", icon: <InstagramIcon /> },
     unit.facebook && { key: "facebook", href: unit.facebook, label: "Facebook", icon: <FacebookIcon /> },
   ].filter(Boolean);
@@ -111,13 +122,27 @@ const CHANNEL_STYLE = {
   facebook: { bg: "bg-[#1877F2]", glowVariant: "facebook" },
 };
 
-function IconLink({ channelKey, href, label, icon }) {
+function IconLink({ channelKey, href, label, icon, unit }) {
   const isExternal = href.startsWith("http");
   const style = CHANNEL_STYLE[channelKey];
+
+  // WhatsApp intercepta o clique normal para criar o lead (DIRECT_CONTACT) antes de abrir - a
+  // unidade já é conhecida pelo card (unit), então nunca abre o modal de escolha.
+  const handleClick =
+    channelKey === "whatsapp"
+      ? (event) => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+          }
+          event.preventDefault();
+          openCommercialWhatsApp({ pagePath: `links-${unit}`, unit });
+        }
+      : undefined;
 
   return (
     <PremiumGlowButton
       href={href}
+      onClick={handleClick}
       variant={style.glowVariant}
       glowRadius={70}
       {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
@@ -160,7 +185,7 @@ function CardShell({ eyebrow, children }) {
   );
 }
 
-// Card com seletor (Dourados: Matriz / Loja de Fábrica) — troca segura, um unico bloco de
+// Card com seletor (Dourados: Centro / Loja de Fábrica) — troca segura, um unico bloco de
 // conteudo no DOM, texto so muda enquanto o bloco esta invisivel.
 function DouradosCard() {
   const shouldReduceMotion = useReducedMotion();
@@ -242,7 +267,7 @@ function DouradosCard() {
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           {channels.map((channel) => (
-            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} />
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} />
           ))}
         </div>
       </div>
@@ -274,7 +299,7 @@ function CampoGrandeCard() {
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           {channels.map((channel) => (
-            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} />
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} />
           ))}
         </div>
       </div>

@@ -44,8 +44,11 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
+            // geolocation=(self): permite o botão "Usar minha localização" do UnitPickerModal
+            // (sempre por clique explícito do usuário, nunca automático - ver lib/consent.js).
+            // Continua bloqueado para qualquer terceiro/iframe (não é "*").
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=()",
+            value: "camera=(), microphone=(), geolocation=(self), payment=()",
           },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           {

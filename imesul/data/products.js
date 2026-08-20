@@ -146,9 +146,14 @@ export const benefits = [
 // Enderecos oficiais usados pelo rodape e pela pagina interna de links.
 export const officialUnits = [
   {
+    // id interno mantido como "dourados-matriz" (usado em SHORT_LABELS/filtros por
+    // "dourados-" em outros componentes) - so o rotulo exibido e o endereco mudaram, conforme
+    // dados oficiais confirmados pelo usuario em 2026-08-20 (a numeracao "258" estava
+    // desatualizada). mapsHref nao foi alterado - sem um link novo confirmado, mantido como
+    // estava (ver relatorio desta fase).
     id: "dourados-matriz",
-    name: "Dourados — Matriz",
-    address: "Rua Pedro Rigotti, 258 – Jardim São Pedro, Dourados/MS",
+    name: "Dourados — Centro",
+    address: "Rua Pedro Rigotti, 248 – Jd. São Pedro, Dourados/MS",
     phone: "(67) 3427-5700",
     phoneHref: "tel:+556734275700",
     mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
@@ -191,8 +196,12 @@ export const navLinks = [
     label: "CATÁLOGO",
     href: "/catalogo/catalogo-imesul.pdf",
   },
-  { label: "DOURADOS", href: salesSiteUrl },
-  { label: "CAMPO GRANDE", href: salesSiteUrl },
+  // A escolha da unidade aqui é EXPLÍCITA pelo próprio rótulo do link - resolve direto (sem
+  // modal) e persiste como preferência necessária antes de sair para o site de vendas (ver
+  // components/Navbar.jsx/Footer.jsx e lib/unitPreference.js). unidade=... também é lida e
+  // persistida pelo site de vendas ao chegar (ver imesul-vendas/lib/unitPreference.js).
+  { label: "DOURADOS", href: `${salesSiteUrl}?unidade=dourados`, unit: "dourados" },
+  { label: "CAMPO GRANDE", href: `${salesSiteUrl}?unidade=campo-grande`, unit: "campo-grande" },
   { label: "LINKS", href: "/links" },
 ];
 
