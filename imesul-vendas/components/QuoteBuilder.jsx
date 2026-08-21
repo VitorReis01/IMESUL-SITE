@@ -693,33 +693,23 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
           labels={isTelaEletrossoldada ? telaSummaryLabels : undefined}
           showLength={isTelaEletrossoldada}
         >
-          {(usesSimplifiedModelQuote || isTelaEletrossoldada) ? (
-            <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">
-              <AddToCartButton
-                category={category}
-                product={product}
-                form={form}
-                quantity={form.quantity}
-                disabledReason={disabledReason}
-              />
-              <WhatsAppButton
-                message={message}
-                disabledReason={disabledReason}
-                trackingDetail={`Material: ${product.name}`}
-                isLoggedIn={isLoggedIn}
-                className="mt-0"
-                pagePath="material-quote-flow"
-              />
-            </div>
-          ) : (
+          <div className="mt-6 grid gap-3 sm:mt-8 xl:grid-cols-2">
+            <AddToCartButton
+              category={category}
+              product={product}
+              form={form}
+              quantity={form.quantity}
+              disabledReason={disabledReason}
+            />
             <WhatsAppButton
               message={message}
               disabledReason={disabledReason}
               trackingDetail={`Material: ${product.name}`}
               isLoggedIn={isLoggedIn}
+              className="mt-0"
               pagePath="material-quote-flow"
             />
-          )}
+          </div>
         </ProductSummary>
       </div>
     </section>

@@ -8,6 +8,7 @@
 // desta fase, secao carrinho).
 const cartStorageKey = "imesul_cart_items";
 const cartEventName = "imesul-cart-updated";
+const cartOpenEventName = "imesul-cart-open";
 const maxCartItems = 60;
 
 const canUseBrowserStorage = () =>
@@ -107,4 +108,15 @@ export const subscribeToCart = (callback) => {
     window.removeEventListener(cartEventName, callback);
     window.removeEventListener("storage", callback);
   };
+};
+
+export const openCartDrawer = () => {
+  if (!canUseBrowserStorage()) return;
+  window.dispatchEvent(new CustomEvent(cartOpenEventName));
+};
+
+export const subscribeToCartOpen = (callback) => {
+  if (!canUseBrowserStorage()) return () => {};
+  window.addEventListener(cartOpenEventName, callback);
+  return () => window.removeEventListener(cartOpenEventName, callback);
 };

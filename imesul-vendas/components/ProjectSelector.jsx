@@ -2,7 +2,7 @@
 
 // Tela principal da area de vendas.
 // Conecta hero, busca, carrossel, catalogo, orcamento, login e painel admin.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ import {
   PackageSearch,
   Search,
   ShieldCheck,
+  ShoppingCart,
   X,
 } from "lucide-react";
 import { projects } from "../data/projects";
@@ -30,6 +31,7 @@ import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
 import { navigateWithConsent } from "../lib/consent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
+import { getCartItemCount, getCartRawSnapshot, getServerCartSnapshot, openCartDrawer, parseCartRaw, subscribeToCart } from "../lib/cart";
 import { captureUnitFromUrl } from "../lib/unitPreference";
 import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
@@ -237,6 +239,7 @@ const projectShowcaseCards = [
 // Apenas um caminho permanece selecionado para evitar dois orcamentos concorrentes.
 export default function ProjectSelector() {
   const router = useRouter();
+  const rawCartItems = useSyncExternalStore(subscribeToCart, getCartRawSnapshot, getServerCartSnapshot);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [recommendedProject, setRecommendedProject] = useState(null);
   const [highlightedProjectId, setHighlightedProjectId] = useState(null);
@@ -261,6 +264,7 @@ export default function ProjectSelector() {
   const carouselScrollTimeoutRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const cartItemCount = getCartItemCount(parseCartRaw(rawCartItems));
   // Fallback nativo do link (clique do meio/nova aba/sem JS) - o clique normal e interceptado
   // por handleDirectContactClick, que cria o lead (DIRECT_CONTACT) antes de abrir o WhatsApp.
   const directContactFallbackUrl = createWhatsAppUrl(sellerMessage);
@@ -852,6 +856,37 @@ export default function ProjectSelector() {
                   <Check size={13} strokeWidth={3} aria-hidden="true" />
                 </span>
               )}
+            </button>
+            <button
+              type="button"
+              onClick={openCartDrawer}
+              aria-label={`Abrir carrinho${cartItemCount ? `, ${cartItemCount} item(ns)` : ""}`}
+              className="relative hidden h-10 w-10 items-center justify-center rounded-[5px] border border-slate-200 bg-white text-slate-800 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-slate-50 hover:text-imesul-red hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-imesul-red/20 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
+            >
+              <ShoppingCart size={17} strokeWidth={2} aria-hidden="true" />
+              {cartItemCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-imesul-red px-1 font-condensed text-[10px] font-bold text-white">
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                closeMobileMenu();
+                openCartDrawer();
+              }}
+              className={mobileMenuLinkClassName}
+            >
+              Carrinho
+              <span className="inline-flex items-center gap-2">
+                {cartItemCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-imesul-red px-1.5 font-condensed text-[10px] font-bold text-white">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
+                <ShoppingCart size={16} aria-hidden="true" />
+              </span>
             </button>
             <a
               href={directContactFallbackUrl}

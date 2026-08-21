@@ -538,8 +538,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
 
   return (
     <div className="fixed inset-0 z-[210] bg-[#030811]/88 px-4 py-5 backdrop-blur-lg">
-      <section className="relative mx-auto flex max-h-[94vh] w-full max-w-[1320px] flex-col overflow-hidden rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
-        <header className="flex flex-col gap-4 border-b border-white/[0.08] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+      <section className="relative mx-auto flex h-[94vh] w-full max-w-[1320px] flex-col overflow-hidden rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
+        <header className="flex shrink-0 flex-col gap-4 border-b border-white/[0.08] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-imesul-red">Área restrita</p>
             <h2 className="mt-2 font-display text-4xl leading-none text-white sm:text-5xl">Painel Administrativo IMESUL</h2>
@@ -597,18 +597,11 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
           </div>
         </header>
 
-        {activeTab === "commercial" && (
-          <div className="absolute inset-x-0 bottom-0 top-[145px] z-30 sm:top-[125px]">
-            <CommercialReportPanel />
-          </div>
-        )}
-        {activeTab === "monitoring" && (
-          <div className="absolute inset-x-0 bottom-0 top-[145px] z-30 sm:top-[125px]">
-            <MonitoringPanel />
-          </div>
-        )}
-
-        <div className={`overflow-y-auto px-5 py-5 sm:px-7 ${activeTab === "analytics" ? "" : "hidden"}`}>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+          {activeTab === "commercial" && <CommercialReportPanel />}
+          {activeTab === "monitoring" && <MonitoringPanel />}
+          {activeTab === "analytics" && (
+            <>
           <div className="flex flex-wrap gap-2">
             {periodFilters.map((period) => (
               <button key={period.value} type="button" onClick={() => setActivePeriod(period.value)} className={`rounded-full border px-3.5 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${activePeriod === period.value ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] bg-white/[0.035] text-imesul-steel-light/72 hover:border-white/[0.22] hover:text-white"}`}>
@@ -761,6 +754,8 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
               </div>
             ) : null}
           </div>
+            </>
+          )}
         </div>
       </section>
       {selectedSecurityEvent ? (

@@ -6,7 +6,7 @@
 // montado uma vez em app/layout.jsx e a forma mais segura de atender "carrinho acessivel fora do
 // catalogo" sem redesenhar o cabecalho de cada pagina (fora do escopo desta fase).
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { MessageCircle, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import {
   clearCartItems,
   getCartItemCount,
@@ -15,12 +15,17 @@ import {
   parseCartRaw,
   removeCartItem,
   subscribeToCart,
+  subscribeToCartOpen,
   updateCartItemQuantity,
 } from "../lib/cart";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { trackLocalEvent } from "../lib/localAnalytics";
 import { getCurrentCartTrackCode, scheduleCartTrackingSync } from "../lib/cartTracking";
+import { getStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
+
+const sellerMessage =
+  "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";
 
 const formatTechnicalLine = (item) =>
   [
@@ -55,6 +60,7 @@ const buildCartMessage = (items) => {
 
 export default function CartWidget() {
   const rawItems = useSyncExternalStore(subscribeToCart, getCartRawSnapshot, getServerCartSnapshot);
+  const unit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
   const items = parseCartRaw(rawItems);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +74,8 @@ export default function CartWidget() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open]);
+
+  useEffect(() => subscribeToCartOpen(() => setOpen(true)), []);
 
   // Rastreio de abandono é opcional e debounced (ver lib/cartTracking.js) - só envia algo quando
   // o visitante já consentiu com analytics; sem consentimento, esta chamada não faz nada.
@@ -103,21 +111,48 @@ export default function CartWidget() {
     });
   };
 
+  const handleFloatingWhatsApp = () => {
+    trackLocalEvent({
+      type: "whatsapp",
+      label: "Contato/WhatsApp",
+      section: "Botões flutuantes",
+      detail: "Botão flutuante",
+    });
+
+    openWhatsAppWithLead({
+      message: sellerMessage,
+      flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
+      product: "Botão flutuante",
+      unit,
+      pagePath: "floating-whatsapp",
+    });
+  };
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={`Abrir carrinho${itemCount ? `, ${itemCount} item(ns)` : ""}`}
-        className="fixed bottom-5 right-5 z-[140] flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.14] bg-imesul-red text-white shadow-[0_14px_38px_rgba(212,43,43,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-imesul-red/30 sm:h-16 sm:w-16"
-      >
-        <ShoppingCart size={22} strokeWidth={2} aria-hidden="true" />
-        {itemCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[#06101d] bg-white px-1 font-condensed text-[11px] font-bold text-imesul-red">
-            {itemCount > 99 ? "99+" : itemCount}
-          </span>
-        )}
-      </button>
+      <div className="fixed bottom-5 right-5 z-[140] flex flex-col items-end gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={handleFloatingWhatsApp}
+          aria-label="Falar com vendedor pelo WhatsApp"
+          className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.14] bg-[#25D366] text-white shadow-[0_14px_38px_rgba(37,211,102,0.26)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe5d] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 sm:h-16 sm:w-16"
+        >
+          <MessageCircle size={22} strokeWidth={2} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Abrir carrinho${itemCount ? `, ${itemCount} item(ns)` : ""}`}
+          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.14] bg-imesul-red text-white shadow-[0_14px_38px_rgba(212,43,43,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-imesul-red/30 sm:h-16 sm:w-16"
+        >
+          <ShoppingCart size={22} strokeWidth={2} aria-hidden="true" />
+          {itemCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[#06101d] bg-white px-1 font-condensed text-[11px] font-bold text-imesul-red">
+              {itemCount > 99 ? "99+" : itemCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {open && (
         <div className="fixed inset-0 z-[160] flex justify-end">
