@@ -138,7 +138,14 @@ export const importConsentFromUrl = async () => {
     });
     const data = await response.json();
     if (!response.ok || !data?.ok) return null;
-    return persistConsentRecord(data.consent);
+
+    const imported = persistConsentRecord(data.consent);
+
+    if (imported) {
+      window.dispatchEvent(new CustomEvent(consentEventName));
+    }
+
+    return imported;
   } catch {
     return null;
   } finally {
@@ -161,9 +168,9 @@ export const syncSharedConsent = () => {
 export const getStoredConsentRaw = () =>
   canUseBrowserStorage()
     ? (() => {
-        const consent = syncSharedConsent() || parseStoredConsent(window.localStorage.getItem(consentStorageKey) || "");
-        return consent ? JSON.stringify(consent) : "";
-      })()
+      const consent = syncSharedConsent() || parseStoredConsent(window.localStorage.getItem(consentStorageKey) || "");
+      return consent ? JSON.stringify(consent) : "";
+    })()
     : "";
 
 // Snapshot do servidor e sempre vazio: garante que a primeira renderizacao no client (antes de
@@ -171,7 +178,7 @@ export const getStoredConsentRaw = () =>
 export const getServerConsentRaw = () => "";
 
 export const subscribeToConsent = (callback) => {
-  if (!canUseBrowserStorage()) return () => {};
+  if (!canUseBrowserStorage()) return () => { };
   window.addEventListener(consentEventName, callback);
   window.addEventListener("storage", callback);
   return () => {
@@ -226,7 +233,7 @@ export const requestOpenPrivacyPreferences = () => {
 };
 
 export const subscribeToOpenPrivacyPreferences = (callback) => {
-  if (!canUseBrowserStorage()) return () => {};
+  if (!canUseBrowserStorage()) return () => { };
   window.addEventListener(openPreferencesEventName, callback);
   return () => window.removeEventListener(openPreferencesEventName, callback);
 };

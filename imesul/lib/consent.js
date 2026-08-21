@@ -132,7 +132,13 @@ export const importConsentFromUrl = async () => {
     });
     const data = await response.json();
     if (!response.ok || !data?.ok) return null;
-    return persistConsentRecord(data.consent);
+    const imported = persistConsentRecord(data.consent);
+
+if (imported) {
+  window.dispatchEvent(new CustomEvent(consentEventName));
+}
+
+return imported;
   } catch {
     return null;
   } finally {

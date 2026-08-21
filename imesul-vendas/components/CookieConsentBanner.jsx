@@ -49,15 +49,24 @@ export default function CookieConsentBanner() {
   // a decisao - nunca um painel granular separado (ver relatorio desta fase).
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
   useEffect(() => {
-    if (!syncing) return undefined;
-    let active = true;
-    importConsentFromUrl().finally(() => {
-      if (active) setSyncing(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, [syncing]);
+  if (!syncing) return undefined;
+
+  let active = true;
+
+  const syncConsent = async () => {
+    await importConsentFromUrl();
+
+    if (active) {
+      setSyncing(false);
+    }
+  };
+
+  syncConsent();
+
+  return () => {
+    active = false;
+  };
+}, [syncing]);
 
   const isVisible = forceOpen || !consent;
   if (syncing || !isVisible) return null;
