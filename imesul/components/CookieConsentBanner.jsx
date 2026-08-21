@@ -16,17 +16,32 @@ import {
 
 export default function CookieConsentBanner() {
   const storedRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
-  const consent = parseStoredConsent(storedRaw);
   const [forceOpen, setForceOpen] = useState(false);
   const [syncing, setSyncing] = useState(() => hasPendingConsentSync());
+  const [importedRaw, setImportedRaw] = useState("");
+
+  const consent = parseStoredConsent(storedRaw || importedRaw);
 
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
   useEffect(() => {
     if (!syncing) return undefined;
+
     let active = true;
-    importConsentFromUrl().finally(() => {
-      if (active) setSyncing(false);
-    });
+
+    const importConsent = async () => {
+      const imported = await importConsentFromUrl();
+
+      if (!active) return;
+
+      if (imported) {
+        setImportedRaw(JSON.stringify(imported));
+      }
+
+      setSyncing(false);
+    };
+
+    importConsent();
+
     return () => {
       active = false;
     };

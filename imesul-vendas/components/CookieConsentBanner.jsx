@@ -41,32 +41,38 @@ export default function CookieConsentBanner() {
   // corrige para o valor real do localStorage logo apos hidratar, sem mismatch e sem flash visivel
   // do banner para quem ja decidiu (ao contrario de reler em useEffect + setState).
   const storedRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
-  const consent = parseStoredConsent(storedRaw);
   const [forceOpen, setForceOpen] = useState(false);
   const [syncing, setSyncing] = useState(() => hasPendingConsentSync());
+  const [importedRaw, setImportedRaw] = useState("");
+
+  const consent = parseStoredConsent(storedRaw || importedRaw);
 
   // "Preferências de privacidade" no rodape reabre o MESMO banner binario, para revogar/alterar
   // a decisao - nunca um painel granular separado (ver relatorio desta fase).
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
   useEffect(() => {
-  if (!syncing) return undefined;
+    if (!syncing) return undefined;
 
-  let active = true;
+    let active = true;
 
-  const syncConsent = async () => {
-    await importConsentFromUrl();
+    const importConsent = async () => {
+      const imported = await importConsentFromUrl();
 
-    if (active) {
+      if (!active) return;
+
+      if (imported) {
+        setImportedRaw(JSON.stringify(imported));
+      }
+
       setSyncing(false);
-    }
-  };
+    };
 
-  syncConsent();
+    importConsent();
 
-  return () => {
-    active = false;
-  };
-}, [syncing]);
+    return () => {
+      active = false;
+    };
+  }, [syncing]);
 
   const isVisible = forceOpen || !consent;
   if (syncing || !isVisible) return null;
