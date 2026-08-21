@@ -857,19 +857,7 @@ export default function ProjectSelector() {
                 </span>
               )}
             </button>
-            <button
-              type="button"
-              onClick={openCartDrawer}
-              aria-label={`Abrir carrinho${cartItemCount ? `, ${cartItemCount} item(ns)` : ""}`}
-              className="relative hidden h-10 w-10 items-center justify-center rounded-[5px] border border-slate-200 bg-white text-slate-800 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-imesul-red/55 hover:bg-slate-50 hover:text-imesul-red hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-imesul-red/20 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
-            >
-              <ShoppingCart size={17} strokeWidth={2} aria-hidden="true" />
-              {cartItemCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-imesul-red px-1 font-condensed text-[10px] font-bold text-white">
-                  {cartItemCount > 99 ? "99+" : cartItemCount}
-                </span>
-              )}
-            </button>
+            
             <button
               type="button"
               onClick={() => {
