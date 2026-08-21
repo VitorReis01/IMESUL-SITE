@@ -27,6 +27,7 @@ import { catalogProducts, getCatalogProduct } from "../data/catalogProducts";
 import { getCatalogCategoryPath } from "../data/catalogRoutes";
 import { createWhatsAppUrl } from "../lib/whatsapp";
 import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
+import { navigateWithConsent } from "../lib/consent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { captureUnitFromUrl } from "../lib/unitPreference";
@@ -767,7 +768,7 @@ export default function ProjectSelector() {
             </a>
             <a
               href={institutionalUrl}
-              onClick={() => trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar", detail: institutionalUrl })}
+              onClick={(event) => navigateWithConsent(event, institutionalUrl, () => trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar", detail: institutionalUrl }))}
               className={navLinkClassName}
             >
               Sobre a Imesul
@@ -927,10 +928,10 @@ export default function ProjectSelector() {
             </a>
             <a
               href={institutionalUrl}
-              onClick={() => {
+              onClick={(event) => navigateWithConsent(event, institutionalUrl, () => {
                 trackInteraction({ type: "click", label: "Sobre a Imesul", section: "Navbar mobile", detail: institutionalUrl });
                 closeMobileMenu();
-              }}
+              })}
               className={mobileMenuLinkClassName}
             >
               Sobre a Imesul

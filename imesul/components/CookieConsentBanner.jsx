@@ -1,15 +1,13 @@
 "use client";
 
-// Banner de consentimento (LGPD) do site institucional - decisão binária: ACEITAR ou REJEITAR
-// (sem "Configurar"/categorias/painel granular, mesma decisão do site de vendas - ver
-// components/CookieConsentBanner.jsx em imesul-vendas). Storage próprio deste site (lib/consent.js
-// aqui é independente do consent.js de imesul-vendas - domínios separados, nunca compartilhar
-// localStorage entre eles).
+// Banner de consentimento (LGPD): decisão binária, sincronizada entre os sites da IMESUL.
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   getServerConsentRaw,
   getStoredConsentRaw,
+  hasPendingConsentSync,
+  importConsentFromUrl,
   parseStoredConsent,
   saveConsent,
   subscribeToConsent,
@@ -20,11 +18,22 @@ export default function CookieConsentBanner() {
   const storedRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
   const consent = parseStoredConsent(storedRaw);
   const [forceOpen, setForceOpen] = useState(false);
+  const [syncing, setSyncing] = useState(() => hasPendingConsentSync());
 
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
+  useEffect(() => {
+    if (!syncing) return undefined;
+    let active = true;
+    importConsentFromUrl().finally(() => {
+      if (active) setSyncing(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [syncing]);
 
   const isVisible = forceOpen || !consent;
-  if (!isVisible) return null;
+  if (syncing || !isVisible) return null;
 
   const close = () => setForceOpen(false);
 

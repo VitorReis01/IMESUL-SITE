@@ -11,6 +11,8 @@ import { ShieldCheck } from "lucide-react";
 import {
   getServerConsentRaw,
   getStoredConsentRaw,
+  hasPendingConsentSync,
+  importConsentFromUrl,
   parseStoredConsent,
   requestDeviceLocationOnce,
   saveConsent,
@@ -41,13 +43,24 @@ export default function CookieConsentBanner() {
   const storedRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
   const consent = parseStoredConsent(storedRaw);
   const [forceOpen, setForceOpen] = useState(false);
+  const [syncing, setSyncing] = useState(() => hasPendingConsentSync());
 
   // "Preferências de privacidade" no rodape reabre o MESMO banner binario, para revogar/alterar
   // a decisao - nunca um painel granular separado (ver relatorio desta fase).
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
+  useEffect(() => {
+    if (!syncing) return undefined;
+    let active = true;
+    importConsentFromUrl().finally(() => {
+      if (active) setSyncing(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [syncing]);
 
   const isVisible = forceOpen || !consent;
-  if (!isVisible) return null;
+  if (syncing || !isVisible) return null;
 
   const close = () => setForceOpen(false);
 

@@ -12,6 +12,8 @@ const gaCampoGrandeId = process.env.NEXT_PUBLIC_GA_CAMPO_GRANDE_ID || "";
 const gaDouradosId = process.env.NEXT_PUBLIC_GA_DOURADOS_ID || "";
 const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
+export const canSendTracking = ({ enabled, consent }) => enabled === true && Boolean(consent?.analytics);
+
 export default function TrackingScripts() {
   const pathname = usePathname() || "/";
   const lastGooglePageViewPath = useRef("");
@@ -26,7 +28,7 @@ export default function TrackingScripts() {
       : selectedUnit === COMMERCIAL_UNITS.CAMPO_GRANDE
         ? gaCampoGrandeId
         : "";
-  const canTrack = trackingEnabled && Boolean(consent?.analytics);
+  const canTrack = canSendTracking({ enabled: trackingEnabled, consent });
 
   useEffect(() => {
     if (!canTrack || !googleReady || !googleTagId || typeof window.gtag !== "function") return;

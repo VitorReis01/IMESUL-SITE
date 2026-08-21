@@ -5,7 +5,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { requestOpenPrivacyPreferences } from "../lib/consent";
+import { navigateWithConsent, requestOpenPrivacyPreferences } from "../lib/consent";
 
 const institutionalUrl =
   process.env.NEXT_PUBLIC_INSTITUTIONAL_URL ||
@@ -160,6 +160,7 @@ export default function SalesFooter() {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    onClick={link.href === institutionalUrl ? (event) => navigateWithConsent(event, link.href) : undefined}
                     target={link.external ? "_blank" : undefined}
                     rel={link.external ? "noopener noreferrer" : undefined}
                     className="group inline-flex min-h-10 items-center gap-2 py-1 font-condensed text-sm font-semibold uppercase tracking-[0.1em] text-slate-700 transition-colors hover:text-imesul-red sm:tracking-[0.13em]"
