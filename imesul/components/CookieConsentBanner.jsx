@@ -17,35 +17,38 @@ import {
 export default function CookieConsentBanner() {
   const storedRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
   const [forceOpen, setForceOpen] = useState(false);
-  const [syncing, setSyncing] = useState(() => hasPendingConsentSync());
+  const [syncing, setSyncing] = useState(true);
   const [importedRaw, setImportedRaw] = useState("");
 
-  const consent = parseStoredConsent(storedRaw || importedRaw);
+  const consent = parseStoredConsent(importedRaw || storedRaw);
 
   useEffect(() => subscribeToOpenPrivacyPreferences(() => setForceOpen(true)), []);
   useEffect(() => {
-    if (!syncing) return undefined;
-
     let active = true;
 
-    const importConsent = async () => {
-      const imported = await importConsentFromUrl();
+    const syncConsent = async () => {
+      let raw = getStoredConsentRaw();
 
-      if (!active) return;
+      if (hasPendingConsentSync()) {
+        const imported = await importConsentFromUrl();
 
-      if (imported) {
-        setImportedRaw(JSON.stringify(imported));
+        if (imported) {
+          raw = JSON.stringify(imported);
+        }
       }
 
-      setSyncing(false);
+      if (active) {
+        setImportedRaw(raw);
+        setSyncing(false);
+      }
     };
 
-    importConsent();
+    syncConsent();
 
     return () => {
       active = false;
     };
-  }, [syncing]);
+  }, []);
 
   const isVisible = forceOpen || !consent;
   if (syncing || !isVisible) return null;
@@ -53,15 +56,22 @@ export default function CookieConsentBanner() {
   const close = () => setForceOpen(false);
 
   const handleAccept = () => {
-    // "Localização" aqui é só o consentimento para eventualmente usar o dispositivo (ex.: botão
-    // "Usar minha localização" do UnitPickerModal) - nunca disparada automaticamente por este
-    // clique; o modal continua exigindo um clique explícito próprio (ver UnitPickerModal.jsx).
-    saveConsent({ analytics: true, location: true });
+    const saved = saveConsent({ analytics: true, location: true });
+
+    if (saved) {
+      setImportedRaw(JSON.stringify(saved));
+    }
+
     close();
   };
 
   const handleReject = () => {
-    saveConsent({ analytics: false, location: false });
+    const saved = saveConsent({ analytics: false, location: false });
+
+    if (saved) {
+      setImportedRaw(JSON.stringify(saved));
+    }
+
     close();
   };
 
