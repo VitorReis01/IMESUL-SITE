@@ -639,7 +639,7 @@ export const catalogProducts = [
         group: "Dobradiças",
         description: "Dobradiça 7/8 para articulação de portas, portões e painéis.",
         usage: ["Portões", "Serralheria", "Montagem"],
-        image: "/catalog-products/atualizadas/dobradica-7-8.webp",
+        image: "/catalog-products/atualizadas/catalogo-dobradica.webp",
       },
       {
         id: "dobradica-3-4",
