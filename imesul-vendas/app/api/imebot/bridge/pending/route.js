@@ -1,4 +1,5 @@
 import { isBridgeAuthorized, listPendingBridgeFiles } from "../../../../../Backend.js/pdfBridgeStore";
+import { imebotUnavailable, isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { checkRateLimitLayers } from "../../../../../Backend.js/rateLimiter";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
 
@@ -8,6 +9,8 @@ import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson }
 const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 
 export async function GET(request) {
+  if (!isImebotEnabled()) return imebotUnavailable();
+
   if (!isBridgeAuthorized(request)) {
     return noStoreJson({ ok: false, error: "Não autorizado." }, { status: 401 });
   }

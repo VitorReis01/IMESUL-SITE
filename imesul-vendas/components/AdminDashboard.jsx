@@ -21,9 +21,11 @@ import {
   UserCheck,
   Users,
   X,
+  Activity,
 } from "lucide-react";
 import { clearLocalEvents, getAnalyticsEvents, subscribeToLocalEvents } from "../lib/localAnalytics";
 import CommercialReportPanel from "./CommercialReportPanel";
+import MonitoringPanel from "./MonitoringPanel";
 
 const filters = [
   { label: "Todos", value: "all" },
@@ -559,6 +561,13 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
               >
                 <Briefcase size={14} aria-hidden="true" /> Comercial
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("monitoring")}
+                className={`inline-flex h-9 items-center gap-2 rounded-[7px] border px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.11em] transition-colors ${activeTab === "monitoring" ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] text-imesul-steel-light/72 hover:border-white/25 hover:text-white"}`}
+              >
+                <Activity size={14} aria-hidden="true" /> Monitoramento
+              </button>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -593,8 +602,13 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
             <CommercialReportPanel />
           </div>
         )}
+        {activeTab === "monitoring" && (
+          <div className="absolute inset-x-0 bottom-0 top-[145px] z-30 sm:top-[125px]">
+            <MonitoringPanel />
+          </div>
+        )}
 
-        <div className="overflow-y-auto px-5 py-5 sm:px-7">
+        <div className={`overflow-y-auto px-5 py-5 sm:px-7 ${activeTab === "analytics" ? "" : "hidden"}`}>
           <div className="flex flex-wrap gap-2">
             {periodFilters.map((period) => (
               <button key={period.value} type="button" onClick={() => setActivePeriod(period.value)} className={`rounded-full border px-3.5 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-[0.1em] transition-colors ${activePeriod === period.value ? "border-imesul-red bg-imesul-red text-white" : "border-white/[0.12] bg-white/[0.035] text-imesul-steel-light/72 hover:border-white/[0.22] hover:text-white"}`}>

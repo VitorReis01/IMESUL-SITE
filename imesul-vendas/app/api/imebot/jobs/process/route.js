@@ -1,4 +1,5 @@
 import { processDueFeedbackJobs } from "../../../../../Backend.js/feedbackStore";
+import { imebotUnavailable, isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { noStoreJson } from "../../../../../Backend.js/requestGuards";
 
 const unauthorized = () => noStoreJson({ ok: false }, { status: 401 });
@@ -11,6 +12,8 @@ const isAuthorized = (request) => {
 };
 
 export async function POST(request) {
+  if (!isImebotEnabled()) return imebotUnavailable();
+
   if (!isAuthorized(request)) return unauthorized();
 
   try {

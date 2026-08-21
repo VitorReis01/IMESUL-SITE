@@ -1,4 +1,5 @@
 import { verifyMetaSignature } from "../../../../Backend.js/metaSignature";
+import { imebotUnavailable, isImebotEnabled } from "../../../../Backend.js/imebotFeatureGate";
 import {
   applyImebotEvent,
   assertLeadOwnedBySeller,
@@ -60,6 +61,8 @@ const methodNotAllowed = () => sharedMethodNotAllowed("GET, POST");
 
 // --- GET: verificacao do webhook (handshake exigido pela Meta ao configurar a URL) -------------
 export async function GET(request) {
+  if (!isImebotEnabled()) return imebotUnavailable();
+
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("hub.mode");
   const token = searchParams.get("hub.verify_token");
@@ -78,6 +81,8 @@ export async function GET(request) {
 
 // --- POST: eventos (mensagens inbound de vendedores e clientes) --------------------------------
 export async function POST(request) {
+  if (!isImebotEnabled()) return imebotUnavailable();
+
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > maxBodyBytes) {
     return noStoreJson({ ok: false }, { status: 413 });
@@ -431,7 +436,7 @@ async function handleSellerReturnCommand({ seller, text }) {
     confirmationId: result.confirmationId,
     current: result.current,
     preview: result.preview,
-    token: result.token,
+    tokenAvailable: Boolean(result.token),
   });
 }
 

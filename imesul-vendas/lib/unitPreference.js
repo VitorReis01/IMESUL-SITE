@@ -8,6 +8,7 @@
 import { isValidCommercialUnit } from "./leadFlow";
 
 const unitStorageKey = "imesul_commercial_unit";
+const unitEventName = "imesul-commercial-unit-updated";
 
 const canUseBrowserStorage = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -21,6 +22,17 @@ export const getStoredUnit = () => {
 export const setStoredUnit = (unit) => {
   if (!canUseBrowserStorage() || !isValidCommercialUnit(unit)) return;
   window.localStorage.setItem(unitStorageKey, unit);
+  window.dispatchEvent(new CustomEvent(unitEventName));
+};
+
+export const subscribeToUnitPreference = (callback) => {
+  if (!canUseBrowserStorage()) return () => {};
+  window.addEventListener(unitEventName, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(unitEventName, callback);
+    window.removeEventListener("storage", callback);
+  };
 };
 
 // Le ?unidade= da URL atual, valida contra a allowlist e persiste quando valida. Chamar uma vez

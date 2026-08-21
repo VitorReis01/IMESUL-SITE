@@ -31,6 +31,15 @@ claude-proxy.ps1
 index.html
 .codex-dev-check/
 **/.codex-dev-check/
+.claude/
+skills-lock.json
+AGENTS.md
+DESIGN_DIRECTION.md
+cd
+git
+main
+e --short HEAD
+cd C...UsersAdministradorDocumentsIMESUL-SITE
 
 # Analytics local de desenvolvimento
 Backend.js/analytics-events.json

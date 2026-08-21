@@ -1,4 +1,5 @@
 import { getBridgeFileById, isBridgeAuthorized, markBridgeFileStatus } from "../../../../../../Backend.js/pdfBridgeStore";
+import { imebotUnavailable, isImebotEnabled } from "../../../../../../Backend.js/imebotFeatureGate";
 import { checkRateLimitLayers } from "../../../../../../Backend.js/rateLimiter";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../../Backend.js/requestGuards";
 
@@ -14,6 +15,8 @@ const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 const isMetaConfigured = () => Boolean(process.env.META_WHATSAPP_TOKEN);
 
 export async function GET(request, { params }) {
+  if (!isImebotEnabled()) return imebotUnavailable();
+
   if (!isBridgeAuthorized(request)) {
     return noStoreJson({ ok: false, error: "Não autorizado." }, { status: 401 });
   }

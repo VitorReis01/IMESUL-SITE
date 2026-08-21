@@ -3,6 +3,7 @@ import { Barlow, Barlow_Condensed, Bebas_Neue, JetBrains_Mono } from "next/font/
 import CookieConsentBanner from "../components/CookieConsentBanner";
 import UnitPickerModal from "../components/UnitPickerModal";
 import CommercialContactAlert from "../components/CommercialContactAlert";
+import TrackingScripts from "../components/TrackingScripts";
 
 // Carrega somente os pesos usados e publica cada familia como variavel CSS.
 const displayFont = Bebas_Neue({
@@ -141,6 +142,7 @@ export default function RootLayout({ children }) {
         <UnitPickerModal />
         <CommercialContactAlert />
         <CookieConsentBanner />
+        <TrackingScripts />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@ import "./globals.css";
 import CookieConsentBanner from "../components/CookieConsentBanner";
 import CartWidget from "../components/CartWidget";
 import CommercialContactAlert from "../components/CommercialContactAlert";
+import TrackingScripts from "../components/TrackingScripts";
 
 // Define o titulo e a descricao usados em compartilhamento e mecanismos de busca.
 export const metadata = {
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
         <CartWidget />
         <CommercialContactAlert />
         <CookieConsentBanner />
+        <TrackingScripts />
       </body>
     </html>
   );

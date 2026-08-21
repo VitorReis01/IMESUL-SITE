@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { withSentryConfig } = require("@sentry/nextjs");
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 // Define as origens permitidas para scripts, fontes, imagens e conexoes da aplicacao.
 const contentSecurityPolicy = [
@@ -8,7 +10,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob:",
-  `connect-src 'self' blob: https://accounts.google.com https:${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' blob: https://accounts.google.com https: https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
   "frame-src 'self' https://accounts.google.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
@@ -36,8 +38,7 @@ const nextConfig = {
           { key: "X-DNS-Prefetch-Control", value: "on" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
-            // Geolocalizacao do dispositivo (Fase 2) so pode ser solicitada pela propria origem,
-            // nunca por terceiros embutidos. Camera/microfone/pagamento continuam bloqueados.
+            // Geolocalização só pela própria origem; câmera, microfone e pagamento bloqueados.
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(self), payment=()",
           },
@@ -62,4 +63,8 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  dryRun: !process.env.SENTRY_AUTH_TOKEN,
+  hideSourceMaps: true,
+});

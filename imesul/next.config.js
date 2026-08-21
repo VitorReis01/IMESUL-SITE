@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { withSentryConfig } = require("@sentry/nextjs");
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Configura o build do site institucional e os headers aplicados em produção.
@@ -15,7 +17,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
-  `connect-src 'self' https:${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' https: https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -61,4 +63,8 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  dryRun: !process.env.SENTRY_AUTH_TOKEN,
+  hideSourceMaps: true,
+});
