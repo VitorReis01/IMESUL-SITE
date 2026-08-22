@@ -721,6 +721,10 @@ export default function ProjectSelector() {
   const shouldHideNavbar = navbarHidden && !mobileMenuOpen && !heroReduceMotion;
   const mobileMenuLinkClassName =
     "flex min-h-12 items-center justify-between rounded-[7px] border border-white/[0.11] bg-[#0b1b2d] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] transition-colors hover:border-imesul-red/55 hover:bg-[#10233a]";
+  // Abaixo de xl mostra só o ícone (mesmo tamanho/estilo do botão de menu ao lado), acima de xl
+  // volta a ser exatamente o botão original com texto "Carrinho" (mesmas classes de mobileMenuLinkClassName).
+  const cartHeaderButtonClassName =
+    "relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] border border-slate-200 bg-slate-50 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-slate-900 transition-colors hover:border-imesul-red/55 hover:bg-white xl:h-auto xl:w-auto xl:min-h-12 xl:justify-between xl:rounded-[7px] xl:border-white/[0.11] xl:bg-[#0b1b2d] xl:px-4 xl:text-white xl:shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] xl:hover:bg-[#10233a]";
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
@@ -788,8 +792,8 @@ export default function ProjectSelector() {
             </a>
           </nav>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div ref={searchRef} className="relative flex min-w-0">
-              <label className="flex h-11 w-[min(34vw,140px)] items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 min-[360px]:w-[min(38vw,160px)] min-[390px]:w-[min(42vw,190px)] sm:w-[270px] sm:px-3">
+            <div ref={searchRef} className="relative flex min-w-0 flex-1 sm:flex-none">
+              <label className="flex h-11 w-full items-center gap-2 rounded-[5px] border border-slate-200 bg-slate-50 px-2.5 text-slate-500 sm:w-[270px] sm:px-3">
                 <span className="sr-only">Buscar materiais</span>
                 <input
                   type="search"
@@ -864,17 +868,26 @@ export default function ProjectSelector() {
                 closeMobileMenu();
                 openCartDrawer();
               }}
-              className={mobileMenuLinkClassName}
+              aria-label={`Abrir carrinho${cartItemCount > 0 ? `, ${cartItemCount} item(ns)` : ""}`}
+              className={cartHeaderButtonClassName}
             >
-              Carrinho
+              <span className="hidden xl:inline">Carrinho</span>
               <span className="inline-flex items-center gap-2">
                 {cartItemCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-imesul-red px-1.5 font-condensed text-[10px] font-bold text-white">
+                  <span className="hidden h-5 min-w-5 items-center justify-center rounded-full bg-imesul-red px-1.5 font-condensed text-[10px] font-bold text-white xl:flex">
                     {cartItemCount > 99 ? "99+" : cartItemCount}
                   </span>
                 )}
                 <ShoppingCart size={16} aria-hidden="true" />
               </span>
+              {cartItemCount > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-slate-50 bg-imesul-red px-1 font-condensed text-[10px] font-bold text-white xl:hidden"
+                >
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
             </button>
             <a
               href={directContactFallbackUrl}

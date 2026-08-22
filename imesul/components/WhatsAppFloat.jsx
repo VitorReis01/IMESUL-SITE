@@ -3,16 +3,26 @@
 // CTA genérico "falar com um vendedor" (DIRECT_CONTACT) - resolve unidade, cria o lead e abre o
 // WhatsApp do vendedor sorteado pelo rodízio (ver lib/commercialContact.js). Botão em vez de link
 // direto: precisa rodar lógica antes de abrir o WhatsApp, sem quebrar o fallback já existente.
+import { useSyncExternalStore } from "react";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
+import {
+  getConsentBannerOpen,
+  getServerConsentBannerOpen,
+  subscribeToConsentBannerOpen,
+} from "../lib/consent";
 
 // Mantem o contato comercial acessivel e aplica profundidade ao botao, nao ao icone.
 export default function WhatsAppFloat() {
+  // Abaixo de xl, cede lugar ao banner de consentimento enquanto ele estiver visivel (ver
+  // lib/consent.js) - em xl+ o banner tem espaco sobrando ao lado e o botao continua visivel.
+  const bannerOpen = useSyncExternalStore(subscribeToConsentBannerOpen, getConsentBannerOpen, getServerConsentBannerOpen);
+
   return (
     <button
       type="button"
       onClick={() => openCommercialWhatsApp({ pagePath: "whatsapp-flutuante" })}
       aria-label="Falar com a IMESUL no WhatsApp"
-      className="group fixed bottom-5 right-5 z-[140] flex h-14 w-14 items-center justify-center rounded-full text-[#25d366] transition-transform duration-300 ease-out hover:-translate-y-1 hover:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#25d366] motion-reduce:transform-none sm:bottom-7 sm:right-7 sm:h-16 sm:w-16"
+      className={`group fixed bottom-5 right-5 z-[140] ${bannerOpen ? "hidden xl:flex" : "flex"} h-14 w-14 items-center justify-center rounded-full text-[#25d366] transition-transform duration-300 ease-out hover:-translate-y-1 hover:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#25d366] motion-reduce:transform-none sm:bottom-7 sm:right-7 sm:h-16 sm:w-16`}
     >
       <span
         className="whatsapp-float-halo pointer-events-none absolute -inset-1 rounded-full border border-[#25d366]/15 bg-[#25d366]/10 blur-[7px] transition duration-300 group-hover:border-[#25d366]/25 group-hover:bg-[#25d366]/15 motion-reduce:animate-none"

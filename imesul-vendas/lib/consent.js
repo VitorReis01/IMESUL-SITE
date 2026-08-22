@@ -7,6 +7,7 @@ const consentStorageKey = "imesul_privacy_consent";
 export const consentVersion = 1;
 const consentEventName = "imesul-consent-updated";
 const openPreferencesEventName = "imesul-privacy-preferences-open";
+const bannerOpenEventName = "imesul-consent-banner-open-changed";
 const sharedConsentCookieName = "imesul_privacy_consent";
 export const consentQueryParam = "im_consent";
 const issueEndpoint = "/api/consent-sync/issue";
@@ -236,6 +237,28 @@ export const subscribeToOpenPrivacyPreferences = (callback) => {
   if (!canUseBrowserStorage()) return () => { };
   window.addEventListener(openPreferencesEventName, callback);
   return () => window.removeEventListener(openPreferencesEventName, callback);
+};
+
+// Sinal efemero (nao persistido, nao e uma segunda decisao de consentimento) de "o banner esta
+// visivel agora". Quem publica e so o CookieConsentBanner, a partir da mesma logica que ja usa
+// para decidir se renderiza (forceOpen/consent salvo) - outros elementos fixos (WhatsApp/carrinho
+// flutuantes) leem por aqui para ceder espaco ao banner em telas pequenas, sem duplicar a logica
+// de consentimento nem reimplementar forceOpen/syncing em cada componente.
+let consentBannerOpenState = false;
+
+export const setConsentBannerOpen = (open) => {
+  if (typeof window === "undefined" || consentBannerOpenState === open) return;
+  consentBannerOpenState = open;
+  window.dispatchEvent(new CustomEvent(bannerOpenEventName));
+};
+
+export const getConsentBannerOpen = () => consentBannerOpenState;
+export const getServerConsentBannerOpen = () => false;
+
+export const subscribeToConsentBannerOpen = (callback) => {
+  if (!canUseBrowserStorage()) return () => { };
+  window.addEventListener(bannerOpenEventName, callback);
+  return () => window.removeEventListener(bannerOpenEventName, callback);
 };
 
 // --- Geolocalizacao: no maximo uma chamada por decisao, sempre disparada por acao explicita ---

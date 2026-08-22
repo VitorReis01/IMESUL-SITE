@@ -16,6 +16,7 @@ import {
   parseStoredConsent,
   requestDeviceLocationOnce,
   saveConsent,
+  setConsentBannerOpen,
   subscribeToConsent,
   subscribeToOpenPrivacyPreferences,
 } from "../lib/consent";
@@ -78,6 +79,13 @@ export default function CookieConsentBanner() {
   }, []);
 
   const isVisible = forceOpen || !consent;
+
+  // Publica a mesma decisao de visibilidade que este componente ja calcula, para os botoes
+  // flutuantes (WhatsApp/carrinho) saberem se devem ceder espaco - ver lib/consent.js.
+  useEffect(() => {
+    setConsentBannerOpen(!syncing && isVisible);
+  }, [syncing, isVisible]);
+
   if (syncing || !isVisible) return null;
 
   const close = () => setForceOpen(false);
@@ -104,12 +112,12 @@ export default function CookieConsentBanner() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[150] px-4 pb-4 sm:px-6 sm:pb-6">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[150] px-4 pb-4 sm:px-6 sm:pb-6">
       <div
         role="dialog"
         aria-modal="false"
         aria-label="Consentimento de cookies"
-        className="relative mx-auto max-w-[860px] overflow-hidden rounded-[10px] border border-white/[0.12] bg-[#071321]/97 p-5 shadow-[0_-16px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none sm:p-6"
+        className="pointer-events-auto relative mx-auto max-w-[860px] overflow-hidden rounded-[10px] border border-white/[0.12] bg-[#071321]/97 p-5 shadow-[0_-16px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none sm:p-6"
       >
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-imesul-red/50 to-transparent" />
 

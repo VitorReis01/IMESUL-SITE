@@ -23,6 +23,11 @@ import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { trackLocalEvent } from "../lib/localAnalytics";
 import { getCurrentCartTrackCode, scheduleCartTrackingSync } from "../lib/cartTracking";
 import { getStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
+import {
+  getConsentBannerOpen,
+  getServerConsentBannerOpen,
+  subscribeToConsentBannerOpen,
+} from "../lib/consent";
 
 const sellerMessage =
   "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";
@@ -61,6 +66,9 @@ const buildCartMessage = (items) => {
 export default function CartWidget() {
   const rawItems = useSyncExternalStore(subscribeToCart, getCartRawSnapshot, getServerCartSnapshot);
   const unit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
+  // Abaixo de xl, cede lugar ao banner de consentimento enquanto ele estiver visivel (ver
+  // lib/consent.js) - em xl+ o banner tem espaco sobrando ao lado e os botoes continuam visiveis.
+  const bannerOpen = useSyncExternalStore(subscribeToConsentBannerOpen, getConsentBannerOpen, getServerConsentBannerOpen);
   const items = parseCartRaw(rawItems);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -130,7 +138,9 @@ export default function CartWidget() {
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-[140] flex flex-col items-end gap-3 sm:flex-row">
+      <div
+        className={`fixed bottom-5 right-5 z-[140] ${bannerOpen ? "hidden xl:flex" : "flex"} flex-col items-end gap-3 sm:flex-row`}
+      >
         <button
           type="button"
           onClick={handleFloatingWhatsApp}
