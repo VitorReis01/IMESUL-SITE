@@ -12,10 +12,10 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
 // Restringe os recursos que a pagina pode carregar e fica mais permissiva apenas no desenvolvimento.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://www.facebook.com https://www.google-analytics.com",
   "media-src 'self' blob:",
   `connect-src 'self' https: https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",

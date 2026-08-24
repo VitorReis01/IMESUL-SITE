@@ -5,7 +5,7 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 // Define as origens permitidas para scripts, fontes, imagens e conexoes da aplicacao.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://accounts.gstatic.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://accounts.gstatic.com https://www.googletagmanager.com https://connect.facebook.net${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
