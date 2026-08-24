@@ -225,6 +225,22 @@ function CompatibilityProductCard({ product, index, fallback = false }) {
 }
 
 function CompatibilityProductExperience({ fallback = false }) {
+  // Palco desktop de reduced-motion: mostra 1 produto por vez, sem GSAP/pin/parallax/fade -
+  // troca de produto e so um re-render do React (nao ha nada para animar). Reaproveita
+  // ProductImage/ProductInformation/products - os mesmos usados no showroom "full" animado, que
+  // esta funcao nao altera. Mobile/tablet continuam com a lista vertical de sempre (ver lg:hidden
+  // abaixo); este palco so aparece em lg+.
+  const [desktopActive, setDesktopActive] = useState(0);
+  const desktopProduct = products[desktopActive];
+
+  const goToPreviousProduct = () => {
+    setDesktopActive((current) => (current - 1 + products.length) % products.length);
+  };
+
+  const goToNextProduct = () => {
+    setDesktopActive((current) => (current + 1) % products.length);
+  };
+
   return (
     <section id="produtos" className="relative overflow-hidden bg-[#050b14] py-20 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_36%,rgba(212,43,43,0.1),transparent_29%),radial-gradient(circle_at_52%_72%,rgba(48,107,180,0.1),transparent_38%),linear-gradient(180deg,#0A1628_0%,#050b14_100%)]" />
@@ -251,7 +267,7 @@ function CompatibilityProductExperience({ fallback = false }) {
           </p>
         </header>
 
-        <div className="mt-10 grid gap-6">
+        <div className="mt-10 grid gap-6 lg:hidden">
           {products.map((product, index) => (
             <CompatibilityProductCard
               key={product.id}
@@ -260,6 +276,62 @@ function CompatibilityProductExperience({ fallback = false }) {
               fallback={fallback}
             />
           ))}
+        </div>
+      </div>
+
+      <div className="relative z-10 hidden lg:block">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-[0.94fr_1.06fr] items-center gap-12 px-12 pb-4 pt-10 xl:px-16">
+          <div className="relative z-20">
+            <div className="w-full max-w-[650px] border-l-2 border-imesul-red bg-[#07111f]/78 px-8 py-7 shadow-[0_30px_90px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+              <ProductInformation product={desktopProduct} />
+            </div>
+
+            <div className="mt-8 flex items-center gap-5">
+              <button
+                type="button"
+                onClick={goToPreviousProduct}
+                aria-label="Produto anterior"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white hover:border-imesul-red hover:text-imesul-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red"
+              >
+                <span aria-hidden="true">←</span>
+              </button>
+
+              <div className="flex items-center gap-1">
+                {products.map((product, index) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => setDesktopActive(index)}
+                    aria-label={`Ver ${product.name}`}
+                    aria-current={index === desktopActive ? "true" : undefined}
+                    className="p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`block h-1.5 w-1.5 rounded-full ${
+                        index === desktopActive ? "scale-150 bg-imesul-red" : "bg-white/20"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={goToNextProduct}
+                aria-label="Próximo produto"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white hover:border-imesul-red hover:text-imesul-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-imesul-red"
+              >
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="relative h-[78vh] min-h-[540px]">
+            <div className="absolute inset-[7%] rounded-full bg-imesul-red/[0.055] blur-[90px]" />
+            <div className="absolute inset-x-[5%] bottom-[9%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            <ProductImage product={desktopProduct} />
+          </div>
         </div>
       </div>
     </section>
