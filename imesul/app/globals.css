@@ -20,12 +20,6 @@
   animation: whatsapp-float-halo 3.8s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .whatsapp-float-halo {
-    animation: none;
-  }
-}
-
 /* Base e tokens visuais */
 :root {
   --red: #D42B2B;
@@ -823,27 +817,4 @@ body {
 /* CTA final */
 #cta-final p.font-mono {
   display: none;
-}
-
-/* Acessibilidade: mantem a narrativa legivel sem movimento horizontal. */
-@media (prefers-reduced-motion: reduce) {
-  .company-story {
-    height: auto;
-  }
-
-  .company-story__sticky {
-    position: relative;
-    height: auto;
-  }
-
-  .company-story__track {
-    display: block;
-    width: 100%;
-    transform: none !important;
-  }
-
-  .story-panel {
-    width: 100%;
-    min-height: 100vh;
-  }
 }

@@ -7,10 +7,9 @@
 // texto neutro (ver comentario no topo daquele arquivo) — nenhum nome, nota ou foto é inventado.
 // Desktop: 3 colunas com marquee vertical (framer-motion, y de 0% a -50% em loop, cada card
 // duplicado uma vez para o loop ficar sem emenda). Mobile/tablet: carrossel horizontal nativo
-// (scroll-snap), sem JS de animacao. prefers-reduced-motion: colunas viram grade estatica, sem
-// duplicar cards e sem transform em loop.
+// (scroll-snap), sem JS de animacao.
 import { useState } from "react";
-import { m as motion, useReducedMotion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { reviews } from "../data/googleReviews";
 import { whatsapp } from "../data/products";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
@@ -212,7 +211,6 @@ function MobileReviewsMarquee({ items, reduceMotion }) {
 }
 
 export default function GoogleReviews() {
-  const shouldReduceMotion = useReducedMotion();
   const waUrl = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsapp.message)}`;
   const hasReviews = reviews.length > 0;
 
@@ -268,15 +266,13 @@ export default function GoogleReviews() {
                     items={rotate(reviews, column.rotate)}
                     duration={column.duration}
                     offsetClassName={i === 1 ? "lg:mt-10" : ""}
-                    reduceMotion={shouldReduceMotion === true}
                   />
                 ))}
               </div>
 
-              {/* Mobile/tablet: marquee horizontal lento, pausavel ao toque e estatico em reduced-motion. */}
+              {/* Mobile/tablet: marquee horizontal lento, pausavel ao toque. */}
               <MobileReviewsMarquee
                 items={reviews}
-                reduceMotion={shouldReduceMotion === true}
               />
             </>
           )}

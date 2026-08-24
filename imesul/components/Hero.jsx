@@ -7,7 +7,7 @@ import { VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
 
 // Video proprio do Hero (nao compartilhado com a CompanyStory, que usa institutionalVideo.desktop/
 // mobile do mesmo data/videoAssets.js); um unico par de arquivos serve todos os perfis de viewport,
-// mas o profile "poster" (reduced-motion/save-data) continua desativando-o, igual ao comportamento
+// mas o profile "poster" (Save-Data) continua desativando-o, igual ao comportamento
 // antigo. Otimizado de 20,5 MB/1080p/~17 Mbps para ~1,4 MB (webm) / ~1,9 MB (mp4), sem audio (o
 // video e sempre muted) — webm primeiro, mp4 como fallback para navegadores sem suporte a VP9.
 const HERO_VIDEO_WEBM = "/videos/imesul-intro.webm";
@@ -59,9 +59,7 @@ export default function Hero() {
       }, heroRef);
     };
 
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setup();
-    }
+    setup();
 
     return () => {
       cancelled = true;

@@ -9,15 +9,15 @@
 // usado antes (nao usar os dois juntos) — cleanup via gsap.context().revert(), sem preventDefault,
 // sem bloquear wheel/touch, sem window.scrollTo.
 // Mobile (<1024px) NAO recebe pin/scrub/scale: fica estatica, com scroll normal da pagina, usando
-// so as classes base (sem overrides de GSAP). Reduced-motion cai para um card grande estatico.
+// so as classes base (sem overrides de GSAP). compatibilityMode !== "full" cai para um card grande estatico.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { m as motion, useReducedMotion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import useAdaptiveVideoProfile from "../hooks/useAdaptiveVideoProfile";
 import useCompatibility from "../hooks/useCompatibility";
 import { institutionalVideo, VIDEO_DISABLED_PROFILE } from "../data/videoAssets";
 
 // Video proprio do showreel (nao compartilhado com o Hero); um unico par de arquivos serve todos
-// os perfis de viewport, mas o profile "poster" (reduced-motion/save-data) continua desativando-o.
+// os perfis de viewport, mas o profile "poster" (Save-Data) continua desativando-o.
 // Otimizado de 16,06 MB/1080p/~19,6 Mbps para ~2,1 MB (webm) / ~1,9 MB (mp4), sem audio (o video e
 // sempre muted) — webm primeiro, mp4 como fallback para navegadores sem suporte a VP9.
 const SHOWREEL_VIDEO_WEBM = "/videos/estoque-showreel.webm";
@@ -89,11 +89,7 @@ function StaticShowreel({ mode, videoSources, videoRef, canUseVideo }) {
 
 export default function MaterialsShowreel() {
   const { capabilities, mode, ready } = useCompatibility();
-  // Decide o layout em JS (nao via variante CSS) para nunca deixar a legenda presa em opacidade 0:
-  // sem isso, desktop com reduced-motion herdaria o layout imersivo (posicoes absolutas, legenda
-  // escondida) sem nenhum GSAP rodando para revelar nada. null (SSR) conta como "sem reducao".
-  const shouldReduceMotion = useReducedMotion();
-  const immersive = shouldReduceMotion !== true;
+  const immersive = true;
   const sectionRef = useRef(null);
   const bgRef = useRef(null);
   const videoBoxRef = useRef(null);
@@ -158,7 +154,7 @@ export default function MaterialsShowreel() {
   }, [isFallbackMode, ready, videoSources]);
 
   // Pina a secao em tela cheia e expande o video conforme o usuario rola dentro dela.
-  // Roda so no desktop com movimento permitido; mobile e reduced-motion ficam no layout estatico.
+  // Roda so em compatibilityMode "full"; mobile e modo reduzido/fallback ficam no layout estatico.
   useEffect(() => {
     if (!isFullMode) return undefined;
 
@@ -188,7 +184,7 @@ export default function MaterialsShowreel() {
 
         // Mobile (<1024px) nao recebe nenhum matchMedia aqui: sem pin, sem scrub, sem scale.
         // A secao fica com as classes base (estatica), e o scroll da pagina passa por ela normalmente.
-        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(min-width: 1024px)", () => {
         const context = gsap.context(() => {
           // xPercent/yPercent ficam fixos em -50 o tempo todo (nunca entram no timeline abaixo):
           // com left:50%/top:50% no CSS, isso centraliza o video de forma absoluta e imune a

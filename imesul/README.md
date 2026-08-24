@@ -55,7 +55,7 @@ O desenvolvimento usa a porta 3000 por padrao. `next.config.js` permite o acesso
 
 `SmoothScroll.jsx` inicializa Lenis e GSAP fora do carregamento inicial. As secoes carregam GSAP sob demanda e removem seus gatilhos no cleanup. `MotionProvider.jsx` limita o Framer Motion ao conjunto `domAnimation`.
 
-O Hero usa WebM com MP4 de fallback e poster WebP. Em `prefers-reduced-motion` ou `Save-Data`, o video nao e baixado. Os originais ficam em `docs/performance-assets-originals/` e nao devem ser usados diretamente pela pagina.
+O Hero usa WebM com MP4 de fallback e poster WebP. Em `Save-Data`, o video nao e baixado. Os originais ficam em `docs/performance-assets-originals/` e nao devem ser usados diretamente pela pagina.
 
 ## Conteudo e contato
 

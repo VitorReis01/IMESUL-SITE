@@ -14,7 +14,6 @@
 // unidades sobrepostas.
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useReducedMotion } from "framer-motion";
 import { officialUnits, officialSocialLinks, whatsapp } from "../data/products";
 import PremiumGlowButton from "./PremiumGlowButton";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
@@ -188,8 +187,6 @@ function CardShell({ eyebrow, children }) {
 // Card com seletor (Dourados: Centro / Loja de Fábrica) — troca segura, um unico bloco de
 // conteudo no DOM, texto so muda enquanto o bloco esta invisivel.
 function DouradosCard() {
-  const shouldReduceMotion = useReducedMotion();
-  const noMotion = shouldReduceMotion === true;
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const targetIndexRef = useRef(0);
@@ -212,11 +209,6 @@ function DouradosCard() {
       pendingTimeoutRef.current = null;
     }
 
-    if (noMotion) {
-      setActiveIndex(index);
-      return;
-    }
-
     setVisible(false);
     pendingTimeoutRef.current = window.setTimeout(() => {
       setActiveIndex(index);
@@ -230,7 +222,7 @@ function DouradosCard() {
   return (
     <CardShell eyebrow="Dourados">
       <div className="mt-6">
-        <UnitAvatar pulsing={!noMotion && !visible} />
+        <UnitAvatar pulsing={!visible} />
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -254,7 +246,7 @@ function DouradosCard() {
       {/* Conteudo da unidade selecionada — UM UNICO bloco no DOM. */}
       <div
         className={`mt-8 w-full max-w-xl transition-all duration-300 ease-out ${
-          !noMotion && !visible ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+          !visible ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
         }`}
       >
         <h2 className="font-display text-3xl uppercase leading-tight text-white sm:text-4xl">

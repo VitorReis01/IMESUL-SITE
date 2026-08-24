@@ -150,7 +150,6 @@ export function classifyCompatibilityMode(capabilities) {
   const missingEnhancementCount = enhancementChecks.filter((supported) => !supported).length;
 
   if (
-    capabilities.prefersReducedMotion ||
     capabilities.saveData ||
     constrainedHardware ||
     missingCoreCount === 1 ||

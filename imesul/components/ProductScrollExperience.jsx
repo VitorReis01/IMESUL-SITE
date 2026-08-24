@@ -225,7 +225,7 @@ function CompatibilityProductCard({ product, index, fallback = false }) {
 }
 
 function CompatibilityProductExperience({ fallback = false }) {
-  // Palco desktop de reduced-motion: mostra 1 produto por vez, sem GSAP/pin/parallax/fade -
+  // Palco desktop de compatibilityMode !== "full": mostra 1 produto por vez, sem GSAP/pin/parallax/fade -
   // troca de produto e so um re-render do React (nao ha nada para animar). Reaproveita
   // ProductImage/ProductInformation/products - os mesmos usados no showroom "full" animado, que
   // esta funcao nao altera. Mobile/tablet continuam com a lista vertical de sempre (ver lg:hidden
@@ -381,7 +381,7 @@ export default function ProductScrollExperience() {
           });
         };
 
-        media.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(max-width: 1023px)", () => {
         const context = gsap.context(() => {
           const mobileVisualItems = mobileVisualRefs.current.filter(Boolean);
           const mobileInfoItems = mobileInfoRefs.current.filter(Boolean);
@@ -467,7 +467,7 @@ export default function ProductScrollExperience() {
         return () => context.revert();
       });
 
-        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(min-width: 1024px)", () => {
         const context = gsap.context(() => {
           const visualItems = visualRefs.current.filter(Boolean);
 
@@ -579,7 +579,7 @@ export default function ProductScrollExperience() {
       <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(90deg,rgba(255,255,255,0.09)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:86px_86px]" />
       <div data-mobile-gradient="bottom" aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-32 bg-gradient-to-b from-transparent via-[#050b14]/76 to-[#050b14] lg:hidden" />
 
-      <div className="relative z-10 flex min-h-[100svh] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-12 motion-reduce:hidden sm:px-6 sm:pt-14 lg:hidden [@media(max-height:700px)]:pt-9">
+      <div className="relative z-10 flex min-h-[100svh] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-12 sm:px-6 sm:pt-14 lg:hidden [@media(max-height:700px)]:pt-9">
         <header className="mx-auto w-full max-w-3xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
@@ -639,7 +639,7 @@ export default function ProductScrollExperience() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden px-5 pb-20 pt-28 motion-reduce:block sm:px-8 sm:pb-24 sm:pt-32">
+      <div className="relative z-10 hidden px-5 pb-20 pt-28 sm:px-8 sm:pb-24 sm:pt-32">
         <header className="mx-auto max-w-5xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
@@ -677,7 +677,7 @@ export default function ProductScrollExperience() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden h-screen lg:block lg:motion-reduce:hidden">
+      <div className="relative z-10 hidden h-screen lg:block">
         <div className="mx-auto grid h-full max-w-[1600px] grid-cols-[0.94fr_1.06fr] items-start gap-12 px-12 pb-8 pt-24 xl:px-16">
           <div className="relative z-20 min-h-[640px] xl:min-h-[690px]">
             <div className="mb-7 flex items-center gap-4">

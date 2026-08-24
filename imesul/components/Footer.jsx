@@ -31,35 +31,14 @@ export default function Footer() {
   const footerRef = useRef(null);
   const footerVisibleRef = useRef(false);
   const [footerVisible, setFooterVisible] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
 
   // Revela o rodape com IntersectionObserver sem alterar altura ou espacamento da pagina.
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncReducedMotion = () => {
-      setReducedMotion(media.matches);
-      if (media.matches && !footerVisibleRef.current) {
-        footerVisibleRef.current = true;
-        setFooterVisible(true);
-      }
-    };
-
-    syncReducedMotion();
-
-    const addMediaListener = media.addEventListener
-      ? () => media.addEventListener("change", syncReducedMotion)
-      : () => media.addListener(syncReducedMotion);
-    const removeMediaListener = media.removeEventListener
-      ? () => media.removeEventListener("change", syncReducedMotion)
-      : () => media.removeListener(syncReducedMotion);
-
-    addMediaListener();
-
     const footerNode = footerRef.current;
-    if (media.matches || !footerNode || !("IntersectionObserver" in window)) {
+    if (!footerNode || !("IntersectionObserver" in window)) {
       footerVisibleRef.current = true;
       setFooterVisible(true);
-      return removeMediaListener;
+      return undefined;
     }
 
     const observer = new IntersectionObserver(
@@ -76,15 +55,14 @@ export default function Footer() {
 
     return () => {
       observer.disconnect();
-      removeMediaListener();
     };
   }, []);
 
   return (
     <footer
       ref={footerRef}
-      className={`relative border-t border-slate-200 bg-white transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none ${
-        reducedMotion || footerVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      className={`relative border-t border-slate-200 bg-white transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+        footerVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
       }`}
     >
       <div className="h-px bg-gradient-to-r from-transparent via-imesul-red/35 to-transparent" />

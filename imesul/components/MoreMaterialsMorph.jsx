@@ -6,9 +6,9 @@
 // progresso de scroll. Ao terminar em "E MUITO MAIS" a sequencia para; a partir dai o scroll do
 // usuario segue normalmente ate consumir a distancia reservada pelo pin e liberar para o FinalCTA.
 // Mobile/tablet: mesma sequencia automatica, sem pin, disparada ao entrar na viewport (uma vez).
-// prefers-reduced-motion: so "E MUITO MAIS" estatico, sem pin, sem timers.
+// compatibilityMode !== "full" (incompatibilidade real): so "E MUITO MAIS" estatico, sem pin, sem timers.
 import { useEffect, useRef, useState } from "react";
-import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import useCompatibility from "../hooks/useCompatibility";
 
 const WORDS = [
@@ -69,7 +69,6 @@ function StaticMoreMaterials() {
 }
 
 export default function MoreMaterialsMorph() {
-  const motionPrefersReduced = useReducedMotion();
   const { mode, ready } = useCompatibility();
   const sectionRef = useRef(null);
   const hasPlayedRef = useRef(false);
@@ -78,7 +77,7 @@ export default function MoreMaterialsMorph() {
   const [settled, setSettled] = useState(false);
   const [animationFailed, setAnimationFailed] = useState(false);
   const isFullMode = ready && mode === "full" && !animationFailed;
-  const shouldReduceMotion = ready ? mode !== "full" : motionPrefersReduced;
+  const shouldReduceMotion = mode !== "full";
 
   const finished = index >= LAST_INDEX;
 
@@ -153,7 +152,7 @@ export default function MoreMaterialsMorph() {
           }, 150);
         };
 
-        media.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        media.add("(min-width: 1024px)", () => {
           const context = gsap.context(() => {
             // "top top": pina assim que a secao chega ao topo da viewport. "end" reserva ~130vh de
             // distancia de scroll — o suficiente, num scroll normal, para a sequencia automatica
