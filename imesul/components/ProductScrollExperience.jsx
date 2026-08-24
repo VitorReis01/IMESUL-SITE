@@ -567,7 +567,7 @@ export default function ProductScrollExperience() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden px-5 pb-20 pt-28 motion-reduce:block sm:px-8 sm:pb-24 sm:pt-32 lg:hidden">
+      <div className="relative z-10 hidden px-5 pb-20 pt-28 motion-reduce:block sm:px-8 sm:pb-24 sm:pt-32">
         <header className="mx-auto max-w-5xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
@@ -605,7 +605,7 @@ export default function ProductScrollExperience() {
         </div>
       </div>
 
-      <div className="relative z-10 hidden h-screen lg:block">
+      <div className="relative z-10 hidden h-screen lg:block lg:motion-reduce:hidden">
         <div className="mx-auto grid h-full max-w-[1600px] grid-cols-[0.94fr_1.06fr] items-start gap-12 px-12 pb-8 pt-24 xl:px-16">
           <div className="relative z-20 min-h-[640px] xl:min-h-[690px]">
             <div className="mb-7 flex items-center gap-4">

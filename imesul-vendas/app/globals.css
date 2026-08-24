@@ -236,7 +236,10 @@ body.reveal-motion-ready [data-scroll-reveal].is-visible,
 
 /* Usu?rios com redu??o de movimento veem o conte?do sem transi??es cont?nuas. */
 @media (prefers-reduced-motion: reduce) {
-  [data-scroll-reveal] {
+  /* Mesmo seletor de body.reveal-motion-ready [data-scroll-reveal] (linha ~71) para igualar a
+     especificidade e vencer por ordem de declaracao - a versao anterior (so [data-scroll-reveal])
+     tinha especificidade menor e nunca conseguia sobrepor a regra que esconde o conteudo. */
+  body.reveal-motion-ready [data-scroll-reveal] {
     opacity: 1;
     transform: none;
     transition: none;
