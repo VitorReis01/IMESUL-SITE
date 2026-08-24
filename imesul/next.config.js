@@ -18,9 +18,10 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https://www.facebook.com https://www.google-analytics.com",
   "media-src 'self' blob:",
   `connect-src 'self' https: https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
+  "frame-src 'self' https://www.facebook.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://www.facebook.com",
   "object-src 'none'",
 ].join("; ");
 
