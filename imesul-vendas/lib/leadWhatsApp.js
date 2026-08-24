@@ -20,9 +20,15 @@
 import { createWhatsAppUrl } from "./whatsapp";
 import { getAnonymousVisitorId } from "./localAnalytics";
 import { createLead } from "./leads";
-import { COMMERCIAL_UNITS, LEAD_SITE_ORIGIN, getCommercialUnitConfig } from "./leadFlow";
+import { COMMERCIAL_UNITS, LEAD_FLOW_TYPES, LEAD_SITE_ORIGIN, getCommercialUnitConfig } from "./leadFlow";
 import { getStoredUnit } from "./unitPreference";
 import { notifyCommercialContactBlocked } from "./commercialContactAlert";
+import { trackEvent } from "./trackEvent";
+
+// GUIDED_QUOTE/CART ja passaram por um formulario de orcamento antes deste clique - contam como
+// inicio de checkout. DIRECT_CONTACT (e qualquer flow futuro) e um contato generico via WhatsApp.
+const isCheckoutFlow = (flowType) =>
+  flowType === LEAD_FLOW_TYPES.GUIDED_QUOTE || flowType === LEAD_FLOW_TYPES.CART;
 
 // Le UTM da URL atual so no momento do clique - nao duplica a logica de "primeiro toque
 // persistido" do analytics (lib/localAnalytics.js), que fica intocada. Um lead reflete o
@@ -63,6 +69,8 @@ export const openWhatsAppWithLead = async (args) => {
   const fallbackUrl = createWhatsAppUrl(message, getCommercialUnitConfig(unit)?.phone);
   const popup = typeof window !== "undefined" ? window.open("", "_blank") : null;
 
+  trackEvent(isCheckoutFlow(flowType) ? "begin_checkout" : "whatsapp_click", { section: pagePath, unit });
+
   try {
     const lead = await createLead({
       visitorId: getAnonymousVisitorId(),
@@ -79,6 +87,7 @@ export const openWhatsAppWithLead = async (args) => {
     });
 
     if (lead.ok && lead.seller?.whatsapp) {
+      trackEvent("generate_lead", { unit });
       const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
       if (popup && !popup.closed) popup.location.href = finalUrl;
       else window.open(finalUrl, "_blank", "noopener,noreferrer");
@@ -89,6 +98,7 @@ export const openWhatsAppWithLead = async (args) => {
     // Felipe/Bruniely; nao encontrar significa "nenhum vendedor ativo agora", nao "unidade sem
     // automacao" (Dourados). Nesse caso especifico, nunca abre o WhatsApp padrao.
     if (lead.ok && unit === COMMERCIAL_UNITS.CAMPO_GRANDE) {
+      trackEvent("generate_lead", { unit });
       if (popup && !popup.closed) popup.close();
       notifyCommercialContactBlocked({ retry: () => openWhatsAppWithLead(args) });
       return;

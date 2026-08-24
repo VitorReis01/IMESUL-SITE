@@ -9,6 +9,7 @@ import { subscribeToUnitRequests, resolveUnitRequests } from "../lib/unitPickerB
 import { requestDeviceLocationOnce } from "../lib/consent";
 import { estimateUnitFromCoordinates } from "../lib/regionResolver";
 import { COMMERCIAL_UNITS } from "../lib/unitPreference";
+import { trackEvent } from "../lib/trackEvent";
 
 export default function UnitPickerModal() {
   const [open, setOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function UnitPickerModal() {
   const choose = useCallback((unit) => {
     setOpen(false);
     setLocating(false);
+    if (unit) trackEvent("select_unit", { unit });
     resolveUnitRequests(unit || undefined);
   }, []);
 

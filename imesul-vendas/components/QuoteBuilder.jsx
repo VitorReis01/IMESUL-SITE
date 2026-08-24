@@ -18,6 +18,7 @@ import {
 } from "../data/quoteOptions";
 import { buildProductMessage, buildProjectMessage, createWhatsAppUrl } from "../lib/whatsapp";
 import { trackLocalEvent } from "../lib/localAnalytics";
+import { trackEvent } from "../lib/trackEvent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { addCartItem } from "../lib/cart";
@@ -304,6 +305,11 @@ function AddToCartButton({ category, product, form, quantity, disabledReason = "
       label: "Adicionar ao carrinho",
       section: "Resumo da solicitação",
       detail: product.name,
+    });
+    trackEvent("add_to_cart", {
+      product_name: product.name,
+      category: category?.name || "",
+      quantity: Number(quantity) || 1,
     });
 
     setAdded(true);

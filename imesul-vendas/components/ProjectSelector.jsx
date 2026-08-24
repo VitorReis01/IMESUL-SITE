@@ -28,6 +28,7 @@ import { catalogProducts, getCatalogProduct } from "../data/catalogProducts";
 import { getCatalogCategoryPath } from "../data/catalogRoutes";
 import { createWhatsAppUrl } from "../lib/whatsapp";
 import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
+import { trackEvent } from "../lib/trackEvent";
 import { navigateWithConsent } from "../lib/consent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
@@ -392,6 +393,7 @@ export default function ProjectSelector() {
         section: "Busca do topo",
         detail: `${query} / ${resultCount} resultado${resultCount === 1 ? "" : "s"}`,
       });
+      trackEvent("search", { search_term: query });
     }, 700);
 
     return () => window.clearTimeout(timer);
@@ -1111,6 +1113,7 @@ export default function ProjectSelector() {
               data-testid="start-project-path"
               onClick={() => {
                 trackInteraction({ type: "click", label: "Tenho um projeto", section: "Hero", detail: "Card Preciso de ajuda" });
+                trackEvent("cta_click", { section: "hero", cta_name: "nao_sei_material" });
                 scrollToFlow("project-path");
               }}
               className={`premium-soft-sheen group relative flex min-h-[188px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-imesul-red/40 bg-[linear-gradient(145deg,rgba(212,43,43,0.12),rgba(7,16,29,0.78)_62%)] p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-red/65 hover:bg-[linear-gradient(145deg,rgba(212,43,43,0.15),rgba(7,16,29,0.84)_62%)] hover:shadow-[0_20px_58px_rgba(212,43,43,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:min-h-[218px] sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1280)}
@@ -1140,6 +1143,7 @@ export default function ProjectSelector() {
               data-testid="start-material-path"
               onClick={() => {
                 trackInteraction({ type: "click", label: "Já sei o material", section: "Hero", detail: "Card Já sei o que preciso" });
+                trackEvent("cta_click", { section: "hero", cta_name: "ja_sei_material" });
                 scrollToFlow("material-path");
               }}
               className={`premium-soft-sheen group relative flex min-h-[188px] cursor-pointer flex-col overflow-hidden rounded-[7px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(31,66,108,0.20),rgba(7,16,29,0.76)_62%)] p-4 text-left shadow-[0_18px_50px_rgba(0,0,0,0.19)] backdrop-blur-md transition-[opacity,transform,border-color,background-color,box-shadow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform hover:-translate-y-0.5 hover:scale-[1.01] hover:border-imesul-steel/45 hover:bg-[linear-gradient(145deg,rgba(31,66,108,0.24),rgba(7,16,29,0.82)_62%)] hover:shadow-[0_20px_58px_rgba(30,76,128,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-steel focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none sm:min-h-[218px] sm:p-6 ${heroIntroReady || heroReduceMotion ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={heroIntroStyle(1400)}

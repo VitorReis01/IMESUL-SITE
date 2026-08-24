@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Database, Home, ImageIcon } from "lucide-react";
 import { getCatalogCategoryPath, getCatalogVariantPath } from "../data/catalogRoutes";
 import { trackLocalEvent } from "../lib/localAnalytics";
+import { trackEvent } from "../lib/trackEvent";
+import { getStoredUnit } from "../lib/unitPreference";
 import { MaterialQuoteFlow } from "./QuoteBuilder";
 
 export default function MaterialProductPage({ category, product, backLink = null }) {
@@ -22,6 +24,11 @@ export default function MaterialProductPage({ category, product, backLink = null
       label: "Visualização de produto",
       section: category?.name || "Materiais",
       detail: product.name,
+    });
+    trackEvent("view_item", {
+      product_name: product.name,
+      category: category?.name || "",
+      unit: getStoredUnit(),
     });
   }, [category?.name, product.name]);
 

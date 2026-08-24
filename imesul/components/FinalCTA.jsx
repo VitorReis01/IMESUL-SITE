@@ -7,6 +7,7 @@ import PremiumGlowButton from "./PremiumGlowButton";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
 import { navigateWithConsent } from "../lib/consent";
 import { getServerUnitRaw, getStoredUnitRaw, subscribeToUnit } from "../lib/unitPreference";
+import { trackEvent } from "../lib/trackEvent";
 
 // Encerra a apresentacao com acesso ao WhatsApp e a Area de Vendas.
 export default function FinalCTA() {
@@ -133,7 +134,10 @@ export default function FinalCTA() {
 
           <PremiumGlowButton
             href={salesUrl}
-            onClick={(event) => navigateWithConsent(event, salesUrl)}
+            onClick={(event) => {
+              trackEvent("cta_click", { section: "footer", cta_name: "ver_site_de_vendas" });
+              navigateWithConsent(event, salesUrl);
+            }}
             variant="secondary"
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >

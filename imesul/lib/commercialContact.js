@@ -16,6 +16,7 @@ import { COMMERCIAL_UNITS, getCommercialUnitConfig, getStoredUnit, setStoredUnit
 import { requestUnitChoice } from "./unitPickerBridge";
 import { getVisitorId } from "./visitorId";
 import { notifyCommercialContactBlocked } from "./commercialContactAlert";
+import { trackEvent } from "./trackEvent";
 
 const createWhatsAppUrl = (message, number = whatsapp.number) =>
   `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
@@ -51,6 +52,8 @@ export const openCommercialWhatsApp = async (args) => {
     setStoredUnit(resolvedUnit);
   }
 
+  trackEvent("whatsapp_click", { section: pagePath, unit: resolvedUnit });
+
   // Calculado DEPOIS da unidade resolvida, para usar o numero humano oficial de Dourados quando
   // aplicavel - sem unidade conhecida (nunca deveria acontecer aqui, mas por seguranca), cai no
   // numero generico ja existente (whatsapp.number).
@@ -71,6 +74,7 @@ export const openCommercialWhatsApp = async (args) => {
     });
 
     if (lead.ok && lead.seller?.whatsapp) {
+      trackEvent("generate_lead", { unit: resolvedUnit });
       const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
       if (popup && !popup.closed) popup.location.href = finalUrl;
       else window.open(finalUrl, "_blank", "noopener,noreferrer");
@@ -78,6 +82,7 @@ export const openCommercialWhatsApp = async (args) => {
     }
 
     if (lead.ok && resolvedUnit === COMMERCIAL_UNITS.CAMPO_GRANDE) {
+      trackEvent("generate_lead", { unit: resolvedUnit });
       if (popup && !popup.closed) popup.close();
       notifyCommercialContactBlocked({ retry: () => openCommercialWhatsApp({ ...args, unit: resolvedUnit }) });
       return;

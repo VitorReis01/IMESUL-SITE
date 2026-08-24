@@ -5,7 +5,7 @@
 // paginas de material (cada uma tem seu proprio cabecalho simples) - um componente flutuante
 // montado uma vez em app/layout.jsx e a forma mais segura de atender "carrinho acessivel fora do
 // catalogo" sem redesenhar o cabecalho de cada pagina (fora do escopo desta fase).
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MessageCircle, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import {
   clearCartItems,
@@ -21,6 +21,7 @@ import {
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { trackLocalEvent } from "../lib/localAnalytics";
+import { trackEvent } from "../lib/trackEvent";
 import { getCurrentCartTrackCode, scheduleCartTrackingSync } from "../lib/cartTracking";
 import { getStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
 import {
@@ -72,6 +73,7 @@ export default function CartWidget() {
   const items = parseCartRaw(rawItems);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const wasOpenRef = useRef(false);
 
   // Fecha o drawer com Escape - conveniencia de teclado, nao afeta o funcionamento sem JS extra.
   useEffect(() => {
@@ -84,6 +86,15 @@ export default function CartWidget() {
   }, [open]);
 
   useEffect(() => subscribeToCartOpen(() => setOpen(true)), []);
+
+  // Cobre as duas formas de abrir o carrinho (botao do header via openCartDrawer() e o botao
+  // flutuante, que chama setOpen(true) direto) sem duplicar o evento em cada callsite.
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      trackEvent("view_cart", {});
+    }
+    wasOpenRef.current = open;
+  }, [open]);
 
   // Rastreio de abandono é opcional e debounced (ver lib/cartTracking.js) - só envia algo quando
   // o visitante já consentiu com analytics; sem consentimento, esta chamada não faz nada.
