@@ -9,7 +9,9 @@ import {
   ArrowUp,
   BarChart3,
   Briefcase,
+  Copy,
   Download,
+  Filter,
   LogOut,
   MapPin,
   MessageCircle,
@@ -294,15 +296,62 @@ const buildLocationRanking = (visitors) => {
 
   visitors.forEach((visitor) => {
     const key = visitor.location || "Desconhecido";
-    const current = ranking.get(key) || { label: key, total: 0, whatsapp: 0, suspicious: 0 };
+    const current = ranking.get(key) || { label: key, total: 0, whatsapp: 0, suspicious: 0, visitorIds: [] };
     current.total += 1;
     current.whatsapp += visitor.whatsapp > 0 ? 1 : 0;
     current.suspicious += visitor.securityStatus === "Suspeito" ? 1 : 0;
+    current.visitorIds.push(visitor.id);
     ranking.set(key, current);
   });
 
   return [...ranking.values()].sort((left, right) => right.total - left.total).slice(0, 8);
 };
+
+// Abrevia o visitorId para exibicao (o ID completo continua disponivel via "Copiar ID").
+const shortenVisitorId = (id) => (id && id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id || "-");
+
+// Splits que a visao agregada de groupVisitors nao guarda (so o texto combinado ja usado nas
+// tabelas existentes) - derivados aqui, sob demanda, so quando o painel de detalhes abre.
+const getDeviceParts = (events) => {
+  const withDevice = events.find((event) => event.device && (event.device.device || event.device.browser || event.device.os));
+  const device = withDevice?.device || {};
+  return {
+    device: device.device || "Desconhecido",
+    browser: device.browser || "Desconhecido",
+    os: device.os || "Desconhecido",
+  };
+};
+
+const getLocationParts = (events) => {
+  const withLocation = events.find((event) => event.location && (event.location.city || event.location.region || event.location.country));
+  const location = withLocation?.location || {};
+  return {
+    city: location.city && location.city !== "Desconhecido" ? location.city : "Desconhecido",
+    region: location.region && location.region !== "Desconhecido" ? location.region : "Desconhecido",
+    country: location.country && location.country !== "Desconhecido" ? location.country : "Desconhecido",
+  };
+};
+
+const getTrafficParts = (events) => {
+  const withUtm = events.find((event) => event.utm && Object.values(event.utm).some(Boolean));
+  const utm = withUtm?.utm || null;
+  const withOrigin = events.find((event) => event.referrer || event.origin);
+  return {
+    origin: withOrigin?.referrer || withOrigin?.origin || "Direto / não informado",
+    utm,
+  };
+};
+
+const eventTypeLabels = {
+  visit: "Visita",
+  click: "Clique",
+  whatsapp: "WhatsApp",
+  search: "Pesquisa",
+  login: "Login",
+  device_location: "Localização do dispositivo",
+};
+
+const getEventTypeLabel = (event) => eventTypeLabels[event.type] || event.type;
 
 function SummaryCard({ icon: Icon, label, value, comparison }) {
   const TrendIcon = comparison?.trend === "down" ? ArrowDown : ArrowUp;
@@ -340,6 +389,132 @@ function MiniTable({ title, children }) {
   );
 }
 
+// Painel lateral "Detalhes do visitante": cruza tudo que ja existe para aquele visitorId (visitor
+// agregado de groupVisitors + os proprios eventos ja carregados em rankingEvents) sem consultar
+// nada novo no backend nem criar um segundo sistema de analytics.
+function VisitorDetailsPanel({ visitor, events, onClose, onFilterVisitor }) {
+  const [copied, setCopied] = useState(false);
+  const deviceParts = getDeviceParts(events);
+  const locationParts = getLocationParts(events);
+  const trafficParts = getTrafficParts(events);
+  const pages = events
+    .filter((event) => event.pagePath || event.path)
+    .map((event) => ({ path: event.pagePath || event.path, timestamp: event.timestamp }));
+
+  const copyVisitorId = async () => {
+    try {
+      await navigator.clipboard.writeText(visitor.id);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard indisponivel (permissao/navegador antigo) - o ID completo ja fica visivel no painel.
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[240] flex justify-end bg-[#020711]/82 backdrop-blur-md">
+      <button type="button" onClick={onClose} aria-label="Fechar detalhes do visitante" className="absolute inset-0 cursor-default" />
+      <section className="relative flex h-full w-full max-w-xl flex-col overflow-hidden border-l border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.99),rgba(4,10,19,0.99))] shadow-[0_0_120px_rgba(0,0,0,0.6)]">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-white/[0.08] px-5 py-5">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-imesul-red">Detalhes do visitante</p>
+            <h3 className="mt-2 truncate font-display text-2xl text-white" title={visitor.identity.name}>{visitor.identity.name}</h3>
+            <p className="mt-1 font-mono text-xs text-imesul-steel-light/55">{shortenVisitorId(visitor.id)}</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.12] text-white hover:bg-white/[0.08]" aria-label="Fechar">
+            <X size={17} aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="flex shrink-0 flex-wrap gap-2 border-b border-white/[0.08] px-5 py-4">
+          <button type="button" onClick={() => onFilterVisitor(visitor.id)} className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-imesul-red/45 px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.1em] text-imesul-red transition-colors hover:bg-imesul-red/10">
+            <Filter size={14} aria-hidden="true" /> Filtrar só este visitante
+          </button>
+          <button type="button" onClick={copyVisitorId} className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-white/[0.14] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+            <Copy size={14} aria-hidden="true" /> {copied ? "ID copiado!" : "Copiar ID do visitante"}
+          </button>
+          <button type="button" onClick={onClose} className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-white/[0.12] px-3 font-condensed text-[12px] font-bold uppercase tracking-[0.1em] text-imesul-steel-light/72 transition-colors hover:border-white/25 hover:text-white">
+            Fechar
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <dl className="grid gap-3 text-sm text-imesul-steel-light/76 sm:grid-cols-2">
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Identificação</dt><dd className="mt-1 text-white">{visitor.identity.name}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Cidade</dt><dd className="mt-1">{locationParts.city}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Região / País</dt><dd className="mt-1">{locationParts.region} / {locationParts.country}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">IP mascarado</dt><dd className="mt-1 break-all font-mono">{visitor.ipMasked}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Dispositivo</dt><dd className="mt-1">{deviceParts.device}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Navegador</dt><dd className="mt-1">{deviceParts.browser}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Sistema operacional</dt><dd className="mt-1">{deviceParts.os}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Origem do tráfego</dt><dd className="mt-1 break-all">{trafficParts.origin}</dd></div>
+            {trafficParts.utm ? (
+              <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2">
+                <dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">UTM</dt>
+                <dd className="mt-1 break-all">
+                  {[
+                    trafficParts.utm.source && `source=${trafficParts.utm.source}`,
+                    trafficParts.utm.medium && `medium=${trafficParts.utm.medium}`,
+                    trafficParts.utm.campaign && `campaign=${trafficParts.utm.campaign}`,
+                    trafficParts.utm.content && `content=${trafficParts.utm.content}`,
+                    trafficParts.utm.term && `term=${trafficParts.utm.term}`,
+                  ].filter(Boolean).join(" | ") || "-"}
+                </dd>
+              </div>
+            ) : null}
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Primeira atividade</dt><dd className="mt-1">{formatDate(visitor.firstActivity)} {formatTime(visitor.firstActivity)}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Última atividade</dt><dd className="mt-1">{formatDate(visitor.lastActivity)} {formatTime(visitor.lastActivity)}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Duração observada</dt><dd className="mt-1">{visitor.duration}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Total de acessos</dt><dd className="mt-1">{visitor.accesses}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Total de cliques</dt><dd className="mt-1">{visitor.clicks}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Total de buscas</dt><dd className="mt-1">{visitor.searches}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3"><dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Total de WhatsApp</dt><dd className="mt-1">{visitor.whatsapp}</dd></div>
+            <div className="rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-3 sm:col-span-2">
+              <dt className="font-condensed text-[11px] uppercase tracking-[0.12em] text-white/60">Status de segurança</dt>
+              <dd className={`mt-1 font-semibold ${visitor.securityStatus === "Suspeito" ? "text-[#f87171]" : "text-[#25D366]"}`}>
+                {visitor.securityStatus}
+                {visitor.suspiciousReasons.length ? ` — ${visitor.suspiciousReasons.join(", ")}` : ""}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-6">
+            <h4 className="font-condensed text-[13px] font-bold uppercase tracking-[0.14em] text-white">Páginas visitadas</h4>
+            <ol className="mt-3 space-y-1.5">
+              {pages.length ? pages.map((page, index) => (
+                <li key={`page-${index}-${page.timestamp}`} className="flex items-center gap-3 rounded-[6px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-sm text-imesul-steel-light/76">
+                  <span className="shrink-0 font-mono text-[11px] text-imesul-steel-light/50">{formatTime(page.timestamp)}</span>
+                  <span className="truncate text-white/90">{page.path}</span>
+                </li>
+              )) : <li className="rounded-[6px] border border-white/[0.06] bg-white/[0.02] px-3 py-4 text-center text-sm text-imesul-steel-light/55">Nenhuma página registrada.</li>}
+            </ol>
+          </div>
+
+          <div className="mt-6">
+            <h4 className="font-condensed text-[13px] font-bold uppercase tracking-[0.14em] text-white">Linha do tempo</h4>
+            <ol className="mt-3 space-y-2">
+              {events.length ? events.map((event) => (
+                <li key={event.id} className="rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm text-imesul-steel-light/76">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-mono text-[11px] text-imesul-steel-light/50">{formatDate(event.timestamp)} {formatTime(event.timestamp)}</span>
+                    <span className="rounded-full border border-white/[0.14] px-2 py-0.5 font-condensed text-[10px] font-bold uppercase tracking-[0.08em] text-white">{getEventTypeLabel(event)}</span>
+                    {event.label ? <span className="font-semibold text-white">{event.label}</span> : null}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-imesul-steel-light/58">
+                    {event.section ? <span>Seção: {event.section}</span> : null}
+                    {(event.pagePath || event.path) ? <span>Path: {event.pagePath || event.path}</span> : null}
+                    {event.detail ? <span>Detalhe: {event.detail}</span> : null}
+                  </div>
+                </li>
+              )) : <li className="rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-4 text-center text-sm text-imesul-steel-light/55">Nenhum evento registrado.</li>}
+            </ol>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 // Mostra eventos vindos das APIs protegidas (paginacao/metricas server-side) no painel admin.
 export default function AdminDashboard({ open, onClose, onLogout }) {
   // Recorte usado para rankings/agrupamento por visitante (ver rankingsPageSize acima).
@@ -359,6 +534,11 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSecurityEvent, setSelectedSecurityEvent] = useState(null);
   const [selectedLocationEvent, setSelectedLocationEvent] = useState(null);
+  // "Detalhes do visitante": selectedVisitorId aponta para o mesmo visitor.id ja calculado por
+  // groupVisitors. locationVisitorPicker guarda o item de "Visitantes por cidade/regiao" quando
+  // ha mais de um visitante naquela localizacao, ate o admin escolher um deles.
+  const [selectedVisitorId, setSelectedVisitorId] = useState(null);
+  const [locationVisitorPicker, setLocationVisitorPicker] = useState(null);
   // Aba "Comercial" (Lead ID, rodízio, IMEbot, carrinho) - renderizada como camada por cima do
   // analytics existente, sem depender do estado dele (ver CommercialReportPanel.jsx).
   const [activeTab, setActiveTab] = useState("analytics");
@@ -422,6 +602,36 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
       locationRanking: buildLocationRanking(visitors),
     };
   }, [rankingEvents]);
+
+  // Eventos do visitante selecionado, em ordem cronologica - mesmo recorte rankingEvents ja
+  // carregado (ate rankingsPageSize), sem nenhuma consulta nova ao backend.
+  const selectedVisitorEvents = useMemo(() => {
+    if (!selectedVisitorId) return [];
+    return rankingEvents
+      .filter((event) => (event.visitorId || "visitor-unavailable") === selectedVisitorId)
+      .slice()
+      .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+  }, [rankingEvents, selectedVisitorId]);
+
+  const openVisitorDetails = (visitorId) => {
+    setLocationVisitorPicker(null);
+    setSelectedVisitorId(visitorId);
+  };
+
+  const handleLocationRowClick = (item) => {
+    if (item.visitorIds.length === 1) {
+      openVisitorDetails(item.visitorIds[0]);
+    } else {
+      setLocationVisitorPicker(item);
+    }
+  };
+
+  // Reaproveita a busca do backend ja existente (visitor_id ILIKE, ver Backend.js/analyticsStore.js)
+  // em vez de criar um segundo mecanismo de filtro so para o painel de detalhes.
+  const handleFilterVisitor = (visitorId) => {
+    setSelectedVisitorId(null);
+    setSearchQuery(visitorId);
+  };
 
   // Volta para a primeira pagina sempre que o filtro, o periodo ou a busca mudam, para nunca
   // deixar o admin numa pagina vazia. Ajuste de estado durante a renderizacao (nao em effect):
@@ -644,7 +854,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                 <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Localizacao</th><th className="px-4 py-3">Visitantes</th><th className="px-4 py-3">WhatsApp</th><th className="px-4 py-3">Suspeitos</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {locationRanking.length ? locationRanking.map((item) => (
-                    <tr key={item.label} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{item.label}</td><td className="px-4 py-3">{item.total}</td><td className="px-4 py-3">{item.whatsapp}</td><td className="px-4 py-3">{item.suspicious}</td></tr>
+                    <tr key={item.label} onClick={() => handleLocationRowClick(item)} className="cursor-pointer text-sm text-imesul-steel-light/74 transition-colors hover:bg-white/[0.04]"><td className="px-4 py-3 font-semibold text-white">{item.label}</td><td className="px-4 py-3">{item.total}</td><td className="px-4 py-3">{item.whatsapp}</td><td className="px-4 py-3">{item.suspicious}</td></tr>
                   )) : <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem localizacao registrada.</td></tr>}
                 </tbody>
               </table>
@@ -655,7 +865,7 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
                 <thead className="bg-white/[0.055]"><tr className="font-condensed text-[12px] uppercase tracking-[0.12em] text-imesul-steel-light/72"><th className="px-4 py-3">Visitante</th><th className="px-4 py-3">Dispositivo</th><th className="px-4 py-3">Tempo</th><th className="px-4 py-3">Paginas</th><th className="px-4 py-3">Seguranca</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {visitors.length ? visitors.map((visitor) => (
-                    <tr key={`session-${visitor.id}`} className="text-sm text-imesul-steel-light/74"><td className="px-4 py-3 font-semibold text-white">{visitor.identity.name}</td><td className="px-4 py-3">{visitor.device}</td><td className="px-4 py-3">{visitor.duration}</td><td className="px-4 py-3">{visitor.pages.join(", ") || "-"}</td><td className={`px-4 py-3 font-semibold ${visitor.securityStatus === "Suspeito" ? "text-[#f87171]" : "text-[#25D366]"}`}>{visitor.securityStatus}{visitor.suspiciousReasons.length ? `: ${visitor.suspiciousReasons.join(", ")}` : ""}</td></tr>
+                    <tr key={`session-${visitor.id}`} onClick={() => openVisitorDetails(visitor.id)} className="cursor-pointer text-sm text-imesul-steel-light/74 transition-colors hover:bg-white/[0.04]"><td className="px-4 py-3 font-semibold text-white">{visitor.identity.name}</td><td className="px-4 py-3">{visitor.device}</td><td className="px-4 py-3">{visitor.duration}</td><td className="px-4 py-3">{visitor.pages.join(", ") || "-"}</td><td className={`px-4 py-3 font-semibold ${visitor.securityStatus === "Suspeito" ? "text-[#f87171]" : "text-[#25D366]"}`}>{visitor.securityStatus}{visitor.suspiciousReasons.length ? `: ${visitor.suspiciousReasons.join(", ")}` : ""}</td></tr>
                   )) : <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-imesul-steel-light/62">Sem sessoes registradas.</td></tr>}
                 </tbody>
               </table>
@@ -846,6 +1056,54 @@ export default function AdminDashboard({ open, onClose, onLogout }) {
               </div>
             </section>
           </div>
+        );
+      })() : null}
+      {locationVisitorPicker ? (
+        <div className="fixed inset-0 z-[235] flex items-center justify-center bg-[#020711]/82 px-4 backdrop-blur-md">
+          <section className="w-full max-w-md rounded-[12px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(8,22,38,0.98),rgba(4,10,19,0.99))] p-5 shadow-[0_26px_90px_rgba(0,0,0,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-imesul-red">{locationVisitorPicker.label}</p>
+                <h3 className="mt-2 font-display text-2xl text-white">{locationVisitorPicker.visitorIds.length} visitantes</h3>
+              </div>
+              <button type="button" onClick={() => setLocationVisitorPicker(null)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.12] text-white hover:bg-white/[0.08]" aria-label="Fechar">
+                <X size={17} aria-hidden="true" />
+              </button>
+            </div>
+            <ul className="mt-4 max-h-[50vh] space-y-2 overflow-y-auto">
+              {locationVisitorPicker.visitorIds.map((visitorId) => {
+                const visitor = visitors.find((item) => item.id === visitorId);
+                if (!visitor) return null;
+                return (
+                  <li key={visitorId}>
+                    <button
+                      type="button"
+                      onClick={() => openVisitorDetails(visitorId)}
+                      className="flex w-full items-center justify-between gap-3 rounded-[8px] border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-left transition-colors hover:border-imesul-red/45 hover:bg-white/[0.06]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-white">{visitor.identity.name}</span>
+                        <span className="block font-mono text-[11px] text-imesul-steel-light/55">{shortenVisitorId(visitor.id)}</span>
+                      </span>
+                      <span className="shrink-0 font-mono text-[11px] text-imesul-steel-light/55">{formatDate(visitor.lastActivity)} {formatTime(visitor.lastActivity)}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </div>
+      ) : null}
+      {selectedVisitorId ? (() => {
+        const selectedVisitor = visitors.find((visitor) => visitor.id === selectedVisitorId);
+        if (!selectedVisitor) return null;
+        return (
+          <VisitorDetailsPanel
+            visitor={selectedVisitor}
+            events={selectedVisitorEvents}
+            onClose={() => setSelectedVisitorId(null)}
+            onFilterVisitor={handleFilterVisitor}
+          />
         );
       })() : null}
     </div>
