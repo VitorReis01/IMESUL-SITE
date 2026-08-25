@@ -24,20 +24,23 @@ const navigationLinks = [
 // a segunda unidade (Av. Marcelino Pires) é a "Loja de Fábrica" - estava mal rotulada como
 // "Dourados Centro" antes desta correção, o que também estava errado (endereço nunca mudou,
 // só o rótulo).
+// mapsHref corrigido em 2026-08-25: os dois links de Dourados estavam trocados entre si (cada
+// endereço abria a localização da outra unidade) - confirmado resolvendo os links curtos do
+// Google Maps. Ver mesma correção em imesul/data/products.js (fonte irmã dos mesmos dados).
 const units = [
   {
     name: "Dourados — Centro",
     address: "Rua Pedro Rigotti, 248 – Jd. São Pedro, Dourados/MS",
     phone: "(67) 3427-5700",
     phoneHref: "tel:+556734275700",
-    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
+    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
   },
   {
     name: "Dourados — Loja de Fábrica",
     address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
     phone: "(67) 3411-5700",
     phoneHref: "tel:+556734115700",
-    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
+    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
   {
     name: "Campo Grande",
@@ -251,6 +254,27 @@ export default function SalesFooter() {
             Preferências de privacidade
           </button>
         </div>
+
+        <p className="mt-3 text-center font-mono text-[10px] tracking-[0.04em] text-slate-400 sm:mt-4">
+          Desenvolvido por{" "}
+          <a
+            href="https://www.instagram.com/vitor.systems?igsi=dWhjZWc2aGl1bG1l"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 underline decoration-transparent underline-offset-2 transition-colors hover:text-imesul-red hover:decoration-imesul-red/50"
+          >
+            @vitor.systems
+          </a>{" "}
+          •{" "}
+          <a
+            href="https://wa.me/5567992490880"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 underline decoration-transparent underline-offset-2 transition-colors hover:text-imesul-red hover:decoration-imesul-red/50"
+          >
+            (67) 99249-0880
+          </a>
+        </p>
       </div>
     </footer>
   );

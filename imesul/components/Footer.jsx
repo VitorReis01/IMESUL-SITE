@@ -187,6 +187,27 @@ export default function Footer() {
             Dourados Centro, Dourados Fábrica e Campo Grande
           </span>
         </div>
+
+        <p className="mt-4 text-center font-mono text-[10px] tracking-[0.04em] text-slate-400">
+          Desenvolvido por{" "}
+          <a
+            href="https://www.instagram.com/vitor.systems?igsi=dWhjZWc2aGl1bG1l"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 underline decoration-transparent underline-offset-2 transition-colors hover:text-imesul-red hover:decoration-imesul-red/50"
+          >
+            @vitor.systems
+          </a>{" "}
+          •{" "}
+          <a
+            href="https://wa.me/5567992490880"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 underline decoration-transparent underline-offset-2 transition-colors hover:text-imesul-red hover:decoration-imesul-red/50"
+          >
+            (67) 99249-0880
+          </a>
+        </p>
       </div>
     </footer>
   );

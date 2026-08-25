@@ -141,22 +141,27 @@ export const officialUnits = [
     // id interno mantido como "dourados-matriz" (usado em SHORT_LABELS/filtros por
     // "dourados-" em outros componentes) - so o rotulo exibido e o endereco mudaram, conforme
     // dados oficiais confirmados pelo usuario em 2026-08-20 (a numeracao "258" estava
-    // desatualizada). mapsHref nao foi alterado - sem um link novo confirmado, mantido como
-    // estava (ver relatorio desta fase).
+    // desatualizada).
+    // mapsHref corrigido em 2026-08-25: os dois links de Dourados estavam trocados entre si
+    // (cada endereco abria a localizacao da outra unidade). Confirmado resolvendo os links
+    // curtos do Google Maps - o link abaixo aponta para o local de negocio "Imesul
+    // Distribuicao | Dourados / MS", que corresponde a este endereco (Centro).
     id: "dourados-matriz",
     name: "Dourados — Centro",
     address: "Rua Pedro Rigotti, 248 – Jd. São Pedro, Dourados/MS",
     phone: "(67) 3427-5700",
     phoneHref: "tel:+556734275700",
-    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
+    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
   },
   {
+    // mapsHref corrigido em 2026-08-25 (ver nota acima) - este link aponta para o local de
+    // negocio "Imesul Distribuicao | Loja de Fabrica", que corresponde a este endereco.
     id: "dourados-fabrica",
     name: "Dourados — Loja de Fábrica",
     address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
     phone: "(67) 3411-5700",
     phoneHref: "tel:+556734115700",
-    mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
+    mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
   {
     id: "campo-grande",
