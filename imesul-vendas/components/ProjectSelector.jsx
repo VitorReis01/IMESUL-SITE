@@ -11,14 +11,10 @@ import {
   ArrowRight,
   Building2,
   Check,
-  Headphones,
-  Layers3,
   Menu,
-  MapPin,
   MessageCircle,
   PackageSearch,
   Search,
-  ShieldCheck,
   ShoppingCart,
   X,
 } from "lucide-react";
@@ -148,27 +144,13 @@ const expandSearchQuery = (value) => {
   return Array.from(new Set([normalized, ...tokens, ...relatedTerms.map(normalizeSearch)].filter(Boolean)));
 };
 
-const trustItems = [
-  {
-    icon: ShieldCheck,
-    title: "+45 anos",
-    description: "experiência e confiança",
-  },
-  {
-    icon: Headphones,
-    title: "Atendimento técnico",
-    description: "orientação especializada",
-  },
-  {
-    icon: MapPin,
-    title: "Dourados e Campo Grande",
-    description: "três unidades",
-  },
-  {
-    icon: Layers3,
-    title: "Linha completa em aço",
-    description: "do básico ao acabamento",
-  },
+// Faixa de ficha tecnica do hero: so fatos verificaveis, sem claim generico. highlight (quando
+// existe) e o unico trecho em vermelho da linha - o resto do texto fica em branco/cinza claro.
+const trustFacts = [
+  { highlight: "45+", label: "anos de mercado" },
+  { highlight: "3", label: "unidades em MS" },
+  { highlight: null, label: "Estoque próprio" },
+  { highlight: null, label: "Entrega regional" },
 ];
 
 const projectShowcaseCards = [
@@ -252,7 +234,6 @@ export default function ProjectSelector() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [heroIntroReady, setHeroIntroReady] = useState(false);
   const [heroReduceMotion, setHeroReduceMotion] = useState(false);
-  const [heroTrustGlowIndex, setHeroTrustGlowIndex] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authVisualActive, setAuthVisualActive] = useState(false);
   const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
@@ -474,7 +455,6 @@ export default function ProjectSelector() {
       setHeroReduceMotion(media.matches);
       if (media.matches) {
         setHeroIntroReady(true);
-        setHeroTrustGlowIndex(null);
         return;
       }
 
@@ -490,23 +470,6 @@ export default function ProjectSelector() {
       media.removeEventListener("change", syncHeroIntro);
     };
   }, []);
-
-  // Destaca cada prova de confiança uma vez após a entrada da hero, sem brilho em loop.
-  useEffect(() => {
-    if (!heroIntroReady || heroReduceMotion) {
-      return undefined;
-    }
-
-    const timers = trustItems.flatMap((_, index) => {
-      const startDelay = 1040 + index * 720;
-      return [
-        window.setTimeout(() => setHeroTrustGlowIndex(index), startDelay),
-        window.setTimeout(() => setHeroTrustGlowIndex(null), startDelay + 620),
-      ];
-    });
-
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [heroIntroReady, heroReduceMotion]);
 
   // Revela os blocos abaixo da hero uma vez e mantém o conteúdo estável durante o scroll.
   useEffect(() => {
@@ -1066,44 +1029,20 @@ export default function ProjectSelector() {
               Consulte medidas disponíveis e envie sua solicitação pelo WhatsApp.
             </p>
 
-            <div className="mt-6 grid max-w-[640px] gap-x-5 gap-y-3 sm:mt-7 sm:grid-cols-2 sm:gap-y-4 xl:max-w-[760px] xl:grid-cols-4">
-              {trustItems.map((item, index) => {
-                const isGlowing = heroTrustGlowIndex === index && !heroReduceMotion;
-
-                return (
-                <div
-                  key={item.title}
-                  className={`relative flex min-w-0 items-start gap-3 py-1 transition-[filter] duration-500 motion-reduce:transition-none ${
-                    isGlowing ? "drop-shadow-[0_0_18px_rgba(212,43,43,0.16)]" : ""
-                  } ${heroIntroClassName}`}
-                  style={heroIntroStyle(900 + index * 90)}
-                >
-                  <span
-                    className={`relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-imesul-red/50 bg-transparent text-imesul-red transition-[box-shadow,color,border-color] duration-500 motion-reduce:transition-none ${
-                      isGlowing
-                        ? "border-imesul-red/80 text-white shadow-[0_0_18px_rgba(212,43,43,0.36)]"
-                        : ""
-                    }`}
-                  >
-                    <item.icon size={17} strokeWidth={2} aria-hidden="true" />
+            {/* Ficha tecnica do hero: faixa unica de fatos, sem cards/icones - ver trustFacts acima. */}
+            <div
+              className={`mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-7 ${heroIntroClassName}`}
+              style={heroIntroStyle(900)}
+            >
+              {trustFacts.map((fact, index) => (
+                <span key={fact.label} className="flex items-center gap-x-2">
+                  {index > 0 && <span aria-hidden="true" className="h-3 w-px shrink-0 bg-white/15" />}
+                  <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.04em] text-imesul-steel-light/85">
+                    {fact.highlight && <span className="font-semibold text-imesul-red">{fact.highlight} </span>}
+                    {fact.label}
                   </span>
-                  <span className="relative min-w-0">
-                    <strong
-                      className={`block font-condensed text-[14px] font-semibold uppercase leading-none tracking-[0.075em] text-white transition-[text-shadow,color] duration-500 motion-reduce:transition-none sm:text-[15px] ${
-                        isGlowing
-                          ? "text-white [text-shadow:0_0_14px_rgba(255,255,255,0.26),0_0_18px_rgba(212,43,43,0.18)]"
-                          : ""
-                      }`}
-                    >
-                      {item.title}
-                    </strong>
-                    <span className="mt-1 block text-[13px] leading-4 text-imesul-steel-light/72">
-                      {item.description}
-                    </span>
-                  </span>
-                </div>
-                );
-              })}
+                </span>
+              ))}
             </div>
           </div>
 
