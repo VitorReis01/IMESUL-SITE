@@ -35,9 +35,11 @@ import AuthModal from "./AuthModal";
 import { ProjectQuoteFlow } from "./QuoteBuilder";
 import ProductCatalog from "./ProductCatalog";
 import ProductShowcaseCarousel from "./ProductShowcaseCarousel";
+import SalesFooter from "./SalesFooter";
 import SalesGuidanceSection from "./SalesGuidanceSection";
 import SalesTrustStrip from "./SalesTrustStrip";
 import WhatsAppLogo from "./WhatsAppLogo";
+import { setGuidedQuoteActive } from "../lib/guidedQuoteFlow";
 
 // Carrega o efeito 3D somente no cliente para deixar o bundle inicial mais leve.
 const SteelScrollObject = dynamic(() => import("./SteelScrollObject"), {
@@ -240,6 +242,14 @@ export default function ProjectSelector() {
   const highlightTimeoutRef = useRef(null);
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
   const cartItemCount = getCartItemCount(parseCartRaw(rawCartItems));
+
+  // Publica para o WhatsApp flutuante (CartWidget) que o orcamento guiado por projeto esta na
+  // tela - essa tela ja tem o proprio CTA de WhatsApp, o botao flutuante fica redundante.
+  useEffect(() => {
+    setGuidedQuoteActive(Boolean(selectedProjectId));
+    return () => setGuidedQuoteActive(false);
+  }, [selectedProjectId]);
+
   // Fallback nativo do link (clique do meio/nova aba/sem JS) - o clique normal e interceptado
   // por handleDirectContactClick, que cria o lead (DIRECT_CONTACT) antes de abrir o WhatsApp.
   const directContactFallbackUrl = createWhatsAppUrl(sellerMessage);
@@ -686,6 +696,7 @@ export default function ProjectSelector() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
+    <>
     <main className="relative min-h-screen overflow-hidden bg-[#06101d]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
@@ -1203,26 +1214,30 @@ export default function ProjectSelector() {
 
       <SalesTrustStrip />
       <SalesGuidanceSection />
-      <AuthModal
-        open={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onAuthenticated={() => setAuthVisualActive(true)}
-        onAdminAuthenticated={() => {
-          setAdminVisualActive(true);
-          setAdminDashboardOpen(true);
-        }}
-      />
-      <AdminDashboard
-        open={adminDashboardOpen}
-        onClose={() => setAdminDashboardOpen(false)}
-        onLogout={() => {
-          setAdminDashboardOpen(false);
-          setAdminVisualActive(false);
-          setAuthVisualActive(false);
-          endAdminSession();
-        }}
-      />
     </main>
+    {/* Orcamento guiado por projeto e um fluxo focado (preencher -> revisar -> solicitar) -
+        o rodape nao aparece enquanto ele estiver aberto, pra nao competir com o processo. */}
+    {!selectedProjectId && <SalesFooter />}
+    <AuthModal
+      open={authModalOpen}
+      onClose={() => setAuthModalOpen(false)}
+      onAuthenticated={() => setAuthVisualActive(true)}
+      onAdminAuthenticated={() => {
+        setAdminVisualActive(true);
+        setAdminDashboardOpen(true);
+      }}
+    />
+    <AdminDashboard
+      open={adminDashboardOpen}
+      onClose={() => setAdminDashboardOpen(false)}
+      onLogout={() => {
+        setAdminDashboardOpen(false);
+        setAdminVisualActive(false);
+        setAuthVisualActive(false);
+        endAdminSession();
+      }}
+    />
+    </>
   );
 }
 

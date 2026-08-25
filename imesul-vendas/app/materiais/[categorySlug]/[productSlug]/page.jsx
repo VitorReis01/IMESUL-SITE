@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import MaterialProductPage from "../../../../components/MaterialProductPage";
-import SalesFooter from "../../../../components/SalesFooter";
 import {
   getCatalogCategoryPath,
   getLegacyCategoryRedirectPath,
@@ -42,17 +41,14 @@ export default async function MaterialProductRoutePage({ params }) {
     : null;
 
   return (
-    <>
-      <MaterialProductPage
-        category={{
-          id: match.category.id,
-          name: match.category.name,
-          description: match.category.description,
-        }}
-        product={match.product}
-        backLink={backLink}
-      />
-      <SalesFooter />
-    </>
+    <MaterialProductPage
+      category={{
+        id: match.category.id,
+        name: match.category.name,
+        description: match.category.description,
+      }}
+      product={match.product}
+      backLink={backLink}
+    />
   );
 }

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import MaterialProductPage from "../../../../../components/MaterialProductPage";
-import SalesFooter from "../../../../../components/SalesFooter";
 import {
   getCatalogCategoryPath,
   getCatalogProductPath,
@@ -54,20 +53,17 @@ export default async function MaterialVariantRoutePage({ params }) {
       : getCatalogProductPath(match.product);
 
   return (
-    <>
-      <MaterialProductPage
-        category={{
-          id: match.category.id,
-          name: match.category.name,
-          description: match.category.description,
-        }}
-        product={variantProduct}
-        backLink={{
-          href: backHref,
-          label: `Voltar para ${match.product.name}`,
-        }}
-      />
-      <SalesFooter />
-    </>
+    <MaterialProductPage
+      category={{
+        id: match.category.id,
+        name: match.category.name,
+        description: match.category.description,
+      }}
+      product={variantProduct}
+      backLink={{
+        href: backHref,
+        label: `Voltar para ${match.product.name}`,
+      }}
+    />
   );
 }

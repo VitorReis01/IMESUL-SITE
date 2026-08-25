@@ -8,7 +8,9 @@ import { getCatalogCategoryPath, getCatalogVariantPath } from "../data/catalogRo
 import { trackLocalEvent } from "../lib/localAnalytics";
 import { trackEvent } from "../lib/trackEvent";
 import { getStoredUnit } from "../lib/unitPreference";
+import { setGuidedQuoteActive } from "../lib/guidedQuoteFlow";
 import { MaterialQuoteFlow } from "./QuoteBuilder";
+import SalesFooter from "./SalesFooter";
 
 export default function MaterialProductPage({ category, product, backLink = null }) {
   // Alguns produtos (ex.: Colunas) trocam a imagem principal conforme a opcao selecionada no orcamento.
@@ -34,6 +36,16 @@ export default function MaterialProductPage({ category, product, backLink = null
 
   const variants = product.variants || [];
   const hasVariants = variants.length > 0;
+
+  // Publica para o WhatsApp flutuante (CartWidget) que o orcamento guiado esta na tela - so
+  // quando o formulario de verdade aparece (!hasVariants; paginas de variante sempre chegam
+  // aqui com variants: [], entao sempre ativam). Com variantes, esta pagina e so a grade de
+  // "selecione o modelo" - navegacao normal, o flutuante continua.
+  useEffect(() => {
+    setGuidedQuoteActive(!hasVariants);
+    return () => setGuidedQuoteActive(false);
+  }, [hasVariants]);
+
   const isRoldanasSection = product.id === "roldanas";
   const isFechosSection = product.id === "fechos";
   const isDobradicasSection = product.id === "dobradicas";
@@ -50,6 +62,7 @@ export default function MaterialProductPage({ category, product, backLink = null
   };
 
   return (
+    <>
     <main className="relative min-h-screen overflow-hidden bg-[#06101d] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(212,43,43,0.11),transparent_24%),radial-gradient(circle_at_88%_46%,rgba(42,92,151,0.14),transparent_30%),linear-gradient(180deg,#06101d_0%,#0a1727_48%,#06101d_100%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
@@ -245,5 +258,10 @@ export default function MaterialProductPage({ category, product, backLink = null
         </div>
       </section>
     </main>
+    {/* So esconde quando esta pagina mostra o orcamento guiado de verdade (!hasVariants -
+        inclui sempre as paginas de variante, que forcam variants: []). Com variantes, esta
+        pagina e so uma grade de selecao de modelo - navegacao normal, rodape continua. */}
+    {hasVariants && <SalesFooter />}
+    </>
   );
 }
