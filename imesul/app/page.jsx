@@ -8,7 +8,6 @@ import MoreMaterialsMorph from "../components/MoreMaterialsMorph";
 import GoogleReviews from "../components/GoogleReviews";
 import FinalCTA from "../components/FinalCTA";
 import Footer from "../components/Footer";
-import WhatsAppFloat from "../components/WhatsAppFloat";
 import MotionProvider from "../components/MotionProvider";
 import SmoothScroll from "../components/SmoothScroll";
 import CompatibilityProvider from "../components/CompatibilityProvider";
@@ -33,7 +32,6 @@ export default function Home() {
           <div id="dourados">
             <Footer />
           </div>
-          <WhatsAppFloat />
           <SmoothScroll />
         </MotionProvider>
       </CompatibilityProvider>

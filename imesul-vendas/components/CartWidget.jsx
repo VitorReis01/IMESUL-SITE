@@ -6,11 +6,15 @@
 // montado uma vez em app/layout.jsx e a forma mais segura de atender "carrinho acessivel fora do
 // catalogo" sem redesenhar o cabecalho de cada pagina (fora do escopo desta fase).
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { Minus, Plus, Trash2, X } from "lucide-react";
 import WhatsAppLogo from "./WhatsAppLogo";
 import {
+  getGuidedQuoteActive,
+  getServerGuidedQuoteActive,
+  subscribeToGuidedQuoteActive,
+} from "../lib/guidedQuoteFlow";
+import {
   clearCartItems,
-  getCartItemCount,
   getCartRawSnapshot,
   getServerCartSnapshot,
   parseCartRaw,
@@ -72,6 +76,16 @@ export default function CartWidget() {
   // lib/consent.js) - em xl+ o banner tem espaco sobrando ao lado e os botoes continuam visiveis.
   const bannerOpen = useSyncExternalStore(subscribeToConsentBannerOpen, getConsentBannerOpen, getServerConsentBannerOpen);
   const items = parseCartRaw(rawItems);
+  // Esconde SO o WhatsApp flutuante (nunca o carrinho) durante o orcamento guiado - a propria
+  // tela ja tem o CTA "Solicitar orcamento pelo WhatsApp", o botao flutuante fica redundante.
+  // Publicado por ProjectSelector.jsx (fluxo por projeto, inline na home) e por
+  // MaterialProductPage.jsx (fluxo por material - so quando o produto/variante realmente
+  // mostra o formulario, nao na grade de "selecione o modelo") - ver lib/guidedQuoteFlow.js.
+  const hideWhatsAppFloat = useSyncExternalStore(
+    subscribeToGuidedQuoteActive,
+    getGuidedQuoteActive,
+    getServerGuidedQuoteActive
+  );
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const wasOpenRef = useRef(false);
@@ -103,8 +117,6 @@ export default function CartWidget() {
     scheduleCartTrackingSync(items);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawItems]);
-
-  const itemCount = getCartItemCount(items);
 
   const handleFinalize = () => {
     if (!items.length || submitting) return;
@@ -150,31 +162,18 @@ export default function CartWidget() {
 
   return (
     <>
-      <div
-        className={`fixed bottom-5 right-5 z-[140] ${bannerOpen ? "hidden xl:flex" : "flex"} flex-col items-end gap-3 sm:flex-row`}
+      {/* So o WhatsApp fica flutuante agora - o carrinho flutuante foi removido (o do header
+          continua normal, ver ProjectSelector.jsx). Posicao igual a que o carrinho ocupava
+          (canto inferior direito), sem espaco reservado sobrando. Hover reaproveita a mesma
+          transicao do mascote em SalesGuidanceSection.jsx (crescimento + leve subida). */}
+      <button
+        type="button"
+        onClick={handleFloatingWhatsApp}
+        aria-label="Falar com vendedor pelo WhatsApp"
+        className={`fixed bottom-5 right-5 z-[140] ${hideWhatsAppFloat ? "hidden" : bannerOpen ? "hidden xl:flex" : "flex"} h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_38px_rgba(0,0,0,0.32)] transition-transform duration-500 ease-out hover:-translate-y-2 hover:scale-[1.05] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/35 sm:bottom-7 sm:right-7 sm:h-16 sm:w-16`}
       >
-        <button
-          type="button"
-          onClick={handleFloatingWhatsApp}
-          aria-label="Falar com vendedor pelo WhatsApp"
-          className="group flex h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_38px_rgba(0,0,0,0.32)] transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/35 sm:h-16 sm:w-16"
-        >
-          <WhatsAppLogo className="h-11 w-11 sm:h-[52px] sm:w-[52px]" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={`Abrir carrinho${itemCount ? `, ${itemCount} item(ns)` : ""}`}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.14] bg-imesul-red text-white shadow-[0_14px_38px_rgba(212,43,43,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ef3434] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-imesul-red/30 sm:h-16 sm:w-16"
-        >
-          <ShoppingCart size={22} strokeWidth={2} aria-hidden="true" />
-          {itemCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-[#06101d] bg-white px-1 font-condensed text-[11px] font-bold text-imesul-red">
-              {itemCount > 99 ? "99+" : itemCount}
-            </span>
-          )}
-        </button>
-      </div>
+        <WhatsAppLogo variant="green" className="h-14 w-14 sm:h-16 sm:w-16" />
+      </button>
 
       {open && (
         <div className="fixed inset-0 z-[160] flex justify-end">

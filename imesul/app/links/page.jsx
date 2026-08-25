@@ -3,7 +3,6 @@
 // dados de unidades usados no footer (data/products.js) para evitar informacoes duplicadas.
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import WhatsAppFloat from "../../components/WhatsAppFloat";
 import MotionProvider from "../../components/MotionProvider";
 import OfficialLinksPicker from "../../components/OfficialLinksPicker";
 
@@ -45,7 +44,6 @@ export default function OfficialLinksPage() {
         </section>
 
         <Footer />
-        <WhatsAppFloat />
       </MotionProvider>
     </main>
   );
