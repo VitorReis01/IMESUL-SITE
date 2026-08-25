@@ -2,24 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Animacoes compartilhadas e preferencias de movimento */
-@keyframes whatsapp-float-halo {
-  0%,
-  100% {
-    opacity: 0.52;
-    transform: scale(0.96);
-  }
-
-  50% {
-    opacity: 0.78;
-    transform: scale(1.04);
-  }
-}
-
-.whatsapp-float-halo {
-  animation: whatsapp-float-halo 3.8s ease-in-out infinite;
-}
-
 /* Base e tokens visuais */
 :root {
   --red: #D42B2B;

@@ -37,6 +37,7 @@ import ProductCatalog from "./ProductCatalog";
 import ProductShowcaseCarousel from "./ProductShowcaseCarousel";
 import SalesGuidanceSection from "./SalesGuidanceSection";
 import SalesTrustStrip from "./SalesTrustStrip";
+import WhatsAppLogo from "./WhatsAppLogo";
 
 // Carrega o efeito 3D somente no cliente para deixar o bundle inicial mais leve.
 const SteelScrollObject = dynamic(() => import("./SteelScrollObject"), {
@@ -851,14 +852,9 @@ export default function ProjectSelector() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(event) => handleDirectContactClick(event, { section: "Navbar", detail: "Botão superior", pagePath: "navbar-falar-com-vendedor" })}
-              className="group/seller hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red bg-imesul-red px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
+              className="group hidden h-10 items-center justify-center gap-2 rounded-[5px] border border-imesul-red bg-imesul-red px-4 font-condensed text-[12px] font-bold uppercase tracking-[0.13em] text-white shadow-[0_0_0_rgba(37,211,102,0)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-[#25D366] hover:bg-[#25D366] hover:text-white hover:shadow-[0_0_24px_rgba(37,211,102,0.28),0_0_12px_rgba(255,255,255,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none xl:inline-flex"
             >
-              <MessageCircle
-                size={15}
-                strokeWidth={2}
-                className="text-white transition-[filter,color,transform] duration-300 group-hover/seller:text-white group-hover/seller:drop-shadow-[0_0_8px_rgba(255,255,255,0.34)] group-active/seller:scale-110 motion-reduce:transform-none motion-reduce:transition-none"
-                aria-hidden="true"
-              />
+              <WhatsAppLogo className="h-[15px] w-[15px]" />
               Falar com vendedor
             </a>
             <button
@@ -974,7 +970,7 @@ export default function ProjectSelector() {
               }}
               className="mt-1 flex min-h-12 items-center justify-center gap-2 rounded-[7px] border border-[#25D366]/50 bg-[#25D366] px-4 font-condensed text-[15px] font-bold uppercase tracking-[0.12em] text-white shadow-[0_16px_42px_rgba(37,211,102,0.22)]"
             >
-              <MessageCircle size={17} aria-hidden="true" />
+              <WhatsAppLogo variant="green" className="h-[17px] w-[17px]" />
               Falar com vendedor
             </a>
           </nav>

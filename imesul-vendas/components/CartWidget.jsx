@@ -6,7 +6,8 @@
 // montado uma vez em app/layout.jsx e a forma mais segura de atender "carrinho acessivel fora do
 // catalogo" sem redesenhar o cabecalho de cada pagina (fora do escopo desta fase).
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { MessageCircle, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import WhatsAppLogo from "./WhatsAppLogo";
 import {
   clearCartItems,
   getCartItemCount,
@@ -156,9 +157,9 @@ export default function CartWidget() {
           type="button"
           onClick={handleFloatingWhatsApp}
           aria-label="Falar com vendedor pelo WhatsApp"
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.14] bg-[#25D366] text-white shadow-[0_14px_38px_rgba(37,211,102,0.26)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1ebe5d] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/25 sm:h-16 sm:w-16"
+          className="group flex h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_38px_rgba(0,0,0,0.32)] transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/35 sm:h-16 sm:w-16"
         >
-          <MessageCircle size={22} strokeWidth={2} aria-hidden="true" />
+          <WhatsAppLogo className="h-11 w-11 sm:h-[52px] sm:w-[52px]" />
         </button>
         <button
           type="button"
