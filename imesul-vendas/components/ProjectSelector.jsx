@@ -144,14 +144,6 @@ const expandSearchQuery = (value) => {
   return Array.from(new Set([normalized, ...tokens, ...relatedTerms.map(normalizeSearch)].filter(Boolean)));
 };
 
-// Faixa de ficha tecnica do hero: so fatos verificaveis, sem claim generico. highlight (quando
-// existe) e o unico trecho em vermelho da linha - o resto do texto fica em branco/cinza claro.
-const trustFacts = [
-  { highlight: "45+", label: "anos de mercado" },
-  { highlight: "3", label: "unidades em MS" },
-  { highlight: null, label: "Estoque próprio" },
-  { highlight: null, label: "Entrega regional" },
-];
 
 const projectShowcaseCards = [
   {
@@ -1021,29 +1013,13 @@ export default function ProjectSelector() {
               <span className={`block whitespace-nowrap text-imesul-red ${heroIntroClassName}`} style={heroIntroStyle(340)}>PARA OBRA,</span>
               <span className={`block ${heroIntroClassName}`} style={heroIntroStyle(460)}>SERRALHERIA E INDÚSTRIA.</span>
             </h1>
-            <p className={`mt-5 max-w-[560px] text-[0.98rem] leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(620)}>
+            <p className={`mt-5 max-w-[510px] text-[0.98rem]/[1.8] text-imesul-steel-light/88 sm:text-[1rem]/[1.8] lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(620)}>
               Tubos, metalons, chapas, telhas, perfis e acessórios para
               construção, serralheria, indústria e campo.
             </p>
-            <p className={`mt-3 max-w-[560px] text-[0.98rem] font-semibold leading-7 text-imesul-steel-light/88 sm:text-base lg:text-justify ${heroIntroClassName}`} style={heroIntroStyle(760)}>
+            <p className={`mt-1.5 max-w-[510px] text-[0.85rem]/[1.7] font-medium text-imesul-steel-light/76 sm:text-[0.9rem]/[1.7] ${heroIntroClassName}`} style={heroIntroStyle(760)}>
               Consulte medidas disponíveis e envie sua solicitação pelo WhatsApp.
             </p>
-
-            {/* Ficha tecnica do hero: faixa unica de fatos, sem cards/icones - ver trustFacts acima. */}
-            <div
-              className={`mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-7 ${heroIntroClassName}`}
-              style={heroIntroStyle(900)}
-            >
-              {trustFacts.map((fact, index) => (
-                <span key={fact.label} className="flex items-center gap-x-2">
-                  {index > 0 && <span aria-hidden="true" className="h-3 w-px shrink-0 bg-white/15" />}
-                  <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.04em] text-imesul-steel-light/85">
-                    {fact.highlight && <span className="font-semibold text-imesul-red">{fact.highlight} </span>}
-                    {fact.label}
-                  </span>
-                </span>
-              ))}
-            </div>
           </div>
 
           <div className="grid gap-3 self-center sm:grid-cols-2 sm:gap-4 lg:max-w-[560px] lg:justify-self-center">
