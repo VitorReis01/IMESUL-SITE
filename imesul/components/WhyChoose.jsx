@@ -119,16 +119,6 @@ export default function WhyChoose() {
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col items-center text-center mb-20"
         >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-px bg-imesul-red" />
-            <span
-              className="font-mono text-imesul-red text-[10px] tracking-[0.4em] uppercase"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              NOSSOS DIFERENCIAIS
-            </span>
-            <div className="w-12 h-px bg-imesul-red" />
-          </div>
           <h2
             className="font-display text-white leading-none"
             style={{

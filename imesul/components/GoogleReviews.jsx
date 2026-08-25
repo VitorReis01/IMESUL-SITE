@@ -230,11 +230,9 @@ export default function GoogleReviews() {
           className="flex flex-col items-center text-center"
         >
           <div className="flex items-center gap-4">
-            <span className="h-px w-10 bg-imesul-red" />
             <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-imesul-red">
               Avaliações de clientes
             </span>
-            <span className="h-px w-10 bg-imesul-red" />
           </div>
 
           <h2

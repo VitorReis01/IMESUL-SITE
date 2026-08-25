@@ -15,7 +15,6 @@ export const products = [
     principalUse: "Estruturas metálicas, serralheria, portões e aplicações industriais.",
     image: "/products/tubos-removebg-preview.webp",
     number: "01",
-    tag: "SHOWROOM",
   },
   {
     id: "perfis-estruturais",
@@ -27,7 +26,6 @@ export const products = [
     principalUse: "Coberturas, galpões, reforços, suportes e estruturas metálicas.",
     image: "/products/perfis.webp",
     number: "02",
-    tag: "SHOWROOM",
   },
   {
     id: "telhas-metalicas",
@@ -39,7 +37,6 @@ export const products = [
     principalUse: "Coberturas residenciais, comerciais, industriais e rurais.",
     image: "/products/telhas.webp",
     number: "03",
-    tag: "SHOWROOM",
   },
   {
     id: "chapas",
@@ -51,7 +48,6 @@ export const products = [
     principalUse: "Fechamentos, bases, dobra, corte, reforço e fabricação industrial.",
     image: "/products/chapas.webp",
     number: "04",
-    tag: "SHOWROOM",
   },
   {
     id: "laminados",
@@ -63,7 +59,6 @@ export const products = [
     principalUse: "Suportes, travamentos, reforços, grades e componentes metálicos.",
     image: "/products/cantoneiras.webp",
     number: "05",
-    tag: "SHOWROOM",
   },
   {
     id: "perfis-serralheria",
@@ -75,7 +70,6 @@ export const products = [
     principalUse: "Portões, grades, janelas, portas e projetos sob medida.",
     image: "/products/metalon.webp",
     number: "06",
-    tag: "SHOWROOM",
   },
   {
     id: "acessorios-serralheria",
@@ -94,7 +88,6 @@ export const products = [
       "Montagem, movimentação, travamento e acabamento de soluções para serralheria.",
     image: "/products/acessorios-serralheria-showroom.webp",
     number: "07",
-    tag: "SHOWROOM",
   },
   {
     id: "tintas-solventes-consumiveis",
@@ -111,7 +104,6 @@ export const products = [
     principalUse: "Preparação, proteção anticorrosiva, acabamento e manutenção.",
     image: "/products/tintas-solventes-solda-corte.webp",
     number: "08",
-    tag: "SHOWROOM",
   },
 ];
 

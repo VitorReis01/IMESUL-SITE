@@ -84,10 +84,6 @@ function ProductInformation({ product, compact = false }) {
         <span className="font-mono text-[10px] tracking-[0.3em] text-imesul-red">
           {product.number}
         </span>
-        <span className="h-px w-8 bg-imesul-red/80" />
-        <span className="font-mono text-[9px] tracking-[0.26em] text-imesul-steel/55">
-          {product.tag}
-        </span>
       </div>
 
       <h3
@@ -179,9 +175,6 @@ function CompatibilityProductCard({ product, index, fallback = false }) {
           <span className="font-mono text-[10px] tracking-[0.28em] text-imesul-red">
             {product.number}
           </span>
-          <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/55">
-            {product.tag}
-          </span>
         </div>
         <h3 className="mt-4 font-display text-[clamp(2.2rem,10vw,4.5rem)] uppercase leading-[0.92] text-white md:text-[clamp(3.4rem,6vw,5.4rem)]">
           {product.name}
@@ -250,7 +243,7 @@ function CompatibilityProductExperience({ fallback = false }) {
         <header className="max-w-4xl">
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
-              SHOWROOM IMESUL
+              PRODUTOS IMESUL
             </span>
             {!fallback && (
               <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/50">
@@ -583,7 +576,7 @@ export default function ProductScrollExperience() {
         <header className="mx-auto w-full max-w-3xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
-              SHOWROOM IMESUL
+              PRODUTOS IMESUL
             </span>
             <span className="font-mono text-[10px] tracking-[0.22em] text-imesul-steel/50">
               {activeMobileProduct.number}/{String(products.length).padStart(2, "0")}
@@ -643,7 +636,7 @@ export default function ProductScrollExperience() {
         <header className="mx-auto max-w-5xl">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] tracking-[0.34em] text-imesul-red">
-              SHOWROOM IMESUL
+              PRODUTOS IMESUL
             </span>
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-end">
@@ -682,7 +675,7 @@ export default function ProductScrollExperience() {
           <div className="relative z-20 min-h-[640px] xl:min-h-[690px]">
             <div className="mb-7 flex items-center gap-4">
               <span className="font-mono text-[10px] tracking-[0.36em] text-imesul-red">
-                SHOWROOM IMESUL
+                PRODUTOS IMESUL
               </span>
               <span className="font-mono text-[10px] tracking-[0.23em] text-imesul-steel/50">
                 {activeProduct.number}/{String(products.length).padStart(2, "0")}
