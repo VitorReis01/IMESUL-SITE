@@ -17,6 +17,13 @@
 // WhatsApp padrao - esse numero (556733125600) vai virar o IMEbot e nunca deve receber clientes
 // diretamente. Mostra o aviso de "tentar novamente" (ver CommercialContactAlert.jsx) em vez
 // disso. Ver relatorio desta fase para o raciocinio completo.
+//
+// ARQUITETURA TERRITORIAL (instrucao explicita desta fase): Dourados NUNCA passa por este fluxo
+// de lead/rodizio/IMEbot - e so um alternador simples entre as duas lojas (ver
+// lib/commercialRegions.js e lib/douradosDispatch.js). O desvio acontece logo no topo desta
+// funcao, antes de qualquer chamada a createLead - assim TODO chamador existente (QuoteBuilder,
+// ProjectSelector, SalesGuidanceSection, CartWidget) ganha o comportamento correto sem precisar
+// ser alterado individualmente.
 import { createWhatsAppUrl } from "./whatsapp";
 import { getAnonymousVisitorId } from "./localAnalytics";
 import { createLead } from "./leads";
@@ -24,6 +31,7 @@ import { COMMERCIAL_UNITS, LEAD_FLOW_TYPES, LEAD_SITE_ORIGIN, getCommercialUnitC
 import { getStoredUnit } from "./unitPreference";
 import { notifyCommercialContactBlocked } from "./commercialContactAlert";
 import { trackEvent } from "./trackEvent";
+import { openDouradosWhatsApp } from "./douradosDispatch";
 
 // GUIDED_QUOTE/CART ja passaram por um formulario de orcamento antes deste clique - contam como
 // inicio de checkout. DIRECT_CONTACT (e qualquer flow futuro) e um contato generico via WhatsApp.
@@ -61,6 +69,13 @@ export const openWhatsAppWithLead = async (args) => {
     // lib/cartTracking.js) ao lead criado, so para o checkout do carrinho.
     cartCode = "",
   } = args;
+
+  // Dourados: sai daqui ANTES de calcular fallbackUrl/abrir popup - openDouradosWhatsApp cuida
+  // do proprio popup sincrono e da propria URL final (alternador Centro/Fabrica), sem lead, sem
+  // IMEbot, sem rodizio (ver lib/leadFlow.js#isCommercialAutomationEnabledForUnit).
+  if (unit === COMMERCIAL_UNITS.DOURADOS) {
+    return openDouradosWhatsApp({ message, pagePath });
+  }
 
   // Numero de fallback e' consciente da unidade: Dourados tem numero humano oficial proprio
   // (fonte unica em lib/leadFlow.js getCommercialUnitConfig) - nunca cai no numero generico

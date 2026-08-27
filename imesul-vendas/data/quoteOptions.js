@@ -1,4 +1,6 @@
 // Estados e cidades alimentam os selects obrigatorios de localidade.
+import { ALL_MS_COMMERCIAL_CITIES } from "../lib/commercialRegions";
+
 export const brazilianStates = [
   { value: "AC", label: "Acre" },
   { value: "AL", label: "Alagoas" },
@@ -42,29 +44,10 @@ export const citiesByState = {
   GO: ["Goiânia", "Anápolis", "Rio Verde", "Outra"],
   MA: ["São Luís", "Imperatriz", "Outra"],
   MT: ["Cuiabá", "Rondonópolis", "Sinop", "Outra"],
-  MS: [
-    "Dourados",
-    "Campo Grande",
-    "Ponta Porã",
-    "Maracaju",
-    "Itaporã",
-    "Rio Brilhante",
-    "Caarapó",
-    "Naviraí",
-    "Nova Alvorada do Sul",
-    "Sidrolândia",
-    "Três Lagoas",
-    "Corumbá",
-    "Aquidauana",
-    "Bonito",
-    "Jardim",
-    "Amambai",
-    "Fátima do Sul",
-    "Deodápolis",
-    "Glória de Dourados",
-    "Nova Andradina",
-    "Outra",
-  ],
+  // Fonte unica: lib/commercialRegions.js (municipios das regioes comerciais de Campo Grande e
+  // Dourados - nunca manter uma segunda lista de cidades de MS aqui). "Outra" continua sendo so
+  // deste seletor - nao e um municipio, entao nao entra na lista central.
+  MS: [...ALL_MS_COMMERCIAL_CITIES, "Outra"],
   MG: ["Belo Horizonte", "Uberlândia", "Contagem", "Outra"],
   PA: ["Belém", "Ananindeua", "Santarém", "Outra"],
   PB: ["João Pessoa", "Campina Grande", "Outra"],

@@ -3,7 +3,7 @@
 // Fluxos de pre-orcamento por projeto e por material.
 // Monta formularios, resumo e envio ao WhatsApp sem finalizar compra no site.
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler, ShoppingCart } from "lucide-react";
 import { getMaterialsByIds } from "../data/materials";
 import { getCatalogCategory } from "../data/catalogCategories";
@@ -21,6 +21,8 @@ import { trackLocalEvent } from "../lib/localAnalytics";
 import { trackEvent } from "../lib/trackEvent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
+import { getCommercialRegionByCity } from "../lib/commercialRegions";
+import { getStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
 import { addCartItem } from "../lib/cart";
 import ProductOptionSelector, { findSelectedVariation, formatOptionValue } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
@@ -213,7 +215,11 @@ function SummaryRow({ label, value }) {
 // Gera o link somente quando as regras minimas do fluxo foram atendidas. O href continua sendo
 // o WhatsApp padrao (fallback nativo do navegador para clique do meio/abrir em nova aba sem JS);
 // o clique normal (botao esquerdo) e interceptado para criar o lead antes de abrir a conversa.
-function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8", originUnit = "", flowType = LEAD_FLOW_TYPES.GUIDED_QUOTE, pagePath = "" }) {
+// unit: chave validada ("dourados"/"campo-grande"/"") que decide o fluxo dentro de
+// openWhatsAppWithLead (lead+rodizio para Campo Grande, alternador Centro/Fabrica sem lead para
+// Dourados - ver lib/leadWhatsApp.js). origin: rotulo legivel opcional so para o campo "origin"
+// do lead (nunca usado para decidir fluxo).
+function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isLoggedIn = false, className = "mt-8", unit = "", origin = "", flowType = LEAD_FLOW_TYPES.GUIDED_QUOTE, pagePath = "" }) {
   const disabled = Boolean(disabledReason);
   const submittingRef = useRef(false);
 
@@ -255,7 +261,8 @@ function WhatsAppButton({ message, disabledReason = "", trackingDetail = "", isL
             message,
             flowType,
             product: trackingDetail,
-            unit: originUnit,
+            unit,
+            origin,
             pagePath,
           }).finally(() => {
             submittingRef.current = false;
@@ -349,10 +356,21 @@ function AddToCartButton({ category, product, form, quantity, disabledReason = "
 // Quantidade e localidade sao os unicos dados obrigatorios nos dois caminhos.
 const isLocationReady = (form) => Boolean(form.quantity && form.city && form.state);
 
+// Regiao comercial pelo municipio selecionado (arquitetura territorial - ver
+// lib/commercialRegions.js). So resolve dentro de MS - qualquer outro estado, cidade "Outra" ou
+// municipio fora das duas listas oficiais devolve null, e quem chama cai no fallback (preferencia
+// de unidade ja persistida, mesmo comportamento de antes desta fase).
+const resolveCityRegion = (form) => (form.state === "MS" ? getCommercialRegionByCity(form.city) : null);
+
 // Monta o pre-orcamento a partir do projeto, subtipo e materiais recomendados.
 export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" }) {
   const [subtype, setSubtype] = useState("");
   const [form, setForm] = useState(projectInitialForm);
+  // Fallback quando a cidade nao resolve regiao (nao preenchida ainda, "Outra", ou fora de MS) -
+  // preferencia ja capturada de ?unidade= ou de uma escolha manual anterior (ver
+  // lib/unitPreference.js), mesmo comportamento que existia antes desta fase.
+  const storedUnit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
+  const resolvedUnit = resolveCityRegion(form) || storedUnit;
 
   // Evita recalcular os nomes enquanto o cliente altera somente o formulario.
   const recommendationNames = useMemo(() => {
@@ -483,7 +501,8 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
               disabledReason={disabledReason}
               trackingDetail={`Projeto: ${project.name}`}
               isLoggedIn={isLoggedIn}
-              originUnit={originUnit}
+              unit={resolvedUnit}
+              origin={originUnit}
               pagePath="project-quote-flow"
             />
           </aside>
@@ -500,6 +519,11 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
+  // Mesma resolucao territorial do fluxo por projeto (ver ProjectQuoteFlow acima) - aqui o estado
+  // e sempre escolhido pelo cliente (sem default "MS"), entao so resolve regiao quando MS foi
+  // selecionado.
+  const storedUnit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
+  const resolvedUnit = resolveCityRegion(form) || storedUnit;
   const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos" || product.id === "discos-corte" || product.id === "trincos" || product.id === "puxadores" || product.id === "eletrodo" || product.id === "fixador-de-porta-de-piso" || product.id === "kit-n-2-rold-4" || product.id === "kit-n-3-rold-5";
   // Tela eletrossoldada segue o fluxo estruturado (malha/fio/altura), mas e vendida por metro, nao por unidade.
   const isTelaEletrossoldada = product.id === "tela-eletrossoldada";
@@ -713,6 +737,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
               trackingDetail={`Material: ${product.name}`}
               isLoggedIn={isLoggedIn}
               className="mt-0"
+              unit={resolvedUnit}
               pagePath="material-quote-flow"
             />
           </div>
