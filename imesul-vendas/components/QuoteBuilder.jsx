@@ -22,7 +22,7 @@ import { trackEvent } from "../lib/trackEvent";
 import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { getCommercialRegionByCity } from "../lib/commercialRegions";
-import { getStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
+import { getStoredUnit, setStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
 import { addCartItem } from "../lib/cart";
 import ProductOptionSelector, { findSelectedVariation, formatOptionValue } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
@@ -370,7 +370,17 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
   // preferencia ja capturada de ?unidade= ou de uma escolha manual anterior (ver
   // lib/unitPreference.js), mesmo comportamento que existia antes desta fase.
   const storedUnit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
-  const resolvedUnit = resolveCityRegion(form) || storedUnit;
+  const cityRegion = resolveCityRegion(form);
+  const resolvedUnit = cityRegion || storedUnit;
+
+  // Cidade informada no orcamento sempre prevalece sobre uma preferencia anterior (?unidade= como
+  // HINT, escolha manual antiga, etc. - ver lib/commercialContact.js) - persiste so quando a
+  // cidade realmente resolveu uma regiao, nunca sobrescreve com "" enquanto o campo esta vazio.
+  // Efeito colateral: um CTA de contato direto clicado depois deste formulario nao pergunta a
+  // regiao de novo (lib/unitPickerBridge.js so abre o modal sem preferencia salva).
+  useEffect(() => {
+    if (cityRegion) setStoredUnit(cityRegion);
+  }, [cityRegion]);
 
   // Evita recalcular os nomes enquanto o cliente altera somente o formulario.
   const recommendationNames = useMemo(() => {
@@ -523,7 +533,14 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   // e sempre escolhido pelo cliente (sem default "MS"), entao so resolve regiao quando MS foi
   // selecionado.
   const storedUnit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
-  const resolvedUnit = resolveCityRegion(form) || storedUnit;
+  const cityRegion = resolveCityRegion(form);
+  const resolvedUnit = cityRegion || storedUnit;
+
+  // Cidade informada aqui tambem prevalece sobre uma preferencia anterior - mesmo raciocinio de
+  // ProjectQuoteFlow acima.
+  useEffect(() => {
+    if (cityRegion) setStoredUnit(cityRegion);
+  }, [cityRegion]);
   const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos" || product.id === "discos-corte" || product.id === "trincos" || product.id === "puxadores" || product.id === "eletrodo" || product.id === "fixador-de-porta-de-piso" || product.id === "kit-n-2-rold-4" || product.id === "kit-n-3-rold-5";
   // Tela eletrossoldada segue o fluxo estruturado (malha/fio/altura), mas e vendida por metro, nao por unidade.
   const isTelaEletrossoldada = product.id === "tela-eletrossoldada";

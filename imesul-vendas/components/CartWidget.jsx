@@ -23,7 +23,7 @@ import {
   subscribeToCartOpen,
   updateCartItemQuantity,
 } from "../lib/cart";
-import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { requestCommercialContact } from "../lib/commercialContact";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { trackLocalEvent } from "../lib/localAnalytics";
 import { trackEvent } from "../lib/trackEvent";
@@ -130,7 +130,7 @@ export default function CartWidget() {
     });
 
     const message = buildCartMessage(items);
-    openWhatsAppWithLead({
+    requestCommercialContact({
       message,
       flowType: LEAD_FLOW_TYPES.CART,
       product: `Carrinho (${items.length} item(ns))`,
@@ -151,7 +151,7 @@ export default function CartWidget() {
       detail: "Botão flutuante",
     });
 
-    openWhatsAppWithLead({
+    requestCommercialContact({
       message: sellerMessage,
       flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
       product: "Botão flutuante",

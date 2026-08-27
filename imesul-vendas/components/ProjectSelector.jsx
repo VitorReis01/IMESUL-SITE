@@ -26,10 +26,10 @@ import { createWhatsAppUrl } from "../lib/whatsapp";
 import { endAdminSession, trackLocalEvent } from "../lib/localAnalytics";
 import { trackEvent } from "../lib/trackEvent";
 import { navigateWithConsent } from "../lib/consent";
-import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { requestCommercialContact } from "../lib/commercialContact";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { getCartItemCount, getCartRawSnapshot, getServerCartSnapshot, openCartDrawer, parseCartRaw, subscribeToCart } from "../lib/cart";
-import { captureUnitFromUrl } from "../lib/unitPreference";
+import { captureUnitHintFromUrl } from "../lib/unitPreference";
 import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
 import { ProjectQuoteFlow } from "./QuoteBuilder";
@@ -224,7 +224,6 @@ export default function ProjectSelector() {
   const [highlightedCategoryId, setHighlightedCategoryId] = useState(null);
   const [highlightedProductId, setHighlightedProductId] = useState(null);
   const [originUnit, setOriginUnit] = useState("");
-  const [unitKey, setUnitKey] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [heroIntroReady, setHeroIntroReady] = useState(false);
@@ -275,11 +274,13 @@ export default function ProjectSelector() {
     }
     event.preventDefault();
     trackInteraction({ type: "whatsapp", label: "Contato/WhatsApp", section, detail });
-    openWhatsAppWithLead({
+    // Sem "unit" explicito de proposito: requestCommercialContact resolve pela regiao CONFIRMADA
+    // (getStoredUnit()) e so abre o modal se ela ainda nao existir - nunca usa ?unidade= (hint)
+    // como autoridade para pular a pergunta (ver lib/unitPreference.js e lib/commercialContact.js).
+    requestCommercialContact({
       message: sellerMessage,
       flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
       product: detail,
-      unit: unitKey,
       pagePath,
     });
   };
@@ -339,15 +340,15 @@ export default function ProjectSelector() {
       .slice(0, 6);
   }, [searchItems, searchTerm]);
 
-  // Captura a unidade enviada pelo site institucional e mantém o dado no fluxo comercial.
-  // originUnit = rotulo legivel (vai no campo "origin" do lead); unitKey = chave validada
-  // ("dourados"/"campo-grande", persistida como preferencia necessaria - ver lib/unitPreference)
-  // usada no campo "unit" do lead e no rodizio por unidade.
+  // Captura a unidade enviada pelo site institucional. originUnit = rotulo legivel (vai no campo
+  // "origin" do lead, so contexto). captureUnitHintFromUrl guarda ?unidade= num storage SEPARADO
+  // do de regiao confirmada (ver lib/unitPreference.js) - nunca autoriza pular o modal de contato
+  // direto sozinho, so preservado por compatibilidade/contexto.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const unitParam = new URLSearchParams(window.location.search).get("unidade");
       setOriginUnit(salesUnits[unitParam] || "");
-      setUnitKey(captureUnitFromUrl());
+      captureUnitHintFromUrl();
     }, 0);
 
     return () => window.clearTimeout(timer);

@@ -12,7 +12,7 @@ import {
   Timer,
 } from "lucide-react";
 import { trackLocalEvent } from "../lib/localAnalytics";
-import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
+import { requestCommercialContact } from "../lib/commercialContact";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { createWhatsAppUrl } from "../lib/whatsapp";
 
@@ -204,7 +204,7 @@ export default function SalesGuidanceSection() {
                     detail: "Card do mascote",
                     isLoggedIn: false,
                   });
-                  openWhatsAppWithLead({
+                  requestCommercialContact({
                     message: helpCardMessage,
                     flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT,
                     product: "Card do mascote",
