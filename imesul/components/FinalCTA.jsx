@@ -142,7 +142,7 @@ export default function FinalCTA() {
             className="rounded-[10px] border border-white/18 px-8 py-4 text-center transition-all duration-300 hover:border-imesul-red/60 hover:bg-white/[0.04]"
           >
             <span className="relative z-10 font-condensed text-sm font-bold tracking-[0.22em] text-imesul-steel-light">
-              VER SITE DE VENDAS
+              VER ÁREA DE VENDAS
             </span>
           </PremiumGlowButton>
         </motion.div>

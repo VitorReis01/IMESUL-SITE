@@ -72,7 +72,7 @@ export const subscribeToUnit = (callback) => {
   };
 };
 
-// Lê ?unidade= da URL atual (ex.: vindo de um link "VER SITE DE VENDAS" já filtrado por unidade,
+// Lê ?unidade= da URL atual (ex.: vindo de um link "VER ÁREA DE VENDAS" já filtrado por unidade,
 // ou de campanha) e persiste como preferência - nunca sobrescreve com um valor inválido.
 export const captureUnitFromUrl = () => {
   if (typeof window === "undefined") return getStoredUnit();
