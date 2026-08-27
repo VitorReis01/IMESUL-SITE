@@ -28,8 +28,9 @@ export default function Home() {
           <MoreMaterialsMorph />
           <GoogleReviews />
           <FinalCTA />
-          {/* Ancora usada pela Navbar para levar direto as unidades de Dourados na home. */}
-          <div id="dourados">
+          {/* Ancora usada pelo menu ("UNIDADES") para levar direto as informacoes das unidades
+              (Campo Grande, Dourados Centro, Dourados Loja de Fabrica) na home. */}
+          <div id="unidades">
             <Footer />
           </div>
           <SmoothScroll />

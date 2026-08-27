@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { m as motion } from "framer-motion";
 import { salesSiteUrl, whatsapp } from "../data/products";
 import PremiumGlowButton from "./PremiumGlowButton";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
 import { navigateWithConsent } from "../lib/consent";
-import { getServerUnitRaw, getStoredUnitRaw, subscribeToUnit } from "../lib/unitPreference";
 import { trackEvent } from "../lib/trackEvent";
 
 // Encerra a apresentacao com acesso ao WhatsApp e a Area de Vendas.
@@ -17,11 +16,10 @@ export default function FinalCTA() {
   // a intercepcao abaixo (handleWhatsAppClick) cobre o clique normal, criando o lead antes.
   const waUrl = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsapp.message)}`;
 
-  // useSyncExternalStore (não useState+useEffect) evita tanto o mismatch de hidratação quanto
-  // setState dentro de efeito - o servidor sempre vê "" (sem unidade), o cliente atualiza para o
-  // valor real do localStorage assim que hidrata (mesmo padrão de imesul-vendas/lib/consent.js).
-  const unit = useSyncExternalStore(subscribeToUnit, getStoredUnitRaw, getServerUnitRaw);
-  const salesUrl = unit ? `${salesSiteUrl}?unidade=${unit}` : salesSiteUrl;
+  // Sempre o mesmo site unico de vendas - a regiao comercial e resolvida la, pela cidade
+  // informada pelo cliente (nunca mais por um "?unidade=" pre-definido aqui, ver relatorio desta
+  // fase).
+  const salesUrl = salesSiteUrl;
 
   // Mesmo padrao de intercepcao usado no site de vendas (ProjectSelector.jsx
   // handleDirectContactClick): deixa clique com modificador (nova aba, etc.) seguir o href normal.

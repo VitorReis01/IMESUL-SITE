@@ -186,19 +186,23 @@ export const officialSocialLinks = {
 };
 
 // Links internos usam ancora ou rota; destinos externos abrem em outra aba.
+//
+// Arquitetura unificada de vendas (revisão desta fase): não existem mais "DOURADOS"/"CAMPO
+// GRANDE" como itens separados do menu - um único site de vendas atende os dois, e a região
+// comercial é resolvida lá dentro pela cidade que o cliente informa (ver
+// imesul-vendas/lib/commercialRegions.js), nunca mais por um "?unidade=" pré-definido a partir
+// daqui. "UNIDADES" continua levando para as informações institucionais das três unidades
+// (Campo Grande, Dourados Centro, Dourados Loja de Fábrica - ver app/page.jsx#id="unidades" e
+// components/Footer.jsx), que não foram removidas, só deixaram de ter atalho próprio no menu.
+// "PRODUTOS" aponta para a vitrine institucional de produtos (id="produtos", ver
+// components/ProductScrollExperience.jsx) - o PDF do catálogo continua existindo e acessível
+// pelos CTAs próprios dentro dessa seção, só deixou de ser item principal do menu.
 export const navLinks = [
   { label: "INÍCIO", href: "/" },
   { label: "DIFERENCIAIS", href: "/#diferenciais" },
-  {
-    label: "CATÁLOGO",
-    href: "/catalogo/catalogo-imesul.pdf",
-  },
-  // A escolha da unidade aqui é EXPLÍCITA pelo próprio rótulo do link - resolve direto (sem
-  // modal) e persiste como preferência necessária antes de sair para o site de vendas (ver
-  // components/Navbar.jsx/Footer.jsx e lib/unitPreference.js). unidade=... também é lida e
-  // persistida pelo site de vendas ao chegar (ver imesul-vendas/lib/unitPreference.js).
-  { label: "DOURADOS", href: `${salesSiteUrl}?unidade=dourados`, unit: "dourados" },
-  { label: "CAMPO GRANDE", href: `${salesSiteUrl}?unidade=campo-grande`, unit: "campo-grande" },
+  { label: "PRODUTOS", href: "/#produtos" },
+  { label: "UNIDADES", href: "/#unidades" },
+  { label: "ÁREA DE VENDAS", href: salesSiteUrl },
   { label: "LINKS", href: "/links" },
 ];
 

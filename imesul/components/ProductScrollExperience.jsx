@@ -3,11 +3,10 @@
 // Showroom institucional dos produtos principais.
 // Usa dados de products.js e direciona o cliente para a area de vendas.
 import Image from "next/image";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { products, salesSiteUrl } from "../data/products";
 import useCompatibility from "../hooks/useCompatibility";
 import { navigateWithConsent } from "../lib/consent";
-import { getServerUnitRaw, getStoredUnitRaw, subscribeToUnit } from "../lib/unitPreference";
 
 // Mantem o tratamento visual das imagens consistente nos cards e no palco desktop.
 function ProductImage({ product, compact = false }) {
@@ -46,12 +45,11 @@ function ProductImage({ product, compact = false }) {
   );
 }
 
-// Leva a selecao para o site comercial sem simular compra no institucional.
+// Leva a selecao para o site comercial sem simular compra no institucional. Sempre para o mesmo
+// site unico de vendas - a regiao comercial e resolvida la, pela cidade informada pelo cliente
+// (nunca mais por um "?unidade=" pre-definido aqui, ver relatorio desta fase).
 function SalesLink({ compact = false }) {
-  // useSyncExternalStore evita tanto o mismatch de hidratacao quanto setState dentro de efeito
-  // (mesmo padrão de FinalCTA.jsx e imesul-vendas/lib/consent.js).
-  const unit = useSyncExternalStore(subscribeToUnit, getStoredUnitRaw, getServerUnitRaw);
-  const href = unit ? `${salesSiteUrl}?unidade=${unit}` : salesSiteUrl;
+  const href = salesSiteUrl;
 
   return (
     <a
