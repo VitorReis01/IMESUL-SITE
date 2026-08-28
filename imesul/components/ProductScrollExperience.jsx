@@ -256,6 +256,15 @@ function CompatibilityProductExperience({ fallback = false }) {
             ConheÃ§a as principais linhas da IMESUL e encontre o material adequado para sua obra,
             indÃºstria ou serralheria.
           </p>
+          <a
+            href="/catalogo/catalogo-imesul.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center gap-2 font-condensed text-[11px] font-semibold uppercase tracking-[0.16em] text-imesul-steel-light/65 underline decoration-transparent underline-offset-4 transition-colors hover:text-imesul-red hover:decoration-imesul-red/60"
+          >
+            Baixar catálogo completo
+            <span aria-hidden="true">↓</span>
+          </a>
         </header>
 
         <div className="mt-10 grid gap-6 lg:hidden">
@@ -587,6 +596,15 @@ export default function ProductScrollExperience() {
             Conheça as principais linhas da IMESUL e encontre o material adequado para sua obra,
             indústria ou serralheria.
           </p>
+          <a
+            href="/catalogo/catalogo-imesul.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 font-condensed text-[10px] font-semibold uppercase tracking-[0.14em] text-imesul-steel-light/65 underline decoration-transparent underline-offset-4 transition-colors hover:text-imesul-red hover:decoration-imesul-red/60 [@media(max-height:700px)]:hidden"
+          >
+            Baixar catálogo completo
+            <span aria-hidden="true">↓</span>
+          </a>
         </header>
 
         <div className="relative mx-auto mt-4 flex min-h-0 w-full max-w-3xl flex-1 flex-col justify-center gap-3 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:gap-2 [@media(max-height:480px)]:grid [@media(max-height:480px)]:grid-cols-[0.82fr_1.18fr] [@media(max-height:480px)]:items-center">
@@ -641,10 +659,21 @@ export default function ProductScrollExperience() {
             <h2 className="max-w-3xl font-display text-5xl leading-[0.94] text-white sm:text-6xl">
               SOLUÇÕES PARA QUEM CONSTRÓI E TRANSFORMA
             </h2>
-            <p className="max-w-xl text-sm leading-7 text-imesul-steel-light/70 sm:text-base">
-              Conheça as principais linhas da IMESUL e encontre o material adequado para sua obra,
-              indústria ou serralheria.
-            </p>
+            <div>
+              <p className="max-w-xl text-sm leading-7 text-imesul-steel-light/70 sm:text-base">
+                Conheça as principais linhas da IMESUL e encontre o material adequado para sua
+                obra, indústria ou serralheria.
+              </p>
+              <a
+                href="/catalogo/catalogo-imesul.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 font-condensed text-[11px] font-semibold uppercase tracking-[0.16em] text-imesul-steel-light/65 underline decoration-transparent underline-offset-4 transition-colors hover:text-imesul-red hover:decoration-imesul-red/60"
+              >
+                Baixar catálogo completo
+                <span aria-hidden="true">↓</span>
+              </a>
+            </div>
           </div>
         </header>
 
