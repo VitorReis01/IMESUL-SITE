@@ -327,8 +327,8 @@ export const applyImebotEvent = async ({ leadId, event, customerName, buyerName,
 // A Meta reentrega webhooks (retry normal em caso de timeout/erro) - sem isso, o mesmo evento
 // processaria duas vezes (ex.: pedir o valor da venda de novo, ou marcar VENDEU duas vezes).
 // Retorna true se este é um evento NOVO (deve processar); false se já foi visto (ignorar).
-export const registerWebhookEventOnce = async (eventId) => {
-  const { rowCount } = await query(
+export const registerWebhookEventOnce = async (eventId, runQuery = query) => {
+  const { rowCount } = await runQuery(
     "INSERT INTO imebot_webhook_events (event_id) VALUES ($1) ON CONFLICT (event_id) DO NOTHING",
     [eventId]
   );

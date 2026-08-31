@@ -32,6 +32,9 @@ const statusLabels = {
   disabled: "Desativado",
   checking: "Verificando",
   pending: "Pendente",
+  normal: "Normal",
+  throttled: "Throttled",
+  paused: "Paused",
 };
 
 const formatDateTime = (value) =>
@@ -107,6 +110,7 @@ export default function MonitoringPanel() {
       connected: false,
       message: "Monitoramento externo ainda não conectado",
     },
+    imebotProtection: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -240,6 +244,20 @@ export default function MonitoringPanel() {
               <div className="flex items-center justify-between gap-3 rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2.5">
                 <span className="text-sm font-semibold text-white">IMEbot</span>
                 <StatusPill status={services.imebot.status} />
+              </div>
+              <div className="mt-3 grid gap-2 text-sm text-imesul-steel-light/70">
+                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
+                  <span>Proteção de custo</span>
+                  <strong className="text-white">{statusLabels[status.imebotProtection?.status] || "-"}</strong>
+                </div>
+                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
+                  <span>Modo</span>
+                  <strong className="text-white">{status.imebotProtection?.mode === "volume_quota" ? "Quota por volume" : "-"}</strong>
+                </div>
+                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
+                  <span>Budget financeiro</span>
+                  <strong className="text-white">{status.imebotProtection?.config?.costModelConfigured ? "Configurado" : "Pendente"}</strong>
+                </div>
               </div>
             </Section>
           </div>

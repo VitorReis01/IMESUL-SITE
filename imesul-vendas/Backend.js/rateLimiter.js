@@ -59,7 +59,7 @@ export const checkRateLimit = async ({ key, windowMs, max }) => {
   const resetAt = new Date(windowStart).getTime() + windowMs;
   const retryAfterSeconds = allowed ? 0 : Math.max(Math.ceil((resetAt - Date.now()) / 1000), 1);
 
-  return { allowed, retryAfterSeconds };
+  return { allowed, retryAfterSeconds, key };
 };
 
 // Roda varias camadas em paralelo e devolve a mais restritiva. Se QUALQUER camada falhar

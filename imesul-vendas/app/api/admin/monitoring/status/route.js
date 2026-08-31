@@ -1,4 +1,5 @@
 import { isAdminRequest } from "../../../../../Backend.js/adminSecurity";
+import { getImebotProtectionSnapshot } from "../../../../../Backend.js/imebotAbuseGuard";
 import { isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { query } from "../../../../../Backend.js/db";
 import { methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
@@ -131,6 +132,7 @@ export async function GET(request) {
     },
     services,
     incidents,
+    imebotProtection: getImebotProtectionSnapshot(),
   });
 }
 

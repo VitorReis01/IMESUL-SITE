@@ -35,7 +35,9 @@ import { COMMERCIAL_UNITS, FEEDBACK_TYPE, IMEBOT_STATE, LEAD_SITE_ORIGIN, LEAD_F
 import { isAffirmativeAnswer, isNegativeAnswer, parseFeedbackRating } from "../../../../lib/customerFeedback";
 import { isActiveInternalSeller } from "../../../../lib/sellerAuth";
 import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
+import { checkInboundAbuseGuard, reservePaidActionBudget } from "../../../../Backend.js/imebotAbuseGuard";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
+import { getSalesSiteUrl } from "../../../../lib/siteUrl";
 
 // Webhook do WhatsApp Cloud API (Meta) para o IMEbot - Fase 2, so ativo para leads de unit =
 // "campo-grande" (ver isCommercialAutomationEnabledForUnit em lib/leadFlow.js). Server-to-server:
@@ -483,6 +485,13 @@ async function handleCustomerMessage({ senderPhone, message }) {
   // Nesta fase, o numero oficial do IMEbot so atende Campo Grande (ver relatorio desta fase) -
   // qualquer mensagem de cliente aqui vira um lead WHATSAPP_IMEBOT dessa unidade.
   const unit = COMMERCIAL_UNITS.CAMPO_GRANDE;
+  const initialText = safeString(message?.text?.body, 1000) || "(mensagem sem texto - mídia ou outro tipo)";
+
+  // ABUSE GUARD (A): roda para TODA mensagem de cliente, antes de qualquer leitura/escrita no
+  // banco - conversa existente ou lead novo. Nunca toca a quota paga global (ver
+  // Backend.js/imebotAbuseGuard.js) - so as camadas por telefone/repeticao.
+  const abuseGuard = await checkInboundAbuseGuard({ phone: senderPhone, messageText: initialText, unit });
+  if (!abuseGuard.allowed) return;
 
   const existingLead = await findActiveWhatsappImebotLeadByPhone(senderPhone);
   if (existingLead) {
@@ -493,7 +502,11 @@ async function handleCustomerMessage({ senderPhone, message }) {
     return;
   }
 
-  const initialText = safeString(message?.text?.body, 1000) || "(mensagem sem texto - mídia ou outro tipo)";
+  // PAID ACTION BUDGET (B): só reservada agora, imediatamente antes da ação que de fato pode
+  // gerar custo (criar lead + acionar rodízio/handoff). Mensagens já barradas pelo abuse guard
+  // acima nunca chegam aqui, então nunca consomem quota paga (ver requisito de separação A/B).
+  const budgetGuard = await reservePaidActionBudget({ unit });
+  if (!budgetGuard.allowed) return;
 
   const lead = await createLead(
     {
@@ -518,7 +531,7 @@ async function handleCustomerMessage({ senderPhone, message }) {
 
   if (lead.seller) {
     const handoff = await createHandoffLink({ leadId: lead.leadId, sellerId: lead.seller.id });
-    const baseUrl = process.env.IMEBOT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+    const baseUrl = process.env.IMEBOT_PUBLIC_BASE_URL || getSalesSiteUrl();
     const handoffUrl = baseUrl ? `${baseUrl.replace(/\/$/, "")}/r/${handoff.token}` : `/r/${handoff.token}`;
     console.info(`[imebot-webhook] handoff rastreável criado para ${lead.leadCode}:`, {
       seller: lead.seller.name,
