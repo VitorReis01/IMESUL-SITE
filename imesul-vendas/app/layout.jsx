@@ -4,10 +4,13 @@ import CartWidget from "../components/CartWidget";
 import CommercialContactAlert from "../components/CommercialContactAlert";
 import CommercialRegionModal from "../components/CommercialRegionModal";
 import TrackingScripts from "../components/TrackingScripts";
+import { getRobotsPolicy, getSalesSiteUrl } from "../lib/siteUrl";
+
+const salesSiteUrl = getSalesSiteUrl();
 
 // Define o titulo e a descricao usados em compartilhamento e mecanismos de busca.
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SALES_SITE_URL || "https://imesul.com.br"),
+  metadataBase: new URL(salesSiteUrl),
   title: "Imesul Vendas | Materiais em aço para orçamento",
   description:
     "Escolha tubos, chapas, perfis, telhas, barras e acessórios. Envie sua solicitação para a equipe Imesul confirmar medida, disponibilidade e valor pelo WhatsApp.",
@@ -39,6 +42,8 @@ export const metadata = {
     locale: "pt_BR",
     type: "website",
   },
+  alternates: { canonical: salesSiteUrl },
+  robots: getRobotsPolicy(),
 };
 
 // Entrega a estrutura minima do App Router; a interacao fica no seletor principal.

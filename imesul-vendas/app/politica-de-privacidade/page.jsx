@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getRobotsPolicy } from "../../lib/siteUrl";
 
 // Pagina estatica de politica de privacidade do site de vendas. Nao afirma usar ferramentas que o
 // projeto nao usa hoje (sem Meta Pixel, sem Google Analytics) e nao inventa CNPJ, razao social,
@@ -9,7 +10,7 @@ import { ArrowLeft } from "lucide-react";
 export const metadata = {
   title: "Política de Privacidade | Imesul Vendas",
   description: "Como a IMESUL trata informações no ambiente digital do site de vendas.",
-  robots: { index: true, follow: true },
+  robots: getRobotsPolicy(),
 };
 
 const sections = [

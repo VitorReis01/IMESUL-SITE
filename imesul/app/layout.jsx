@@ -4,6 +4,7 @@ import CookieConsentBanner from "../components/CookieConsentBanner";
 import UnitPickerModal from "../components/UnitPickerModal";
 import CommercialContactAlert from "../components/CommercialContactAlert";
 import TrackingScripts from "../components/TrackingScripts";
+import { getRobotsPolicy, getSiteUrl } from "../lib/siteUrl";
 
 // Carrega somente os pesos usados e publica cada familia como variavel CSS.
 const displayFont = Bebas_Neue({
@@ -36,8 +37,7 @@ const monoFont = JetBrains_Mono({
   preload: false,
 });
 
-// Centraliza a URL publica usada por canonical, compartilhamento e dados estruturados.
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://grupoimesul.com.br").replace(/\/$/, "");
+const siteUrl = getSiteUrl();
 
 // Metadata compartilhada por todas as rotas do site institucional.
 export const metadata = {
@@ -74,7 +74,7 @@ export const metadata = {
     images: ["/logo/imesul-logo-completa.webp"],
   },
   alternates: { canonical: siteUrl },
-  robots: { index: true, follow: true },
+  robots: getRobotsPolicy(),
 };
 
 export const viewport = {

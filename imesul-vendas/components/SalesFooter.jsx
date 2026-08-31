@@ -6,11 +6,9 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { navigateWithConsent, requestOpenPrivacyPreferences } from "../lib/consent";
+import { getInstitutionalSiteUrl } from "../lib/siteUrl";
 
-const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_URL ||
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL ||
-  "https://imesul-site.vercel.app/";
+const institutionalUrl = getInstitutionalSiteUrl();
 
 const navigationLinks = [
   { label: "Projetos", href: "#project-path" },

@@ -30,6 +30,7 @@ import { requestCommercialContact } from "../lib/commercialContact";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { getCartItemCount, getCartRawSnapshot, getServerCartSnapshot, openCartDrawer, parseCartRaw, subscribeToCart } from "../lib/cart";
 import { captureUnitHintFromUrl } from "../lib/unitPreference";
+import { getInstitutionalSiteUrl } from "../lib/siteUrl";
 import AdminDashboard from "./AdminDashboard";
 import AuthModal from "./AuthModal";
 import { ProjectQuoteFlow } from "./QuoteBuilder";
@@ -51,8 +52,7 @@ const salesUnits = {
   "campo-grande": "Campo Grande",
 };
 
-const institutionalUrl =
-  process.env.NEXT_PUBLIC_INSTITUTIONAL_URL || "https://imesul-site.vercel.app/";
+const institutionalUrl = getInstitutionalSiteUrl();
 
 const sellerMessage =
   "Olá, vim pela Área de Vendas da IMESUL e quero falar com um vendedor.";

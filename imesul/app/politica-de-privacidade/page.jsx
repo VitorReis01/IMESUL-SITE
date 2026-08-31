@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getRobotsPolicy } from "../../lib/siteUrl";
 
 // Pagina estatica de politica de privacidade do site institucional. So descreve ferramentas
 // realmente usadas hoje neste site: fontes do Google (Google Fonts), redirecionamento para
@@ -9,7 +10,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Política de Privacidade",
   description: "Como a IMESUL trata informações no ambiente digital do site institucional.",
-  robots: { index: true, follow: true },
+  robots: getRobotsPolicy(),
 };
 
 const sections = [
