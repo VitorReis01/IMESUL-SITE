@@ -2,7 +2,7 @@ import { isAdminRequest } from "../../../../../Backend.js/adminSecurity";
 import { getImebotProtectionSnapshot } from "../../../../../Backend.js/imebotAbuseGuard";
 import { isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { query } from "../../../../../Backend.js/db";
-import { methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
+import { checkOrigin, forbidden, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
 
 const timeoutMs = 1500;
 
@@ -79,6 +79,10 @@ const buildService = (key, result, checkedAt) => ({
 });
 
 export async function GET(request) {
+  // Sessão via cookie HttpOnly SameSite=Strict - checkOrigin é defesa extra contra CSRF (rota é
+  // GET/leitura; a proteção real é o SameSite=Strict do cookie, ver Backend.js/adminSecurity.js).
+  if (!checkOrigin(request).allowed) return forbidden();
+
   try {
     if (!(await isAdminRequest(request))) {
       return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });

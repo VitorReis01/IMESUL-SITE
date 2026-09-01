@@ -1,7 +1,7 @@
 import { isAdminRequest } from "../../../../Backend.js/adminSecurity";
 import { getAnalyticsEventsPage, getAnalyticsSummary } from "../../../../Backend.js/analyticsStore";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
-import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
+import { checkOrigin, forbidden, getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Entrega eventos paginados (server-side) e metricas agregadas somente para uma sessao admin
 // valida; impede cache de dados sensiveis. Todos os parametros vem sanitizados/normalizados
@@ -9,6 +9,10 @@ import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson }
 const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 
 export async function GET(request) {
+  // Sessão via cookie HttpOnly SameSite=Strict - checkOrigin é defesa extra contra CSRF (rota é
+  // GET/leitura; a proteção real é o SameSite=Strict do cookie, ver Backend.js/adminSecurity.js).
+  if (!checkOrigin(request).allowed) return forbidden();
+
   try {
     // Falha ao verificar a sessao (ex.: banco indisponivel) nunca deve liberar acesso -
     // trata como nao autorizado (fail-closed), nunca deixa o erro estourar sem resposta.

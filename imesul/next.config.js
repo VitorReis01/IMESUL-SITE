@@ -17,7 +17,12 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "img-src 'self' data: blob: https://www.facebook.com https://www.google-analytics.com",
   "media-src 'self' blob:",
-  `connect-src 'self' https: https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
+  // Antes era "https:" (qualquer origem HTTPS) - reduzido para a allowlist real usada por GA4
+  // (gtag/collect), Meta Pixel e Sentry (ver components/TrackingScripts.jsx e sentry.*.config.js).
+  // Não verificado com tracking ligado de verdade neste ambiente (NEXT_PUBLIC_TRACKING_ENABLED=
+  // false por padrão) - conferir em preview com tracking habilitado antes de considerar validado
+  // (ver relatório de hardening, seção CSP).
+  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
   "frame-src 'self' https://www.facebook.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

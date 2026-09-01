@@ -1,12 +1,18 @@
 import { isAdminRequest } from "../../../../Backend.js/adminSecurity";
 import { clearAnalyticsEvents } from "../../../../Backend.js/analyticsStore";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
-import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
+import { checkOrigin, forbidden, getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Limpa eventos locais apenas a partir do painel admin autenticado.
 const methodNotAllowed = () => sharedMethodNotAllowed("DELETE");
 
 export async function DELETE(request) {
+  // Sessão via cookie HttpOnly SameSite=Strict - ação MUTÁVEL (apaga dados), então exige Origin
+  // em produção (mesmo padrão de /api/admin/login) além do SameSite=Strict do cookie, que já
+  // impede o navegador de enviar o cookie numa requisição cross-site (ver relatório de hardening,
+  // seção CSRF - por que essa camada é suficiente sem um token CSRF dedicado).
+  if (!checkOrigin(request, { requireOriginInProduction: true }).allowed) return forbidden();
+
   try {
     // Falha ao verificar a sessao (ex.: banco indisponivel) nunca deve liberar acesso -
     // trata como nao autorizado (fail-closed), nunca deixa o erro estourar sem resposta.

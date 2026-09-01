@@ -1,13 +1,19 @@
 import { isAdminRequest } from "../../../../Backend.js/adminSecurity";
 import { buildCommercialReport } from "../../../../Backend.js/commercialReportStore";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
-import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
+import { checkOrigin, forbidden, getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
 // Relatório comercial do painel admin (Lead ID, rodízio, carrinho - ver relatório desta fase,
 // seção dashboard). Mesmo padrão de autenticação/rate limit de app/api/analytics/events/route.js.
 const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 
 export async function GET(request) {
+  // A sessão agora viaja num cookie HttpOnly SameSite=Strict (enviado automaticamente pelo
+  // navegador só em requests same-origin) - checkOrigin é camada extra de defesa em profundidade
+  // contra CSRF (rota é GET/leitura, então não exige Origin - a proteção real contra CSRF aqui é
+  // o SameSite=Strict; ver Backend.js/adminSecurity.js e relatório de hardening, seção CSRF).
+  if (!checkOrigin(request).allowed) return forbidden();
+
   try {
     if (!(await isAdminRequest(request))) {
       return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
