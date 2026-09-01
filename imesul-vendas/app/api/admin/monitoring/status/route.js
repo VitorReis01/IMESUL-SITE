@@ -1,10 +1,15 @@
 import { isAdminRequest } from "../../../../../Backend.js/adminSecurity";
-import { getImebotProtectionSnapshot } from "../../../../../Backend.js/imebotAbuseGuard";
+import { getImebotGlobalQuotaState, getImebotProtectionSnapshot } from "../../../../../Backend.js/imebotAbuseGuard";
 import { isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
+import { logger } from "../../../../../Backend.js/logger";
+import { isMonitoringEnabled } from "../../../../../Backend.js/monitoringAuth";
 import { query } from "../../../../../Backend.js/db";
-import { checkOrigin, forbidden, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
+import { checkOrigin, forbidden, getRequestId, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
 
 const timeoutMs = 1500;
+// Acima disso o banco respondeu mas devagar - sinaliza "degraded" em vez de esperar o timeout
+// inteiro para so entao dizer "offline" (ver secao Health checks do relatorio de hardening).
+const slowQueryThresholdMs = 500;
 
 const methodNotAllowed = () => sharedMethodNotAllowed("GET");
 
@@ -13,7 +18,9 @@ const serviceNames = {
   sales: "Site de Vendas",
   api: "API",
   database: "Banco de Dados",
+  rateLimiter: "Rate Limiter",
   imebot: "IMEbot",
+  monitoring: "Monitoramento Externo",
 };
 
 const measure = async (task) => {
@@ -55,9 +62,46 @@ const checkHttpHealth = async (url) => {
 const checkDatabase = async () => {
   try {
     const latencyMs = await measure(() => withTimeout(query("SELECT 1")));
+    if (latencyMs > slowQueryThresholdMs) {
+      return { status: "degraded", latencyMs, lastFailure: "Latência acima do esperado" };
+    }
     return { status: "online", latencyMs, lastFailure: null };
   } catch {
     return { status: "offline", latencyMs: null, lastFailure: "Banco indisponível" };
+  }
+};
+
+// Rate limiting distribuído roda nas mesmas tabelas/conexão do Postgres (ver
+// Backend.js/rateLimiter.js) - reflete o mesmo resultado de checkDatabase em vez de abrir uma
+// segunda conexão só para health check (evita operação pesada extra a cada request do painel,
+// ver seção Health checks do relatório de hardening).
+const deriveRateLimiterStatus = (databaseResult) => databaseResult;
+
+const checkMonitoringIntegration = () =>
+  isMonitoringEnabled()
+    ? { status: "online", latencyMs: null, lastFailure: null }
+    : { status: "disabled", latencyMs: null, lastFailure: null };
+
+// Estado GLOBAL real do circuit breaker do IMEbot, lido do Postgres compartilhado (não da
+// memória local de uma instância - ver comentário em getImebotGlobalQuotaState). Só leitura,
+// não incrementa quota nem toca a lógica de autorização - uma falha AQUI (timeout, banco fora
+// do ar) nunca deve mudar autorização/quota/rate limit/circuit breaker real, só o que este
+// painel exibe. Por isso cai para "degraded" (não "online", que seria falso positivo de saúde,
+// nem "paused", que fingiria um circuit breaker aberto que não foi de fato confirmado) quando a
+// leitura falha - "não sei" é um estado diferente de "sei que está tudo bem".
+const checkImebotGlobalState = async () => {
+  if (!isImebotEnabled()) return { status: "disabled", latencyMs: null, lastFailure: null };
+
+  try {
+    let globalStatus;
+    const latencyMs = await measure(async () => {
+      globalStatus = await withTimeout(getImebotGlobalQuotaState());
+    });
+    return globalStatus.status === "paused"
+      ? { status: "paused", latencyMs, lastFailure: "Quota global de respostas pagas esgotada" }
+      : { status: "online", latencyMs, lastFailure: null };
+  } catch {
+    return { status: "degraded", latencyMs: null, lastFailure: "Não foi possível ler o estado da quota global" };
   }
 };
 
@@ -97,28 +141,32 @@ export async function GET(request) {
     process.env.NEXT_PUBLIC_INSTITUTIONAL_URL || process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL
   );
 
-  const [institutional, sales, database] = await Promise.all([
+  const [institutional, sales, database, imebotStatus] = await Promise.all([
     checkHttpHealth(institutionalBaseUrl ? `${institutionalBaseUrl}/api/health` : ""),
     checkHttpHealth(`${salesBaseUrl}/api/health`),
     checkDatabase(),
+    checkImebotGlobalState(),
   ]);
+
+  // getImebotProtectionSnapshot continua exposta no payload como telemetria LOCAL desta
+  // instância (nunca autoritativa - ver comentário no próprio Backend.js/imebotAbuseGuard.js);
+  // o estado exibido no painel (services.imebot acima) vem de checkImebotGlobalState, que lê o
+  // Postgres compartilhado e é o mesmo entre todas as instâncias.
+  const imebotProtection = getImebotProtectionSnapshot();
 
   const services = {
     institutional: buildService("institutional", institutional, checkedAt),
     sales: buildService("sales", sales, checkedAt),
     api: buildService("api", { status: "online", latencyMs: null, lastFailure: null }, checkedAt),
     database: buildService("database", database, checkedAt),
-    imebot: buildService(
-      "imebot",
-      isImebotEnabled()
-        ? { status: "online", latencyMs: null, lastFailure: null }
-        : { status: "disabled", latencyMs: null, lastFailure: null },
-      checkedAt
-    ),
+    rateLimiter: buildService("rateLimiter", deriveRateLimiterStatus(database), checkedAt),
+    imebot: buildService("imebot", imebotStatus, checkedAt),
+    monitoring: buildService("monitoring", checkMonitoringIntegration(), checkedAt),
   };
 
+  const healthyStatuses = new Set(["online", "disabled"]);
   const incidents = Object.entries(services)
-    .filter(([, service]) => service.status !== "online" && service.status !== "disabled")
+    .filter(([, service]) => !healthyStatuses.has(service.status))
     .map(([key, service]) => ({
       service: key,
       label: service.name,
@@ -127,17 +175,32 @@ export async function GET(request) {
       checkedAt,
     }));
 
-  return noStoreJson({
-    ok: true,
-    checkedAt,
-    externalMonitoring: {
-      connected: false,
-      message: "Monitoramento externo ainda não conectado",
+  const requestId = getRequestId(request);
+  if (incidents.length > 0) {
+    // Log agregado (nao um por servico) - evita flood quando varios servicos degradam juntos
+    // (ex.: banco lento derruba latencia de varias checagens ao mesmo tempo).
+    logger.warn("health_degraded", {
+      requestId,
+      services: incidents.map((incident) => incident.service),
+    });
+  }
+
+  return noStoreJson(
+    {
+      ok: true,
+      checkedAt,
+      externalMonitoring: {
+        connected: isMonitoringEnabled(),
+        message: isMonitoringEnabled()
+          ? "Monitoramento externo conectado"
+          : "Monitoramento externo ainda não conectado",
+      },
+      services,
+      incidents,
+      imebotProtection,
     },
-    services,
-    incidents,
-    imebotProtection: getImebotProtectionSnapshot(),
-  });
+    { headers: { "X-Request-ID": requestId } }
+  );
 }
 
 export const POST = methodNotAllowed;

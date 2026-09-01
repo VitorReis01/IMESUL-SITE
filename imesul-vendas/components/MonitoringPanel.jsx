@@ -14,14 +14,16 @@ const statusStyles = {
 
 const statusEndpoint = "/api/admin/monitoring/status";
 
-const serviceOrder = ["institutional", "sales", "api", "database", "imebot"];
+const serviceOrder = ["institutional", "sales", "api", "database", "rateLimiter", "imebot", "monitoring"];
 
 const fallbackServices = {
   institutional: { name: "Site Institucional", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   sales: { name: "Site de Vendas", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   api: { name: "API", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   database: { name: "Banco de Dados", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
+  rateLimiter: { name: "Rate Limiter", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   imebot: { name: "IMEbot", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
+  monitoring: { name: "Monitoramento Externo", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
 };
 
 const statusLabels = {

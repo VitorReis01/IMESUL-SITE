@@ -4,6 +4,7 @@ import {
   buildPaidActionBudgetLayers,
   checkImebotCostGuard,
   checkInboundAbuseGuard,
+  getImebotGlobalQuotaState,
   getImebotProtectionSnapshot,
   isImebotCostGuardedUnit,
   reservePaidActionBudget,
@@ -21,6 +22,14 @@ const createAtomicRateLimitDb = () => {
   const store = new Map();
   const query = vi.fn(async (text, params) => {
     if (/DELETE FROM rate_limit_counters/.test(text)) return { rowCount: 0 };
+
+    // SELECT usado por peekRateLimit (Backend.js/rateLimiter.js) - so leitura, nunca muta store.
+    if (/^SELECT count, window_start FROM rate_limit_counters/.test(text)) {
+      const [selectKey] = params;
+      const existing = store.get(selectKey);
+      if (!existing) return { rows: [] };
+      return { rows: [{ count: existing.count, window_start: new Date(existing.windowStart) }] };
+    }
 
     const [key, windowMs] = params;
     const now = Date.now();
@@ -392,6 +401,81 @@ describe("proteção de custo do IMEbot - concorrência real (Postgres simulado)
 
         expect(results.slice(0, 3).every((result) => result.allowed)).toBe(true);
         expect(results.slice(3).every((result) => !result.allowed && result.status === "paused")).toBe(true);
+      }
+    );
+  });
+
+  // getImebotProtectionSnapshot e SO telemetria local desta instancia (nunca autoritativa entre
+  // instancias serverless - ver relatorio de hardening de infraestrutura, secao "IMEbot status
+  // no painel"). O campo se chama localSignal de proposito, para nao ser confundido com o
+  // estado global real (getImebotGlobalQuotaState, testado no describe abaixo).
+  it("getImebotProtectionSnapshot.localSignal reflete paused depois de um bloqueio real de quota global (telemetria local, não autoritativa)", async () => {
+    await withFreshGuardModule(
+      { IMEBOT_MAX_RESPONSES_PER_HOUR: "1", IMEBOT_MAX_RESPONSES_PER_DAY: "1" },
+      async ({ guard, units }) => {
+        const unit = units.CAMPO_GRANDE;
+
+        expect(guard.getImebotProtectionSnapshot().localSignal).toBe("normal");
+
+        await guard.reservePaidActionBudget({ unit, log: { warn: vi.fn() } }); // consome a única vaga
+        const blocked = await guard.reservePaidActionBudget({ unit, log: { warn: vi.fn() } });
+
+        expect(blocked.allowed).toBe(false);
+        expect(guard.getImebotProtectionSnapshot().localSignal).toBe("paused");
+      }
+    );
+  });
+
+  // getImebotGlobalQuotaState e a fonte AUTORITATIVA para o painel (ao contrario do
+  // localSignal acima) - le o Postgres compartilhado via peekRateLimit, entao e correta entre
+  // instancias serverless. Este teste prova as duas garantias pedidas na correcao: (1) reflete
+  // o estado real da MESMA quota que reservePaidActionBudget usa para autorizar, e (2) ler o
+  // estado (mesmo varias vezes) nunca consome quota nem re-autoriza nada.
+  it("getImebotGlobalQuotaState reflete o Postgres compartilhado sem consumir quota ao ler", async () => {
+    await withFreshGuardModule(
+      { IMEBOT_MAX_RESPONSES_PER_HOUR: "1", IMEBOT_MAX_RESPONSES_PER_DAY: "10" },
+      async ({ guard, units }) => {
+        const unit = units.CAMPO_GRANDE;
+
+        // Ler varias vezes antes de qualquer reserva real: sempre "online", nunca consome nada.
+        expect((await guard.getImebotGlobalQuotaState()).status).toBe("online");
+        expect((await guard.getImebotGlobalQuotaState()).status).toBe("online");
+        expect((await guard.getImebotGlobalQuotaState()).status).toBe("online");
+
+        // Consome a unica vaga da hora pelo caminho de autorizacao REAL (nao pela leitura).
+        const reserved = await guard.reservePaidActionBudget({ unit, log: { warn: vi.fn() } });
+        expect(reserved.allowed).toBe(true);
+
+        // Agora a leitura reflete o estado real e compartilhado.
+        expect((await guard.getImebotGlobalQuotaState()).status).toBe("paused");
+
+        // Ler de novo (varias vezes) continua so lendo - nao muda nada nem libera quota.
+        expect((await guard.getImebotGlobalQuotaState()).status).toBe("paused");
+        const stillBlocked = await guard.reservePaidActionBudget({ unit, log: { warn: vi.fn() } });
+        expect(stillBlocked.allowed).toBe(false);
+      }
+    );
+  });
+
+  // Falha de LEITURA (timeout/banco fora do ar ao consultar o estado compartilhado) precisa
+  // virar "degraded" no painel (ver app/api/admin/monitoring/status/route.js#checkImebotGlobalState
+  // - mapeia qualquer rejeição daqui para status:"degraded", nunca "online" nem "paused") - mas
+  // NUNCA pode afetar autorização/quota/rate limit/circuit breaker reais. Este teste prova que
+  // getImebotGlobalQuotaState propaga a falha (não a esconde virando um status inventado) e que
+  // a quota real continua intacta depois da tentativa de leitura falha.
+  it("getImebotGlobalQuotaState propaga falha de leitura (peekRateLimit) sem consumir quota nem alterar autorização", async () => {
+    await withFreshGuardModule(
+      { IMEBOT_MAX_RESPONSES_PER_HOUR: "1", IMEBOT_MAX_RESPONSES_PER_DAY: "10" },
+      async ({ guard, units }) => {
+        const unit = units.CAMPO_GRANDE;
+        const failingPeek = vi.fn().mockRejectedValue(new Error("timeout"));
+
+        await expect(guard.getImebotGlobalQuotaState({ peek: failingPeek })).rejects.toThrow("timeout");
+
+        // A leitura falhou, mas a quota real (Postgres) não foi tocada - a vaga inteira da hora
+        // continua disponível pelo caminho de autorização de verdade.
+        const reserved = await guard.reservePaidActionBudget({ unit, log: { warn: vi.fn() } });
+        expect(reserved.allowed).toBe(true);
       }
     );
   });

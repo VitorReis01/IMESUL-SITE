@@ -1,6 +1,7 @@
 import "server-only";
 import { query } from "./db";
 import { getRequestIp } from "./requestGuards";
+import { logger } from "./logger";
 
 // Rate limit DISTRIBUIDO via Postgres - substitui limitadores baseados so em Map() para as
 // checagens que realmente bloqueiam uma requisicao (ver auditoria de seguranca). Cada instancia
@@ -62,6 +63,22 @@ export const checkRateLimit = async ({ key, windowMs, max }) => {
   return { allowed, retryAfterSeconds, key };
 };
 
+// Leitura SOMENTE LEITURA do estado atual de uma chave - NUNCA incrementa, NUNCA conta como
+// tentativa. Existe so para paineis/health checks que precisam saber se uma chave esta no
+// limite AGORA sem consumir quota de ninguem (ver monitoring/status/route.js, estado global do
+// IMEbot). Nunca use isto para autorizar uma acao - checkRateLimit continua sendo a UNICA fonte
+// de verdade para autorizacao (mesma tabela, mesmas chaves, so nao escreve nada).
+export const peekRateLimit = async ({ key, windowMs, max }) => {
+  const { rows } = await query("SELECT count, window_start FROM rate_limit_counters WHERE limiter_key = $1", [key]);
+  if (!rows.length) return { atLimit: false, count: 0 };
+
+  const { count, window_start: windowStart } = rows[0];
+  const windowExpired = new Date(windowStart).getTime() <= Date.now() - windowMs;
+  if (windowExpired) return { atLimit: false, count: 0 };
+
+  return { atLimit: count >= max, count };
+};
+
 // Roda varias camadas em paralelo e devolve a mais restritiva. Se QUALQUER camada falhar
 // (excecao), propaga a falha - quem chama decide o fallback (ver comentario no topo do arquivo).
 // Cada checkRateLimit ja incrementa E confere no mesmo UPSERT - chamar isto conta como UMA
@@ -82,12 +99,22 @@ export const checkRateLimitLayers = async (layers) => {
 const globalApiRateLimitWindowMs = 10_000;
 const globalApiRateLimitMax = 10;
 
-export const checkGlobalApiRateLimit = (request) =>
-  checkRateLimit({
+export const checkGlobalApiRateLimit = async (request) => {
+  const result = await checkRateLimit({
     key: `api:global:${getRequestIp(request)}`,
     windowMs: globalApiRateLimitWindowMs,
     max: globalApiRateLimitMax,
   });
+
+  // So loga aqui (camada global, compartilhada por toda rota /api) - nao dentro de
+  // checkRateLimit em si, para nao duplicar o log proprio que o IMEbot abuse guard ja faz
+  // quando bloqueia por telefone/quota (ver Backend.js/imebotAbuseGuard.js).
+  if (!result.allowed) {
+    logger.security("rate_limit_triggered", { scope: "global-api", retryAfterSeconds: result.retryAfterSeconds });
+  }
+
+  return result;
+};
 
 // Remove os contadores das chaves informadas - usado quando uma tentativa teve sucesso (ex.:
 // login admin correto) e nao deve continuar contando contra o limite de tentativas com erro.

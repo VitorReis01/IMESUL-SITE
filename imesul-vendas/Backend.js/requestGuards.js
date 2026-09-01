@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 // Helpers server-side reutilizaveis para as rotas /api - evita duplicar a mesma logica de
@@ -114,6 +115,14 @@ export const hasValidJsonContentType = (request) => {
   const contentType = (request.headers.get("content-type") || "").toLowerCase();
   return contentType.startsWith("application/json");
 };
+
+// Correlaciona uma requisicao com seus logs/erros/monitoramento. Usa x-vercel-id (a Vercel ja
+// injeta esse header em toda invocacao de function, identifica o request na infraestrutura
+// dela) quando disponivel; gera um UUID so como fallback (dev local, onde esse header nao
+// existe). Nunca deriva de dado pessoal (IP, telefone, etc.) - so identifica a REQUISICAO.
+// Uso opcional, adotado incrementalmente rota por rota - ver noStoreJson(body, { headers: {
+// "X-Request-ID": getRequestId(request) } }).
+export const getRequestId = (request) => request.headers.get("x-vercel-id") || randomUUID();
 
 export const noStoreJson = (body, init = {}) =>
   NextResponse.json(body, {

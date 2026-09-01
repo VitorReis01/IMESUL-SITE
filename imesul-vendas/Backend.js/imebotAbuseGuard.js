@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "crypto";
-import { checkRateLimit, checkRateLimitLayers } from "./rateLimiter";
+import { checkRateLimit, checkRateLimitLayers, peekRateLimit } from "./rateLimiter";
 import { logger } from "./logger";
 import { COMMERCIAL_UNITS } from "../lib/leadFlow";
 
@@ -19,6 +19,14 @@ export const imebotAbuseConfig = {
   dailyCostWarning: toNumber(process.env.IMEBOT_DAILY_COST_WARNING, 0),
   dailyCostHardStop: toNumber(process.env.IMEBOT_DAILY_COST_HARD_STOP, 0),
 };
+
+// Memoria curta do ultimo bloqueio real de quota global (nao um contador, so um timestamp) -
+// alimenta getImebotProtectionSnapshot para o painel admin conseguir mostrar "paused" por um
+// tempo depois do circuit breaker abrir, em vez de voltar pra "normal" no instante seguinte
+// (cada instancia serverless tem a sua copia - aceitavel para exibicao no painel, nao e usado
+// para nenhuma decisao de autorizacao).
+let lastGlobalBlockAt = 0;
+const globalBlockMemoryMs = 5 * 60_000;
 
 const cleanPhone = (phone) => String(phone || "").replace(/\D/g, "").slice(0, 40);
 const messageHash = (text) =>
@@ -151,6 +159,8 @@ export const reservePaidActionBudget = async ({
     return { allowed: true, status: "normal", retryAfterSeconds: 0 };
   }
 
+  lastGlobalBlockAt = Date.now();
+  log.circuitBreaker?.("imebot_paused", { unit, retryAfterSeconds: result.retryAfterSeconds });
   await logGuardBlocked({ status: "paused", unit, isGlobalLimit: true, phone: undefined, result, checkAlertLimit, log });
 
   return { allowed: false, status: "paused", retryAfterSeconds: result.retryAfterSeconds };
@@ -173,8 +183,12 @@ export const checkImebotCostGuard = async ({
   return reservePaidActionBudget({ unit, checkLayers, checkAlertLimit, log });
 };
 
+// Telemetria LOCAL desta instância serverless - nunca autoritativa (cada instância tem sua
+// própria cópia, não é compartilhada). "localSignal" (não "status") de propósito: nomeia
+// explicitamente que isto não é o estado global do circuit breaker - para esse, ver
+// getImebotGlobalQuotaState abaixo (lê o Postgres compartilhado, sem incrementar quota).
 export const getImebotProtectionSnapshot = () => ({
-  status: "normal",
+  localSignal: Date.now() - lastGlobalBlockAt < globalBlockMemoryMs ? "paused" : "normal",
   mode: "volume_quota",
   config: {
     minResponseIntervalSeconds: imebotAbuseConfig.minResponseIntervalSeconds,
@@ -187,3 +201,16 @@ export const getImebotProtectionSnapshot = () => ({
     costModelConfigured: false,
   },
 });
+
+// Estado GLOBAL real do circuit breaker de orçamento pago, lido direto do Postgres compartilhado
+// (a mesma tabela/chaves que reservePaidActionBudget usa para autorizar de verdade) - SOMENTE
+// LEITURA via peekRateLimit, nunca incrementa quota nem altera a lógica de autorização. Correto
+// entre instâncias serverless (ao contrário de getImebotProtectionSnapshot acima), porque lê o
+// mesmo estado compartilhado que a autorização real usa, em vez de memória local por instância.
+export const getImebotGlobalQuotaState = async ({ peek = peekRateLimit } = {}) => {
+  const layers = buildPaidActionBudgetLayers({ unit: COMMERCIAL_UNITS.CAMPO_GRANDE });
+  if (!layers.length) return { status: "disabled" };
+
+  const results = await Promise.all(layers.map((layer) => peek(layer)));
+  return { status: results.some((result) => result.atLimit) ? "paused" : "online" };
+};

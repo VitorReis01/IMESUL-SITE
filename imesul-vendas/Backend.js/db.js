@@ -1,5 +1,6 @@
 import "server-only";
 import { Pool } from "pg";
+import { logger } from "./logger";
 
 // Camada minima de acesso ao Postgres. So cria conexao se DATABASE_URL existir; sem ela, o
 // resto do backend (analyticsStore.js, adminSecurity.js) usa o fallback local documentado
@@ -35,8 +36,9 @@ const getPool = () => {
   });
 
   pool.on("error", (err) => {
-    // Erro assincrono em conexao ociosa do pool (ex.: rede caiu). Nunca logar a connection string.
-    console.error("[db] erro inesperado no pool do Postgres:", err.message);
+    // Erro assincrono em conexao ociosa do pool (ex.: rede caiu). Nunca logar a connection string
+    // nem err completo (pode conter fragmentos dela) - so err.message.
+    logger.error("database_unavailable", { reason: err.message });
   });
 
   return pool;
