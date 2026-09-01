@@ -56,7 +56,7 @@ O desenvolvimento usa a porta 3000 por padrao. `next.config.js` permite o acesso
 
 `SmoothScroll.jsx` inicializa Lenis e GSAP fora do carregamento inicial. As secoes carregam GSAP sob demanda e removem seus gatilhos no cleanup. `MotionProvider.jsx` limita o Framer Motion ao conjunto `domAnimation`.
 
-O Hero usa WebM com MP4 de fallback e poster WebP. Em `Save-Data`, o video nao e baixado. Os originais ficam em `docs/performance-assets-originals/` e nao devem ser usados diretamente pela pagina.
+O Hero usa WebM com MP4 de fallback e poster WebP. Em `Save-Data`, o video nao e baixado. Os videos publicados ficam em `public/videos/`; nao existe mais uma copia local duplicada em `docs/performance-assets-originals/` (removida - era identica byte-a-byte aos arquivos ja publicados). Se um master realmente diferente do publicado for necessario no futuro, guarde-o fora do diretorio publico, sem duplicar sem necessidade.
 
 ## Conteudo e contato
 
@@ -88,7 +88,6 @@ O deploy precisa preservar os headers definidos em `next.config.js` e servir vid
 - `.next/`
 - `package-lock.json`
 - imagens, videos e fontes
-- backups em `docs/performance-assets-originals/`
 - relatorios e caches gerados por ferramentas
 
 Veja `docs/arquitetura.md` para o fluxo tecnico e `docs/glossario.md` para os termos usados no projeto.
