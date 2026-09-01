@@ -10,13 +10,38 @@ import { checkRateLimitLayers, resetRateLimitKeys } from "./rateLimiter";
 // serverless da Vercel reconhece a mesma sessao e o logout revoga de verdade em todas elas.
 // Sem DATABASE_URL, cai no Map() em memoria (so para desenvolvimento - nao sobrevive a
 // redeploy/reinicio e nao e compartilhado entre instancias).
+//
+// Transporte do token: cookie HttpOnly (nao Bearer/localStorage) - ver ADMIN_SESSION_COOKIE
+// abaixo. JS do navegador nunca le nem manipula o valor; o cookie e enviado automaticamente pelo
+// proprio navegador em requests same-origin, e SameSite=Strict + checkOrigin (ver requestGuards.js,
+// aplicado em toda rota admin/analytics que muda de Bearer para cookie) cobrem CSRF sem precisar
+// de um token CSRF dedicado (ver relatorio de hardening desta fase).
 const adminSessions = new Map();
 const sessionTtlMs = 8 * 60 * 60 * 1000;
 
-const getBearerToken = (request) => {
-  const header = request.headers.get("authorization") || "";
-  return header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+export const ADMIN_SESSION_COOKIE = "imesul_admin_session";
+
+const adminSessionCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  path: "/",
+  maxAge: Math.floor(sessionTtlMs / 1000),
+});
+
+// Chame na resposta de sucesso do login (rota /api/admin/login) - response precisa ser um
+// NextResponse (noStoreJson ja devolve um).
+export const setAdminSessionCookie = (response, token) => {
+  response.cookies.set(ADMIN_SESSION_COOKIE, token, adminSessionCookieOptions());
 };
+
+// Chame na resposta do logout, mesmo que nao houvesse cookie (idempotente) - maxAge 0 instrui o
+// navegador a apagar o cookie imediatamente.
+export const clearAdminSessionCookie = (response) => {
+  response.cookies.set(ADMIN_SESSION_COOKIE, "", { ...adminSessionCookieOptions(), maxAge: 0 });
+};
+
+const getSessionToken = (request) => request.cookies?.get(ADMIN_SESSION_COOKIE)?.value || "";
 
 // NUNCA salvar o token cru: so o hash localiza a sessao no banco. O token continua sendo
 // gerado com randomBytes (256 bits) - o hash e so uma chave de busca, nao reduz a entropia
@@ -64,7 +89,7 @@ export const createAdminSession = async () => {
 };
 
 export const isAdminRequest = async (request) => {
-  const token = getBearerToken(request);
+  const token = getSessionToken(request);
   if (!token) return false;
 
   if (isDatabaseConfigured()) {
@@ -83,7 +108,7 @@ export const isAdminRequest = async (request) => {
 // (XSS, extensao maliciosa, rede comprometida) continuaria valido ate o TTL natural (8h).
 // Idempotente: chamar sem token ou com token ja expirado/revogado nao tem efeito nem gera erro.
 export const invalidateAdminSession = async (request) => {
-  const token = getBearerToken(request);
+  const token = getSessionToken(request);
   if (!token) return;
 
   if (isDatabaseConfigured()) {

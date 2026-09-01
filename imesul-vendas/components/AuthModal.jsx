@@ -260,7 +260,9 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
       return;
     }
 
-    startAdminSession(result.adminSessionToken);
+    // A sessão real é o cookie HttpOnly que o navegador já recebeu na resposta acima - esta
+    // chamada só liga a flag de UI "modo admin" (nunca é a autenticação em si).
+    startAdminSession();
     removeCurrentVisitorEvents();
     onAuthenticated();
     onAdminAuthenticated?.();

@@ -6,7 +6,9 @@ import {
   registerFailedAdminAttempt,
   resetAdminRateLimit,
   safeCompare,
+  setAdminSessionCookie,
 } from "../../../../Backend.js/adminSecurity";
+import { verifyAdminPassword } from "../../../../lib/adminPasswordHash";
 import { checkGlobalApiRateLimit } from "../../../../Backend.js/rateLimiter";
 import {
   checkOrigin,
@@ -46,7 +48,8 @@ const readCredentialsFromBody = (body) => {
   return { user: user.trim(), password };
 };
 
-// Login admin de demonstracao. Em producao, usar autenticacao segura com sessao/cookies e senha com hash.
+// Login admin: senha comparada via hash scrypt (ADMIN_PASSWORD_HASH), sessao entregue como
+// cookie HttpOnly (nunca no corpo da resposta) - ver Backend.js/adminSecurity.js.
 export async function POST(request) {
   const ipKey = getRequestIp(request);
 
@@ -116,20 +119,47 @@ export async function POST(request) {
     const frictionDelayMs = getAccountFrictionDelayMs(user);
     if (frictionDelayMs > 0) await sleep(frictionDelayMs);
 
-    // 7) Comparacao de credenciais, resistente a timing attack.
+    // 7) Comparacao de credenciais, resistente a timing attack. O username é comparado com
+    // safeCompare (tempo constante); a senha SEMPRE roda por verifyAdminPassword (scrypt),
+    // mesmo quando o username já está errado - combinar os dois resultados só depois com "&&"
+    // (nunca fazendo curto-circuito no username) evita que "usuário errado" responda mais rápido
+    // que "senha errada" e vaze qual dos dois estava incorreto (ver relatório de hardening).
+    const isProduction = process.env.NODE_ENV === "production";
     const expectedUser = process.env.ADMIN_DEMO_USER || "";
-    const expectedPassword = process.env.ADMIN_DEMO_PASSWORD || "";
-    const validCredentials =
-      Boolean(expectedUser) && Boolean(expectedPassword) && safeCompare(user, expectedUser) && safeCompare(password, expectedPassword);
+    const configuredHash = process.env.ADMIN_PASSWORD_HASH || "";
+    // ADMIN_DEMO_PASSWORD em texto puro só é aceito fora de produção - nunca lido quando
+    // NODE_ENV=production, mesmo que a variável ainda exista no ambiente (ver seção "Senha admin
+    // com hash" do relatório de hardening).
+    const legacyDevPassword = !isProduction ? process.env.ADMIN_DEMO_PASSWORD || "" : "";
+
+    const userMatches = Boolean(expectedUser) && safeCompare(user, expectedUser);
+
+    let passwordMatches;
+    if (configuredHash) {
+      passwordMatches = await verifyAdminPassword(password, configuredHash);
+    } else if (legacyDevPassword) {
+      console.warn(
+        "[security] login-admin: ADMIN_PASSWORD_HASH não configurada - usando ADMIN_DEMO_PASSWORD em texto puro (permitido só fora de produção). Gere um hash com scripts/generate-admin-password-hash.mjs."
+      );
+      passwordMatches = safeCompare(password, legacyDevPassword);
+    } else {
+      // Fail-closed: nenhuma credencial configurada. Ainda assim roda verifyAdminPassword contra
+      // um hash inválido para manter o mesmo custo de tempo do caminho com hash real configurado.
+      passwordMatches = await verifyAdminPassword(password, "");
+    }
+
+    const validCredentials = userMatches && passwordMatches;
 
     if (!validCredentials) {
       registerFailedAdminAttempt(ipKey, user);
       return noStoreJson({ ok: false, message: genericErrorMessage }, { status: 401 });
     }
 
-    // 8) Sessao.
+    // 8) Sessao: cookie HttpOnly, nunca token no corpo da resposta (ver Backend.js/adminSecurity.js).
     await resetAdminRateLimit(ipKey, user);
-    return noStoreJson({ ok: true, adminSessionToken: await createAdminSession() });
+    const response = noStoreJson({ ok: true });
+    setAdminSessionCookie(response, await createAdminSession());
+    return response;
   } catch {
     registerFailedAdminAttempt(ipKey, "");
     return invalidRequest();

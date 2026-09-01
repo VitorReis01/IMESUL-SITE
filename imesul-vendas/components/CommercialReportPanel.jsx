@@ -3,10 +3,10 @@
 // Painel "Comercial" do admin (Lead ID, rodízio, IMEbot, carrinho - ver relatório desta fase).
 // Componente autocontido: renderizado como uma camada sobre o painel de analytics existente
 // (ver AdminDashboard.jsx), sem depender do estado interno dele. Usa a MESMA sessão admin
-// (Bearer token em memória, ver lib/localAnalytics.js getAdminSessionToken).
+// (cookie HttpOnly SameSite=Strict, enviado automaticamente pelo navegador - ver
+// Backend.js/adminSecurity.js).
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { getAdminSessionToken } from "../lib/localAnalytics";
 import { formatCnpj } from "../lib/cnpjValidation";
 
 const reportEndpoint = "/api/admin/commercial-report";
@@ -78,7 +78,7 @@ export default function CommercialReportPanel() {
 
     fetch(reportEndpoint, {
       cache: "no-store",
-      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+      credentials: "same-origin",
     })
       .then((response) => response.json())
       .then((data) => {

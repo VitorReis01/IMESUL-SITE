@@ -1,4 +1,4 @@
-import { invalidateAdminSession } from "../../../../Backend.js/adminSecurity";
+import { clearAdminSessionCookie, invalidateAdminSession } from "../../../../Backend.js/adminSecurity";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
 import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
 
@@ -45,9 +45,12 @@ export async function POST(request) {
     await invalidateAdminSession(request);
   } catch {
     // Falha ao revogar (ex.: banco indisponivel) nao pode travar o logout do lado do cliente;
-    // o token local ja e descartado independentemente da resposta desta rota.
+    // o cookie e apagado de qualquer forma pela resposta abaixo.
   }
-  return noStoreJson({ ok: true });
+
+  const response = noStoreJson({ ok: true });
+  clearAdminSessionCookie(response);
+  return response;
 }
 
 export const GET = methodNotAllowed;

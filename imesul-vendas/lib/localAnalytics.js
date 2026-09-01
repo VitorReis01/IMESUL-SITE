@@ -9,7 +9,10 @@ const trackEndpoint = "/api/analytics/track";
 const eventsEndpoint = "/api/analytics/events";
 const clearEndpoint = "/api/analytics/clear";
 const logoutEndpoint = "/api/admin/logout";
-let adminSessionToken = "";
+// A autenticacao real e o cookie HttpOnly SameSite=Strict emitido por /api/admin/login (nunca
+// legivel por JS, enviado automaticamente pelo navegador em toda request same-origin) - esta
+// flag em memoria e SO estado de UI (o que mostrar/esconder), nunca uma credencial.
+let isAdminUiActive = false;
 
 const canUseBrowserStorage = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -42,25 +45,21 @@ const writeStoredEvents = (events) => {
   notifyEventsUpdated();
 };
 
-export const isAdminSession = () =>
-  Boolean(adminSessionToken);
+export const isAdminSession = () => isAdminUiActive;
 
-export const getAdminSessionToken = () =>
-  adminSessionToken;
-
-export const startAdminSession = (token = "") => {
-  // O token admin fica apenas em memoria; ao recarregar a pagina, o login precisa ser refeito.
-  adminSessionToken = token;
+// So liga a flag de UI; ao recarregar a pagina ela volta a false e o login precisa ser refeito
+// (o cookie de sessao pode continuar valido no servidor, mas a UI nao assume isso sem novo login).
+export const startAdminSession = () => {
+  isAdminUiActive = true;
 };
 
 export const endAdminSession = () => {
-  const token = adminSessionToken;
-  adminSessionToken = "";
+  isAdminUiActive = false;
 
-  // Revoga a sessao no servidor tambem: sem isso, o token continuaria valido ate o TTL natural.
-  if (token) {
-    fetch(logoutEndpoint, { method: "POST", headers: { Authorization: `Bearer ${token}` }, keepalive: true }).catch(() => {});
-  }
+  // Revoga a sessao no servidor e apaga o cookie - sem isso, o cookie continuaria valido ate o
+  // TTL natural mesmo depois de "sair" na UI. Cookie vai automaticamente (same-origin); nao ha
+  // token para anexar em header.
+  fetch(logoutEndpoint, { method: "POST", credentials: "same-origin", keepalive: true }).catch(() => {});
 };
 
 export const removeCurrentVisitorEvents = () => {
@@ -69,10 +68,11 @@ export const removeCurrentVisitorEvents = () => {
   const currentVisitorId = getAnonymousVisitorId();
   writeStoredEvents(readStoredEvents().filter((event) => event.visitorId !== currentVisitorId));
 
-  // Remove do backend local os eventos criados antes da sessao atual virar admin.
+  // Remove do backend local os eventos criados antes da sessao atual virar admin. Cookie de
+  // sessao vai automaticamente (same-origin), sem precisar anexar nenhum header.
   fetch(`${clearEndpoint}?visitorId=${encodeURIComponent(currentVisitorId)}`, {
     method: "DELETE",
-    headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+    credentials: "same-origin",
   })
     .then(() => notifyEventsUpdated())
     .catch(() => {});
@@ -298,7 +298,7 @@ export async function getAnalyticsEvents(params = {}) {
 
     const response = await fetch(`${eventsEndpoint}?${query.toString()}`, {
       cache: "no-store",
-      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+      credentials: "same-origin",
     });
     if (!response.ok) throw new Error("Falha ao consultar analytics.");
 
@@ -328,7 +328,7 @@ export async function clearLocalEvents() {
   try {
     await fetch(clearEndpoint, {
       method: "DELETE",
-      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+      credentials: "same-origin",
     });
   } catch {
     // Se o backend estiver indisponivel, o fallback local ja foi limpo.

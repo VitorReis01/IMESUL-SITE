@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, Clock3, Database, RefreshCw, Server, ShieldCheck } from "lucide-react";
-import { getAdminSessionToken } from "../lib/localAnalytics";
 
 const statusStyles = {
   online: "border-[#22c55e]/35 bg-[#22c55e]/10 text-[#86efac]",
@@ -126,7 +125,7 @@ export default function MonitoringPanel() {
 
     fetch(statusEndpoint, {
       cache: "no-store",
-      headers: getAdminSessionToken() ? { Authorization: `Bearer ${getAdminSessionToken()}` } : {},
+      credentials: "same-origin",
     })
       .then((response) => response.json())
       .then((data) => {

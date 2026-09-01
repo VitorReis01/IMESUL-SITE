@@ -46,11 +46,11 @@ Nos dois caminhos, `ProductSummary` mostra a solicitacao antes do envio. `lib/wh
 NEXT_PUBLIC_INSTITUTIONAL_SITE_URL=https://imesul-site.vercel.app/
 NEXT_PUBLIC_WHATSAPP_NUMBER=556733125600
 ADMIN_DEMO_USER=
-ADMIN_DEMO_PASSWORD=
+ADMIN_PASSWORD_HASH=
 ANALYTICS_SECURITY_KEY=
 ```
 
-O numero possui fallback no codigo para evitar um CTA sem destino. Variaveis `NEXT_PUBLIC_` sao publicas e nao devem conter credenciais. O login administrativo demo usa `ADMIN_DEMO_USER` e `ADMIN_DEMO_PASSWORD` somente no servidor; em producao, substituir por autenticacao real com sessao segura. `ANALYTICS_SECURITY_KEY` protege o IP completo usado apenas em investigacao de seguranca.
+O numero possui fallback no codigo para evitar um CTA sem destino. Variaveis `NEXT_PUBLIC_` sao publicas e nao devem conter credenciais. O login admin compara a senha contra o hash scrypt em `ADMIN_PASSWORD_HASH` (gere com `node scripts/generate-admin-password-hash.mjs`) — nunca a senha em texto puro. `ADMIN_DEMO_PASSWORD` (texto puro) só é aceita fora de produção, como atalho de dev quando `ADMIN_PASSWORD_HASH` não está configurada; em produção o login falha fechado sem o hash. `ANALYTICS_SECURITY_KEY` protege o IP completo usado apenas em investigacao de seguranca.
 
 ## Comandos
 
