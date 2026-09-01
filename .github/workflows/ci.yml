@@ -1,0 +1,66 @@
+name: CI
+
+# Roda install -> lint -> testes -> build para os dois apps do monorepo, cada um em um job
+# separado (falha de um nao cancela o outro). A Vercel continua responsavel pelos Preview
+# Deployments via integracao Git - este workflow nunca faz deploy, so valida.
+#
+# Sem secrets: build e testes dos dois projetos ja funcionam sem DATABASE_URL/SENTRY_AUTH_TOKEN
+# (fallback local documentado em Backend.js/db.js e dryRun condicional em next.config.js) -
+# confirmado rodando localmente sem nenhuma env configurada.
+on:
+  push:
+    branches:
+      - main
+      - "preview/**"
+  pull_request:
+
+# Menor privilegio possivel para o GITHUB_TOKEN automatico: este workflow so faz checkout/
+# lint/test/build, nunca escreve no repositorio (nenhum comentario em PR, nenhum push, nenhuma
+# release) - sem isso o token herdaria a permissao padrao configurada no repo/org, que em alguns
+# casos e read-write por padrao.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  imesul-vendas:
+    name: imesul-vendas (lint, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: imesul-vendas
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: imesul-vendas/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  imesul-institucional:
+    name: imesul (lint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: imesul
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: imesul/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
