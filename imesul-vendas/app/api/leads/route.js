@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { createLead, linkCartToLead } from "../../../Backend.js/salesLeadsStore";
 import { notifyImebotOfNewLead } from "../../../Backend.js/imebotStore";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../Backend.js/rateLimiter";
+import { isLoadTestBypassAllowed } from "../../../Backend.js/loadTestBypass";
 import { logger } from "../../../Backend.js/logger";
 import {
   checkOrigin,
@@ -98,38 +99,48 @@ export async function POST(request) {
 
   // 2) Camada GLOBAL (compartilhada por TODAS as rotas /api, mesma chave por IP) - ALEM do limite
   // especifico abaixo, nunca no lugar dele. Ver Backend.js/rateLimiter.js.
-  let globalLimit;
-  try {
-    globalLimit = await checkGlobalApiRateLimit(request);
-  } catch {
-    return serviceUnavailable(request);
-  }
-  if (!globalLimit.allowed) {
-    return respond(
-      request,
-      { ok: false, error: "Muitas solicitações. Tente novamente em instantes." },
-      { status: 429, headers: { "Retry-After": String(Math.max(globalLimit.retryAfterSeconds, 1)) } }
-    );
+  //
+  // EXCECAO: bypass extremamente restrito, so ativo no load test controlado da Vercel Preview
+  // (ver Backend.js/loadTestBypass.js) - nunca pula nenhuma outra camada desta rota (Origin,
+  // Content-Type, validacao de payload, idempotencia, escolha de vendedor continuam identicos).
+  const loadTestBypass = isLoadTestBypassAllowed(request);
+
+  if (!loadTestBypass) {
+    let globalLimit;
+    try {
+      globalLimit = await checkGlobalApiRateLimit(request);
+    } catch {
+      return serviceUnavailable(request);
+    }
+    if (!globalLimit.allowed) {
+      return respond(
+        request,
+        { ok: false, error: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(Math.max(globalLimit.retryAfterSeconds, 1)) } }
+      );
+    }
   }
 
   // 3) Rate limit especifico deste endpoint (Postgres) - muito restritivo, leads sao caros
-  // (consomem rodizio).
+  // (consomem rodizio). Mesmo bypass da camada global acima (ver comentario la em cima).
   const ip = getRequestIp(request);
-  let rateLimit;
-  try {
-    rateLimit = await checkRateLimitLayers([
-      { key: `leads:burst:${ip}`, windowMs: 10_000, max: 2 },
-      { key: `leads:minute:${ip}`, windowMs: 60_000, max: 5 },
-    ]);
-  } catch {
-    return serviceUnavailable(request);
-  }
-  if (!rateLimit.allowed) {
-    return respond(
-      request,
-      { ok: false, error: "Muitas solicitações. Tente novamente em instantes." },
-      { status: 429, headers: { "Retry-After": String(Math.max(rateLimit.retryAfterSeconds, 1)) } }
-    );
+  if (!loadTestBypass) {
+    let rateLimit;
+    try {
+      rateLimit = await checkRateLimitLayers([
+        { key: `leads:burst:${ip}`, windowMs: 10_000, max: 2 },
+        { key: `leads:minute:${ip}`, windowMs: 60_000, max: 5 },
+      ]);
+    } catch {
+      return serviceUnavailable(request);
+    }
+    if (!rateLimit.allowed) {
+      return respond(
+        request,
+        { ok: false, error: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(Math.max(rateLimit.retryAfterSeconds, 1)) } }
+      );
+    }
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);
