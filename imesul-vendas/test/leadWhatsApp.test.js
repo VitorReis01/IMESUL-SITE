@@ -1,6 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COMMERCIAL_UNITS, LEAD_FLOW_TYPES } from "../lib/leadFlow";
 
+// sessionStorage real (por aba, some so quando a aba fecha - reload preserva). O mock guarda os
+// dados fora do modulo sendo testado, do mesmo jeito: um vi.resetModules() + reimport simula um
+// reload (estado JS do modulo zerado), mas este objeto (equivalente ao "browser") continua o
+// mesmo entre as duas metades do teste, exatamente como sessionStorage sobreviveria de verdade.
+const createSessionStorageMock = () => {
+  const store = new Map();
+  return {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => store.set(key, String(value)),
+    removeItem: (key) => store.delete(key),
+    clear: () => store.clear(),
+  };
+};
+
 // Cobre a decisão central de lib/leadWhatsApp.js: unit === "dourados" desvia inteiramente para o
 // alternador (nunca cria lead); qualquer outra unidade segue o fluxo de lead/rodízio já existente.
 // window.open é mockado (ambiente de teste é "node" puro, sem jsdom - ver vitest.config.mjs);
@@ -23,6 +37,7 @@ describe("openWhatsAppWithLead - roteamento territorial", () => {
     globalThis.window = {
       open: vi.fn(() => ({ closed: false, location: {}, close: vi.fn() })),
       location: { search: "" },
+      sessionStorage: createSessionStorageMock(),
     };
   });
 
@@ -228,5 +243,124 @@ describe("openWhatsAppWithLead - roteamento territorial", () => {
     expect(secondCall.clientRequestId).not.toBe(firstCall.clientRequestId);
 
     delete globalThis.CustomEvent;
+  });
+
+  // Persistencia do clientRequestId em sessionStorage (substitui o Map em memoria antigo, que nao
+  // sobrevivia a um reload da aba). Os 6 cenarios abaixo cobrem o ciclo de vida completo descrito
+  // no comentario de getClientRequestIdForAttempt em lib/leadWhatsApp.js.
+  describe("persistencia do clientRequestId em sessionStorage", () => {
+    it("1. timeout sem reload -> 1 lead (mesmo clientRequestId reaproveitado)", async () => {
+      createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+      createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-1", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+
+      const { openWhatsAppWithLead } = await import("../lib/leadWhatsApp");
+      const args = { message: "Cenario 1 - timeout sem reload", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+      await openWhatsAppWithLead(args); // timeout - resultado ambiguo
+      await openWhatsAppWithLead(args); // nova tentativa, mesma aba, sem reload
+
+      expect(createLead).toHaveBeenCalledTimes(2);
+      const [{ clientRequestId: idAntes }] = createLead.mock.calls[0];
+      const [{ clientRequestId: idDepois }] = createLead.mock.calls[1];
+      expect(idDepois).toBe(idAntes);
+    });
+
+    it("2. timeout + retry (multiplas tentativas ambiguas) -> 1 lead (clientRequestId mantido ate um resultado definitivo)", async () => {
+      createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+      createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+      createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-2", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+
+      const { openWhatsAppWithLead } = await import("../lib/leadWhatsApp");
+      const args = { message: "Cenario 2 - timeout + retry", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+      await openWhatsAppWithLead(args); // timeout 1
+      await openWhatsAppWithLead(args); // retry -> timeout 2
+      await openWhatsAppWithLead(args); // retry -> sucesso
+
+      expect(createLead).toHaveBeenCalledTimes(3);
+      const ids = createLead.mock.calls.map(([{ clientRequestId }]) => clientRequestId);
+      expect(ids[1]).toBe(ids[0]);
+      expect(ids[2]).toBe(ids[0]);
+    });
+
+    it("3. timeout + reload da mesma aba -> 1 lead (sessionStorage sobrevive ao reload, diferente do Map antigo)", async () => {
+      createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+
+      let leadWhatsApp = await import("../lib/leadWhatsApp");
+      const args = { message: "Cenario 3 - timeout + reload", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+      await leadWhatsApp.openWhatsAppWithLead(args); // timeout - resultado ambiguo, antes do reload
+
+      // Simula reload da pagina: zera o registro de modulos do Vitest (equivalente a reexecutar
+      // todo o JS da pagina do zero) SEM tocar em globalThis.window.sessionStorage - exatamente
+      // como um reload real preserva sessionStorage mas zera qualquer Map em memoria do JS.
+      vi.resetModules();
+      vi.doMock("../lib/douradosDispatch", () => ({ openDouradosWhatsApp }));
+      vi.doMock("../lib/leads", () => ({ createLead }));
+      vi.doMock("../lib/localAnalytics", () => ({ getAnonymousVisitorId: () => "visitor-teste" }));
+      vi.doMock("../lib/trackEvent", () => ({ trackEvent: () => {} }));
+      vi.doMock("../lib/commercialContactAlert", () => ({ notifyCommercialContactBlocked: () => {} }));
+
+      createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-3", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+      leadWhatsApp = await import("../lib/leadWhatsApp");
+      await leadWhatsApp.openWhatsAppWithLead(args); // nova tentativa, POS-reload
+
+      expect(createLead).toHaveBeenCalledTimes(2);
+      const [{ clientRequestId: idAntesDoReload }] = createLead.mock.calls[0];
+      const [{ clientRequestId: idDepoisDoReload }] = createLead.mock.calls[1];
+      expect(idDepoisDoReload).toBe(idAntesDoReload);
+    });
+
+    it("4. sucesso definitivo -> entrada removida do sessionStorage", async () => {
+      createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-4", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+
+      const { openWhatsAppWithLead, pendingAttemptsStorageKey } = await import("../lib/leadWhatsApp");
+      const args = { message: "Cenario 4 - sucesso remove entrada", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+      await openWhatsAppWithLead(args);
+
+      const attemptKey = "visitor-teste|Cenario 4 - sucesso remove entrada";
+      const stored = JSON.parse(window.sessionStorage.getItem(pendingAttemptsStorageKey) || "{}");
+      expect(stored[attemptKey]).toBeUndefined();
+    });
+
+    it("5. TTL expirado -> gera clientRequestId novo", async () => {
+      vi.useFakeTimers();
+      try {
+        createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+        createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-5", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+
+        const { openWhatsAppWithLead } = await import("../lib/leadWhatsApp");
+        const args = { message: "Cenario 5 - TTL expirado", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+        await openWhatsAppWithLead(args); // timeout - fica pendente
+        vi.advanceTimersByTime(3 * 60 * 1000 + 1); // passa dos 3 minutos de TTL
+        await openWhatsAppWithLead(args); // tentativa pendente ja expirou - conta como nova
+
+        expect(createLead).toHaveBeenCalledTimes(2);
+        const [{ clientRequestId: idAntes }] = createLead.mock.calls[0];
+        const [{ clientRequestId: idDepois }] = createLead.mock.calls[1];
+        expect(idDepois).not.toBe(idAntes);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("6. nova cotacao legitima (mensagem diferente) -> clientRequestId novo, sem afetar a tentativa pendente anterior", async () => {
+      createLead.mockResolvedValueOnce({ ok: false, ambiguous: true });
+      createLead.mockResolvedValueOnce({ ok: true, ambiguous: false, leadCode: "IMESUL-6", seller: { name: "Vendedor Teste", whatsapp: "5567900000000" } });
+
+      const { openWhatsAppWithLead } = await import("../lib/leadWhatsApp");
+      const primeiraTentativa = { message: "Cenario 6 - orcamento A", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+      const novaCotacao = { message: "Cenario 6 - orcamento B (diferente)", flowType: LEAD_FLOW_TYPES.DIRECT_CONTACT, unit: COMMERCIAL_UNITS.CAMPO_GRANDE, pagePath: "teste" };
+
+      await openWhatsAppWithLead(primeiraTentativa); // fica ambigua/pendente
+      await openWhatsAppWithLead(novaCotacao); // mensagem diferente = tentativa independente
+
+      expect(createLead).toHaveBeenCalledTimes(2);
+      const [{ clientRequestId: idPrimeira }] = createLead.mock.calls[0];
+      const [{ clientRequestId: idNova }] = createLead.mock.calls[1];
+      expect(idNova).not.toBe(idPrimeira);
+    });
   });
 });

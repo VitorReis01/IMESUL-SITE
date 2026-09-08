@@ -47,14 +47,15 @@ const generateClientRequestId = () => {
   return `cr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 };
 
-// CICLO DE VIDA do clientRequestId (revisão desta rodada) - reaproveitado, não regenerado, para
-// a MESMA visitante+mensagem enquanto o resultado da tentativa anterior for AMBÍGUO (lib/leads.js
-// não conseguiu confirmar se o servidor criou o lead - timeout, conexão caiu, resposta cortada).
-// Isso cobre o caso: servidor cria o lead e responde 200, mas a resposta nunca chega ao
-// navegador (timeout) - se o cliente clicar de novo depois, SEM isso, geraria um clientRequestId
-// novo e criaria um SEGUNDO lead (o dedup do servidor não ajudaria, porque a chave seria
-// diferente). Reaproveitando a mesma chave, o servidor encontra o lead já criado e devolve ele
-// de novo, sem duplicar.
+// CICLO DE VIDA do clientRequestId - reaproveitado, não regenerado, para a MESMA
+// visitante+mensagem enquanto o resultado da tentativa anterior for AMBÍGUO (lib/leads.js não
+// conseguiu confirmar se o servidor criou o lead - timeout, conexão caiu, resposta cortada, OU a
+// aba foi recarregada antes da resposta chegar). Isso cobre o caso: servidor cria o lead e
+// responde 200, mas a resposta nunca chega ao navegador (timeout, ou o usuário recarrega a
+// página antes dela chegar) - se o cliente tentar de novo depois, SEM isso, geraria um
+// clientRequestId novo e criaria um SEGUNDO lead (o dedup do servidor não ajudaria, porque a
+// chave seria diferente). Reaproveitando a mesma chave, o servidor encontra o lead já criado e
+// devolve ele de novo, sem duplicar.
 //
 // Um resultado DEFINITIVO (sucesso, ou falha explícita do servidor - `ambiguous:false` nos dois
 // casos) limpa a entrada imediatamente: a próxima tentativa para o mesmo conteúdo é uma tentativa
@@ -64,27 +65,72 @@ const generateClientRequestId = () => {
 // atribuir vendedor de novo.
 //
 // TTL curto (3 minutos) em vez de reaproveitar para sempre: depois disso, mesmo uma tentativa
-// ambígua conta como "desistida" - um clique novo com o mesmo texto vira uma tentativa realmente
-// nova (cobre o caso de um orçamento novo e legítimo, coincidentemente com o mesmo texto, minutos
-// depois). Guardado só em memória da aba (Map, nunca localStorage/servidor) - não é persistência
-// permanente, some ao recarregar a página.
+// ambígua conta como "desistida" - uma tentativa nova com o mesmo texto vira uma tentativa
+// realmente nova (cobre o caso de um orçamento novo e legítimo, coincidentemente com o mesmo
+// texto, minutos depois).
+//
+// Persistido em sessionStorage (nunca localStorage) - sobrevive a um RELOAD da mesma aba (o que
+// um Map em memória não sobrevive), mas nunca vaza para outra aba/sessão nem fica permanente:
+// sessionStorage é isolado por aba e some quando a aba fecha. Guardado como UM objeto JSON só
+// (todas as tentativas pendentes juntas) para minimizar chaves tocadas no storage.
 const pendingAmbiguousAttemptTtlMs = 3 * 60 * 1000;
-const pendingClientRequestIds = new Map(); // attemptKey -> { clientRequestId, expiresAt }
+export const pendingAttemptsStorageKey = "imesul_pending_lead_attempts_v1";
+
+const readPendingAttempts = () => {
+  if (typeof window === "undefined" || !window.sessionStorage) return {};
+  try {
+    const raw = window.sessionStorage.getItem(pendingAttemptsStorageKey);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    // JSON corrompido ou sessionStorage indisponivel (modo privado antigo, quota) - degrada para
+    // "sem tentativa pendente" em vez de quebrar o fluxo de lead por causa disso.
+    return {};
+  }
+};
+
+const writePendingAttempts = (attempts) => {
+  if (typeof window === "undefined" || !window.sessionStorage) return;
+  try {
+    window.sessionStorage.setItem(pendingAttemptsStorageKey, JSON.stringify(attempts));
+  } catch {
+    // sessionStorage indisponivel/cheio - degrada para o comportamento sem persistencia entre
+    // reload (equivalente ao Map antigo); nunca quebra o fluxo de lead por isso.
+  }
+};
 
 const getClientRequestIdForAttempt = (attemptKey) => {
   const now = Date.now();
-  const cached = pendingClientRequestIds.get(attemptKey);
-  if (cached && cached.expiresAt > now) return cached.clientRequestId;
+  const attempts = readPendingAttempts();
+  let changed = false;
 
-  // Higiene barata: limpa entradas vencidas de outras tentativas ao gerar uma nova, para o Map
+  // Higiene barata: limpa entradas vencidas de outras tentativas ao ler o storage, para ele
   // nunca crescer sem limite numa aba de uso prolongado.
-  for (const [key, value] of pendingClientRequestIds) {
-    if (value.expiresAt <= now) pendingClientRequestIds.delete(key);
+  for (const key of Object.keys(attempts)) {
+    if (!attempts[key] || attempts[key].expiresAt <= now) {
+      delete attempts[key];
+      changed = true;
+    }
+  }
+
+  const cached = attempts[attemptKey];
+  if (cached && cached.expiresAt > now) {
+    if (changed) writePendingAttempts(attempts);
+    return cached.clientRequestId;
   }
 
   const clientRequestId = generateClientRequestId();
-  pendingClientRequestIds.set(attemptKey, { clientRequestId, expiresAt: now + pendingAmbiguousAttemptTtlMs });
+  attempts[attemptKey] = { clientRequestId, expiresAt: now + pendingAmbiguousAttemptTtlMs };
+  writePendingAttempts(attempts);
   return clientRequestId;
+};
+
+const clearPendingAttempt = (attemptKey) => {
+  const attempts = readPendingAttempts();
+  if (!(attemptKey in attempts)) return;
+  delete attempts[attemptKey];
+  writePendingAttempts(attempts);
 };
 
 // Guarda em memoria da aba contra clique duplo: duas chamadas para o MESMO
@@ -174,7 +220,7 @@ export const openWhatsAppWithLead = async (args) => {
       if (!lead.ambiguous) {
         // Resultado definitivo (sucesso OU falha explicita do servidor) - a proxima tentativa
         // para o mesmo conteudo comeca do zero, nunca reaproveita esta chave.
-        pendingClientRequestIds.delete(attemptKey);
+        clearPendingAttempt(attemptKey);
       }
 
       if (lead.ok && lead.seller?.whatsapp) {
