@@ -1,6 +1,8 @@
+import { after } from "next/server";
 import { createLead, linkCartToLead } from "../../../Backend.js/salesLeadsStore";
 import { notifyImebotOfNewLead } from "../../../Backend.js/imebotStore";
 import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../Backend.js/rateLimiter";
+import { logger } from "../../../Backend.js/logger";
 import {
   checkOrigin,
   getCorsHeaders,
@@ -64,7 +66,25 @@ const sanitizePayload = (payload = {}) => ({
   // So usado para ligar um cart_sessions ja rastreado (rastreio opcional, com consentimento de
   // analytics - ver lib/cartTracking.js) ao lead criado; nunca decide seller_id/status/valor.
   cartCode: safeString(payload.cartCode, 40),
+  // Gerado uma unica vez no cliente por tentativa (ver lib/leadWhatsApp.js), so participa do
+  // hash de dedup em Backend.js/salesLeadsStore.js#buildIdempotencyKey - formato validado la
+  // (regex), nunca usado para decidir seller/status/lead_code. Limite de tamanho aqui e so
+  // defesa em profundidade generica (mesmo padrao dos outros campos desta funcao).
+  clientRequestId: safeString(payload.clientRequestId, 100),
 });
+
+// Tarefas best-effort que rodam DEPOIS da resposta ja ter sido enviada ao cliente (ver chamadas
+// abaixo, dentro de after()). Nunca podem virar erro na resposta do lead (que ja foi despachada)
+// nem gerar unhandled rejection - qualquer falha e so logada (nunca loga dado sensivel, so a
+// mensagem de erro, via logger.error que ja sanitiza - ver Backend.js/logger.js).
+// Exportado só para teste (test/leadsRoutePostResponseTasks.test.js) - o contrato testável é
+// "nunca rejeita, sempre loga com segurança em caso de falha", não a rota inteira (nenhuma rota
+// de API deste projeto tem teste direto, ver CLAUDE.md - o handler HTTP em si continua sem
+// cobertura automatizada, só esta função extraída).
+export const runBestEffortTask = (taskName, promise) =>
+  promise.catch((err) => {
+    logger.error("post_lead_task_failed", { task: taskName, reason: err?.message || String(err) });
+  });
 
 export async function POST(request) {
   // 1) Camadas baratas primeiro: Origin (site de vendas OU institucional, ver allowlist) e
@@ -143,14 +163,17 @@ export async function POST(request) {
 
     if (sanitized.cartCode && result.leadId) {
       // Best-effort, depois do lead ja confirmado - nunca atrasa/derruba a resposta ao cliente.
-      linkCartToLead({ cartCode: sanitized.cartCode, leadId: result.leadId });
+      // after() (Next.js) garante que a promise roda ate o fim mesmo depois da resposta ser
+      // despachada - uma chamada solta (sem await/after) podia ser congelada pela plataforma
+      // assim que a function serverless termina de responder, sem completar de verdade.
+      after(() => runBestEffortTask("linkCartToLead", linkCartToLead({ cartCode: sanitized.cartCode, leadId: result.leadId })));
     }
 
     if (result.seller && result.leadId) {
       // Best-effort, depois do lead ja confirmado e do WhatsApp do vendedor ja decidido - o
       // IMEbot e so acompanhamento interno complementar (so roda para unit = campo-grande, ver
       // Backend.js/imebotStore.js), nunca bloqueia nem atrasa a resposta ao cliente.
-      notifyImebotOfNewLead({ leadId: result.leadId, unit: result.unit });
+      after(() => runBestEffortTask("notifyImebotOfNewLead", notifyImebotOfNewLead({ leadId: result.leadId, unit: result.unit })));
     }
 
     return respond(request, {

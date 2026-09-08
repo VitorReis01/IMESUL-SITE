@@ -38,6 +38,63 @@ import { openDouradosWhatsApp } from "./douradosDispatch";
 const isCheckoutFlow = (flowType) =>
   flowType === LEAD_FLOW_TYPES.GUIDED_QUOTE || flowType === LEAD_FLOW_TYPES.CART;
 
+// Identificador estavel por "tentativa comercial" (ver Backend.js/salesLeadsStore.js#
+// buildIdempotencyKey), enviado ao servidor e usado la SOMENTE para dedup - nunca decide
+// vendedor/status/lead_code. randomUUID cobre todo navegador atual; fallback so por seguranca
+// (ambiente sem crypto.randomUUID).
+const generateClientRequestId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `cr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+};
+
+// CICLO DE VIDA do clientRequestId (revisão desta rodada) - reaproveitado, não regenerado, para
+// a MESMA visitante+mensagem enquanto o resultado da tentativa anterior for AMBÍGUO (lib/leads.js
+// não conseguiu confirmar se o servidor criou o lead - timeout, conexão caiu, resposta cortada).
+// Isso cobre o caso: servidor cria o lead e responde 200, mas a resposta nunca chega ao
+// navegador (timeout) - se o cliente clicar de novo depois, SEM isso, geraria um clientRequestId
+// novo e criaria um SEGUNDO lead (o dedup do servidor não ajudaria, porque a chave seria
+// diferente). Reaproveitando a mesma chave, o servidor encontra o lead já criado e devolve ele
+// de novo, sem duplicar.
+//
+// Um resultado DEFINITIVO (sucesso, ou falha explícita do servidor - `ambiguous:false` nos dois
+// casos) limpa a entrada imediatamente: a próxima tentativa para o mesmo conteúdo é uma tentativa
+// NOVA, com uma chave nova. Isso é necessário para o botão "tentar novamente" (quando o lead foi
+// criado mas ficou sem vendedor - ver notifyCommercialContactBlocked abaixo) continuar
+// funcionando: reaproveitar a mesma chave ali devolveria sempre o MESMO lead, sem nunca tentar
+// atribuir vendedor de novo.
+//
+// TTL curto (3 minutos) em vez de reaproveitar para sempre: depois disso, mesmo uma tentativa
+// ambígua conta como "desistida" - um clique novo com o mesmo texto vira uma tentativa realmente
+// nova (cobre o caso de um orçamento novo e legítimo, coincidentemente com o mesmo texto, minutos
+// depois). Guardado só em memória da aba (Map, nunca localStorage/servidor) - não é persistência
+// permanente, some ao recarregar a página.
+const pendingAmbiguousAttemptTtlMs = 3 * 60 * 1000;
+const pendingClientRequestIds = new Map(); // attemptKey -> { clientRequestId, expiresAt }
+
+const getClientRequestIdForAttempt = (attemptKey) => {
+  const now = Date.now();
+  const cached = pendingClientRequestIds.get(attemptKey);
+  if (cached && cached.expiresAt > now) return cached.clientRequestId;
+
+  // Higiene barata: limpa entradas vencidas de outras tentativas ao gerar uma nova, para o Map
+  // nunca crescer sem limite numa aba de uso prolongado.
+  for (const [key, value] of pendingClientRequestIds) {
+    if (value.expiresAt <= now) pendingClientRequestIds.delete(key);
+  }
+
+  const clientRequestId = generateClientRequestId();
+  pendingClientRequestIds.set(attemptKey, { clientRequestId, expiresAt: now + pendingAmbiguousAttemptTtlMs });
+  return clientRequestId;
+};
+
+// Guarda em memoria da aba contra clique duplo: duas chamadas para o MESMO
+// visitante+mensagem, disparadas antes da primeira terminar, reaproveitam a mesma promise em vez
+// de abrir um segundo popup em branco e criar uma segunda tentativa. Nao substitui a dedup do
+// servidor (que continua sendo a garantia real via UNIQUE em sales_leads.idempotency_key) - so
+// evita o efeito colateral visivel (popup extra) e uma segunda chamada de rede desnecessaria no
+// caso comum de clique duplo na mesma aba.
+const inFlightLeadAttempts = new Map();
+
 // Le UTM da URL atual so no momento do clique - nao duplica a logica de "primeiro toque
 // persistido" do analytics (lib/localAnalytics.js), que fica intocada. Um lead reflete o
 // contexto do pedido em si, nao a sessao inteira do visitante.
@@ -77,6 +134,15 @@ export const openWhatsAppWithLead = async (args) => {
     return openDouradosWhatsApp({ message, pagePath });
   }
 
+  // Protecao contra clique duplo (ver inFlightLeadAttempts acima): mesma visitante+mensagem ja
+  // em andamento nesta aba reaproveita a mesma tentativa, sem abrir um segundo popup nem chamar
+  // /api/leads de novo. Colocado DEPOIS do desvio de Dourados de proposito - Dourados nao passa
+  // por lead/dedup, entao fica fora desta guarda.
+  const visitorId = getAnonymousVisitorId();
+  const attemptKey = `${visitorId}|${message}`;
+  const existingAttempt = inFlightLeadAttempts.get(attemptKey);
+  if (existingAttempt) return existingAttempt;
+
   // Numero de fallback e' consciente da unidade: Dourados tem numero humano oficial proprio
   // (fonte unica em lib/leadFlow.js getCommercialUnitConfig) - nunca cai no numero generico
   // (que e' o mesmo do futuro IMEbot) quando a unidade Dourados ja e conhecida. Sem unidade
@@ -86,43 +152,61 @@ export const openWhatsAppWithLead = async (args) => {
 
   trackEvent(isCheckoutFlow(flowType) ? "begin_checkout" : "whatsapp_click", { section: pagePath, unit });
 
+  const attempt = (async () => {
+    try {
+      const lead = await createLead({
+        visitorId,
+        quoteSummary: message,
+        product,
+        origin: origin || (typeof document !== "undefined" ? document.referrer : "") || "",
+        source: "site",
+        utm: readCurrentUtm(),
+        flowType,
+        siteOrigin,
+        unit,
+        pagePath,
+        cartCode,
+        // Ver ciclo de vida completo no comentario de getClientRequestIdForAttempt acima. So
+        // usado para dedup no servidor (Backend.js/salesLeadsStore.js#buildIdempotencyKey).
+        clientRequestId: getClientRequestIdForAttempt(attemptKey),
+      });
+
+      if (!lead.ambiguous) {
+        // Resultado definitivo (sucesso OU falha explicita do servidor) - a proxima tentativa
+        // para o mesmo conteudo comeca do zero, nunca reaproveita esta chave.
+        pendingClientRequestIds.delete(attemptKey);
+      }
+
+      if (lead.ok && lead.seller?.whatsapp) {
+        trackEvent("generate_lead", { unit });
+        const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
+        if (popup && !popup.closed) popup.location.href = finalUrl;
+        else window.open(finalUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      // Lead criado, mas sem vendedor - se for Campo Grande, o rodizio deveria ter encontrado
+      // Felipe/Bruniely; nao encontrar significa "nenhum vendedor ativo agora", nao "unidade sem
+      // automacao" (Dourados). Nesse caso especifico, nunca abre o WhatsApp padrao.
+      if (lead.ok && unit === COMMERCIAL_UNITS.CAMPO_GRANDE) {
+        trackEvent("generate_lead", { unit });
+        if (popup && !popup.closed) popup.close();
+        notifyCommercialContactBlocked({ retry: () => openWhatsAppWithLead(args) });
+        return;
+      }
+
+      if (popup && !popup.closed) popup.location.href = fallbackUrl;
+      else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      if (popup && !popup.closed) popup.location.href = fallbackUrl;
+      else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+    }
+  })();
+
+  inFlightLeadAttempts.set(attemptKey, attempt);
   try {
-    const lead = await createLead({
-      visitorId: getAnonymousVisitorId(),
-      quoteSummary: message,
-      product,
-      origin: origin || (typeof document !== "undefined" ? document.referrer : "") || "",
-      source: "site",
-      utm: readCurrentUtm(),
-      flowType,
-      siteOrigin,
-      unit,
-      pagePath,
-      cartCode,
-    });
-
-    if (lead.ok && lead.seller?.whatsapp) {
-      trackEvent("generate_lead", { unit });
-      const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
-      if (popup && !popup.closed) popup.location.href = finalUrl;
-      else window.open(finalUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    // Lead criado, mas sem vendedor - se for Campo Grande, o rodizio deveria ter encontrado
-    // Felipe/Bruniely; nao encontrar significa "nenhum vendedor ativo agora", nao "unidade sem
-    // automacao" (Dourados). Nesse caso especifico, nunca abre o WhatsApp padrao.
-    if (lead.ok && unit === COMMERCIAL_UNITS.CAMPO_GRANDE) {
-      trackEvent("generate_lead", { unit });
-      if (popup && !popup.closed) popup.close();
-      notifyCommercialContactBlocked({ retry: () => openWhatsAppWithLead(args) });
-      return;
-    }
-
-    if (popup && !popup.closed) popup.location.href = fallbackUrl;
-    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
-  } catch {
-    if (popup && !popup.closed) popup.location.href = fallbackUrl;
-    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+    await attempt;
+  } finally {
+    inFlightLeadAttempts.delete(attemptKey);
   }
 };

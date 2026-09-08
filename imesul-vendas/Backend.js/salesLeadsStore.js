@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { isDatabaseConfigured, query, withTransaction } from "./db";
 import { markCartConverted } from "./cartStore";
 import { recordLeadEvent } from "./imebotStore";
+import { createCampoGrandeLead, flushRotationCreationAudit } from "./sellerRotationStore";
 import {
   LEAD_FLOW_TYPES,
   LEAD_SITE_ORIGIN,
@@ -56,14 +57,42 @@ const safeUtm = (utm = {}) => ({
 // chave - clique duplo ou um retry de rede nao cria um segundo lead, so devolve o que ja existe.
 // Fora dessa janela (inclusive um pedido identico feito depois), a chave muda e um lead novo e
 // criado normalmente - a protecao e curta de proposito, nunca bloqueia um pedido legitimo futuro.
+//
+// LIMITACAO CONHECIDA (bucket de tempo): Math.floor(Date.now()/dedupWindowMs) tem uma fronteira
+// dura. Um clique/retry a poucos milissegundos de distancia PODE cair em buckets diferentes se
+// acontecer exatamente na virada do minuto - nesse caso a chave muda e um segundo lead seria
+// criado, mesmo sendo a mesma tentativa. Confirmado por teste
+// (test/salesLeadsIdempotency.test.js). So afeta quem NAO envia clientRequestId (ver abaixo).
 const dedupWindowMs = 60 * 1000;
-const buildIdempotencyKey = (visitorId, quoteSummary) => {
+
+// Identificador estavel gerado UMA UNICA VEZ no cliente por tentativa comercial (ver
+// lib/leadWhatsApp.js), reenviado identico em qualquer retry automatico do MESMO request
+// (timeout do browser, retry de proxy/plataforma) - como nao depende de relogio, elimina a
+// fronteira de 60s do fallback acima. Validado aqui antes de usar: nunca aceito "cego" e usado
+// SOMENTE para compor o hash de dedup - nunca decide seller_id/status/lead_code, que continuam
+// calculados so pelo servidor independente do valor recebido.
+const clientRequestIdPattern = /^[A-Za-z0-9_-]{8,100}$/;
+const isValidClientRequestId = (value) => typeof value === "string" && clientRequestIdPattern.test(value);
+
+export const buildIdempotencyKey = (visitorId, quoteSummary, clientRequestId) => {
+  if (isValidClientRequestId(clientRequestId)) {
+    return createHash("sha256").update(`crid:${visitorId}:${clientRequestId}`).digest("hex").slice(0, 40);
+  }
+
+  // Fallback legado - usado quando o chamador nao envia clientRequestId (ex.: lead criado
+  // internamente pelo webhook do IMEbot em app/api/imebot/webhook/route.js, que ja tem sua
+  // propria dedup por conversa/telefone via findActiveWhatsappImebotLeadByPhone).
   const timeBucket = Math.floor(Date.now() / dedupWindowMs);
   return createHash("sha256").update(`${visitorId}|${quoteSummary}|${timeBucket}`).digest("hex").slice(0, 40);
 };
 
-const findLeadByIdempotencyKey = async (client, idempotencyKey) => {
-  const { rows } = await client.query(
+// client opcional: sem ele, roda como leitura avulsa via pool (query de ./db) - usado ANTES de
+// decidir o vendedor, fora de qualquer transacao (ver createLead). Com client, roda dentro da
+// transacao de criacao do lead - usado so no tratamento de colisao concorrente de
+// idempotency_key (ver o catch do INSERT abaixo).
+const findLeadByIdempotencyKey = async (idempotencyKey, client) => {
+  const runQuery = client ? client.query.bind(client) : query;
+  const { rows } = await runQuery(
     `SELECT sl.id, sl.lead_code, sl.seller_id, sl.unit, sl.flow_type, ss.name AS seller_name, ss.whatsapp AS seller_whatsapp
        FROM sales_leads sl
        LEFT JOIN sales_sellers ss ON ss.id = sl.seller_id
@@ -88,60 +117,65 @@ const findLeadByIdempotencyKey = async (client, idempotencyKey) => {
 
 // --- Rodizio de vendedores -------------------------------------------------------------------
 
-// FOR UPDATE SKIP LOCKED (nao FOR UPDATE simples): sob concorrencia, duas transacoes que
-// tentassem travar a MESMA linha (o vendedor ha mais tempo sem receber lead) fariam a segunda
-// esperar a primeira commitar e, sob READ COMMITTED, o Postgres devolveria a MESMA linha ja
-// atualizada para a segunda transacao - ou seja, os dois leads simultaneos cairiam no mesmo
-// vendedor, exatamente o bug que o rodizio precisa evitar. SKIP LOCKED faz a segunda transacao
-// pular a linha ja travada e pegar o PROXIMO vendedor da fila imediatamente, sem esperar.
-// Retorna null quando nao ha nenhum vendedor ativo cadastrado (para a unidade pedida, se houver),
-// ou (caso raro) quando todos os candidatos estao momentaneamente travados por outras transacoes
-// concorrentes - o lead ainda e criado, so sem seller_id (ver createLead).
-//
-// unit e OPCIONAL de proposito: quando informada, o filtro e ESTRITO (so vendedores daquela
-// unidade) - nunca cai silenciosamente para vendedor de outra unidade (exigencia explicita desta
-// fase). Sem unit (fluxo legado/sem unidade conhecida), usa o pool geral de vendedores ativos,
-// exatamente como antes desta fase.
-//
-// CORREÇÃO DE ESCOPO (instrução explícita do usuário): rodízio ativo SOMENTE para
-// unit = "campo-grande" nesta fase. unit = "dourados" NUNCA aciona rodízio - devolve null direto,
-// sem nem consultar sales_sellers, preservando o fluxo comercial atual de Dourados (o frontend
-// cai no WhatsApp padrão já existente). Isso vale mesmo que, no futuro, alguém cadastre um
-// vendedor com unit = "dourados" no banco: a automação para Dourados só deve ligar depois de uma
-// nova instrução explícita, nunca silenciosamente por causa de um cadastro no banco.
-const assignNextSeller = async (client, unit = null) => {
-  if (unit && !isCommercialAutomationEnabledForUnit(unit)) return null;
+// Legacy unscoped requests retain their existing timestamp-based assignment.
+// Campo Grande uses sellerRotationStore inside the lead transaction instead.
+// Dourados never enters either rotation path.
+const seller_assignment_max_attempts = 3;
+const seller_assignment_retry_delay_ms = 25;
 
-  const { rows } = await client.query(
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const selectAvailableSeller = async (unit) => {
+  const { rows } = await query(
     unit
-      ? `SELECT id, name, whatsapp
-           FROM sales_sellers
-          WHERE active = TRUE AND unit = $1
-          ORDER BY last_assigned_at ASC NULLS FIRST, id ASC
-          LIMIT 1
-          FOR UPDATE SKIP LOCKED`
-      : `SELECT id, name, whatsapp
-           FROM sales_sellers
-          WHERE active = TRUE
-          ORDER BY last_assigned_at ASC NULLS FIRST, id ASC
-          LIMIT 1
-          FOR UPDATE SKIP LOCKED`,
+      ? `UPDATE sales_sellers
+            SET last_assigned_at = NOW()
+          WHERE id = (
+            SELECT id FROM sales_sellers
+             WHERE active = TRUE AND unit = $1
+             ORDER BY last_assigned_at ASC NULLS FIRST, id ASC
+             LIMIT 1
+             FOR UPDATE SKIP LOCKED
+          )
+        RETURNING id, name, whatsapp`
+      : `UPDATE sales_sellers
+            SET last_assigned_at = NOW()
+          WHERE id = (
+            SELECT id FROM sales_sellers
+             WHERE active = TRUE
+             ORDER BY last_assigned_at ASC NULLS FIRST, id ASC
+             LIMIT 1
+             FOR UPDATE SKIP LOCKED
+          )
+        RETURNING id, name, whatsapp`,
     unit ? [unit] : []
   );
+  return rows[0] || null;
+};
 
-  const seller = rows[0];
-  if (!seller) return null;
+// Retry curto continua existindo como camada extra (agora bem mais barato - cada tentativa e so
+// a instrucao atomica acima, nao uma transacao inteira) para o caso raro residual de duas
+// instrucoes colidindo no mesmissimo instante.
+export const assignNextSeller = async (unit = null) => {
+  if (unit && !isCommercialAutomationEnabledForUnit(unit)) return null;
+  // Campo Grande must be assigned atomically with createLead, never independently.
+  if (isCommercialAutomationEnabledForUnit(unit)) {
+    throw new Error("Use createLead para atribuir vendedor de Campo Grande.");
+  }
 
-  await client.query("UPDATE sales_sellers SET last_assigned_at = NOW() WHERE id = $1", [seller.id]);
+  let seller = null;
+  for (let attempt = 0; attempt < seller_assignment_max_attempts && !seller; attempt += 1) {
+    if (attempt > 0) await sleep(seller_assignment_retry_delay_ms * attempt);
+    seller = await selectAvailableSeller(unit);
+  }
+
   return seller;
 };
 
 // --- Criacao do lead -------------------------------------------------------------------------
 
-// Cria o lead dentro de uma unica transacao: confere dedup, escolhe vendedor (rodizio com lock)
-// e insere - tudo ou nada. Nunca lanca para quem chamou: qualquer falha (banco fora do ar, etc.)
-// vira {ok:false}, e a rota (app/api/leads/route.js) devolve isso ao frontend, que cai no
-// WhatsApp padrao existente.
+// Campo Grande: lock cursor, recheck idempotency, insert lead and advance cursor;
+// COMMIT before publishing creation events. Other units retain their existing flow.
 // allowWhatsappOrigin: SOMENTE true quando chamado internamente pelo webhook do IMEbot (nunca
 // alcancavel a partir do payload de /api/leads, que e' publico/nao autenticado) - ver
 // createWhatsappImebotLead abaixo. Sem essa trava, um cliente do site poderia mandar
@@ -155,7 +189,10 @@ export const createLead = async (payload = {}, { allowWhatsappOrigin = false } =
 
   const visitorId = safeString(payload.visitorId, "visitor-unavailable", 140);
   const quoteSummary = safeString(payload.quoteSummary, "", 4000);
-  const idempotencyKey = buildIdempotencyKey(visitorId, quoteSummary);
+  // clientRequestId so participa do hash de dedup (ver buildIdempotencyKey) - nunca usado em
+  // nenhum outro campo abaixo (seller_id/status/lead_code continuam decididos so pelo servidor).
+  const clientRequestId = safeString(payload.clientRequestId, "", 100);
+  const idempotencyKey = buildIdempotencyKey(visitorId, quoteSummary, clientRequestId);
 
   // Nunca confia cegamente em flowType/unit/siteOrigin vindos do payload: cai para um valor
   // seguro conhecido se o valor enviado nao estiver na allowlist (ver lib/leadFlow.js).
@@ -167,19 +204,105 @@ export const createLead = async (payload = {}, { allowWhatsappOrigin = false } =
       : LEAD_SITE_ORIGIN.VENDAS;
   const unit = isValidCommercialUnit(payload.unit) ? payload.unit : null;
   const pagePath = safeString(payload.pagePath, "", 180);
+  const usesRotation = isCommercialAutomationEnabledForUnit(unit);
+  const customerPhone = safeString(payload.customerPhone, "", 40);
+  const leadValues = [
+    safeString(payload.customerName, "", 120), customerPhone,
+    safeString(payload.customerEmail, "", 160), safeString(payload.origin, "", 180),
+    safeString(payload.source, "", 180), JSON.stringify(safeUtm(payload.utm)),
+    safeString(payload.product, "", 200), quoteSummary, idempotencyKey,
+    flowType, siteOrigin, unit, pagePath,
+    siteOrigin === LEAD_SITE_ORIGIN.WHATSAPP ? CUSTOMER_PHONE_SOURCE.META_INBOUND
+      : customerPhone ? CUSTOMER_PHONE_SOURCE.LEAD_FORM : null,
+  ];
+  const flushAudit = async () => {
+    if (!usesRotation) return;
+    try {
+      await flushRotationCreationAudit();
+    } catch {
+      console.error("[sales-leads] auditoria pendente; sera retomada na proxima criacao/retry.");
+    }
+  };
 
   try {
-    return await withTransaction(async (client) => {
-      const existingLead = await findLeadByIdempotencyKey(client, idempotencyKey);
-      if (existingLead) return existingLead;
+    // Fast retry path; Campo Grande also rechecks after acquiring its cursor lock.
+    const existingLead = await findLeadByIdempotencyKey(idempotencyKey);
+    if (existingLead) {
+      await flushAudit();
+      return existingLead;
+    }
 
-      const seller = await assignNextSeller(client, unit);
+    // Campo Grande: TODA a regiao critica (dedup + lock do cursor + escolha do vendedor + INSERT
+    // + avanco do cursor) roda numa UNICA chamada de funcao PL/pgSQL server-side
+    // (campo_grande_create_lead) - 1 round-trip Node<->Supabase, sem BEGIN/COMMIT explicito (a
+    // propria chamada de funcao ja e atomica). Ver sellerRotationStore.js e
+    // db/migrations/008_campo_grande_create_lead_function.sql para o raciocinio completo.
+    if (usesRotation) {
+      const leadCode = generateLeadCode();
+      const outcome = await createCampoGrandeLead({
+        idempotencyKey,
+        leadCode,
+        visitorId,
+        customerName: leadValues[0],
+        customerPhone: leadValues[1],
+        customerEmail: leadValues[2],
+        origin: leadValues[3],
+        source: leadValues[4],
+        utm: leadValues[5],
+        product: leadValues[6],
+        quoteSummary: leadValues[7],
+        flowType: leadValues[9],
+        siteOrigin: leadValues[10],
+        pagePath: leadValues[12],
+        customerPhoneSource: leadValues[13],
+      });
 
+      let result;
+      if (outcome.existingLead) {
+        result = outcome.existingLead;
+      } else if (outcome.noActiveSeller) {
+        const error = new Error("Nenhum vendedor ativo em Campo Grande.");
+        error.code = "NO_ACTIVE_SELLER";
+        throw error;
+      } else {
+        result = {
+          ok: true,
+          leadId: outcome.inserted.leadId,
+          leadCode: outcome.inserted.leadCode,
+          unit,
+          flowType,
+          deduped: false,
+          seller: outcome.inserted.seller,
+        };
+      }
+
+      await flushAudit();
+      return result;
+    }
+
+    // Legacy (sem rotation) - so chega aqui fora de Campo Grande. Nao e o gargalo sob
+    // investigacao nesta rodada; corrida real de idempotency_key ainda pode acontecer aqui,
+    // porque este caminho nao tem nenhum lock equivalente ao cursor do rodizio - por isso
+    // continua usando withTransaction + SAVEPOINT, sem alteracao.
+    const legacySeller = await assignNextSeller(unit);
+
+    const result = await withTransaction(async (client) => {
+      const seller = legacySeller;
       let inserted = null;
       let lastError = null;
 
       for (let attempt = 0; attempt < maxLeadCodeAttempts && !inserted; attempt += 1) {
         const leadCode = generateLeadCode();
+
+        // SAVEPOINT em volta de cada tentativa de INSERT: sem isso, um erro (23505 - colisao de
+        // lead_code OU de idempotency_key) deixa a transacao INTEIRA em estado "aborted" - a
+        // proxima instrucao (inclusive a busca abaixo pelo lead concorrente, ou a proxima
+        // tentativa de INSERT) falharia so por isso, com "current transaction is aborted,
+        // commands ignored until end of transaction block", mascarando o erro real e QUEBRANDO
+        // o proprio tratamento de colisao concorrente de idempotency_key (a busca do lead
+        // concorrente nunca conseguia rodar). ROLLBACK TO SAVEPOINT devolve so este INSERT,
+        // sem afetar BEGIN/COMMIT nem nada feito antes dele na mesma transacao.
+        await client.query("SAVEPOINT insert_lead_attempt");
 
         try {
           const { rows } = await client.query(
@@ -189,38 +312,21 @@ export const createLead = async (payload = {}, { allowWhatsappOrigin = false } =
                 flow_type, site_origin, unit, page_path, customer_phone_source)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15, $16, $17)
              RETURNING id, lead_code`,
-            [
-              leadCode,
-              visitorId,
-              seller?.id ?? null,
-              safeString(payload.customerName, "", 120),
-              safeString(payload.customerPhone, "", 40),
-              safeString(payload.customerEmail, "", 160),
-              safeString(payload.origin, "", 180),
-              safeString(payload.source, "", 180),
-              JSON.stringify(safeUtm(payload.utm)),
-              safeString(payload.product, "", 200),
-              quoteSummary,
-              idempotencyKey,
-              flowType,
-              siteOrigin,
-              unit,
-              pagePath,
-              siteOrigin === LEAD_SITE_ORIGIN.WHATSAPP
-                ? CUSTOMER_PHONE_SOURCE.META_INBOUND
-                : safeString(payload.customerPhone, "", 40)
-                  ? CUSTOMER_PHONE_SOURCE.LEAD_FORM
-                  : null,
-            ]
+            [leadCode, visitorId, seller?.id ?? null, ...leadValues]
           );
           inserted = rows[0];
+          await client.query("RELEASE SAVEPOINT insert_lead_attempt");
         } catch (err) {
+          await client.query("ROLLBACK TO SAVEPOINT insert_lead_attempt");
+          await client.query("RELEASE SAVEPOINT insert_lead_attempt");
+
           // 23505 = unique_violation (Postgres). Duas causas possiveis aqui:
           // - colisao no lead_code (extremamente rara): tenta de novo com outro codigo.
           // - colisao na idempotency_key: outra requisicao concorrente com o MESMO clique/retry
-          //   ja criou o lead entre a checagem acima e este INSERT - busca e devolve ela.
+          //   ja criou o lead entre a checagem acima e este INSERT - busca e devolve ela. So
+          //   funciona corretamente por causa do ROLLBACK TO SAVEPOINT acima (ver comentario).
           if (err.code === "23505" && String(err.constraint || "").includes("idempotency_key")) {
-            const concurrentLead = await findLeadByIdempotencyKey(client, idempotencyKey);
+            const concurrentLead = await findLeadByIdempotencyKey(idempotencyKey, client);
             if (concurrentLead) return concurrentLead;
           }
           if (err.code !== "23505") throw err;
@@ -252,8 +358,13 @@ export const createLead = async (payload = {}, { allowWhatsappOrigin = false } =
         seller: seller ? { id: seller.id, name: seller.name, whatsapp: seller.whatsapp } : null,
       };
     });
+    await flushAudit();
+    return result;
   } catch (err) {
     console.error("[sales-leads] falha ao criar lead:", err.message);
+    if (err.code === "NO_ACTIVE_SELLER") {
+      return { ok: false, code: "NO_ACTIVE_SELLER", reason: "Nenhum vendedor ativo em Campo Grande." };
+    }
     return { ok: false, reason: "Nao foi possivel criar o lead." };
   }
 };

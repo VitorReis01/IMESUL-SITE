@@ -15,6 +15,21 @@ tabela abaixo (SELECT/INSERT/UPDATE/DELETE) foi levantado por análise estática
 produção, confirme com uma consulta real (`pg_stat_statements` ou logs de query) que nenhuma
 operação foi perdida nessa varredura estática.
 
+**Reconferido numa rodada posterior** (auditoria dedicada a este documento, independente da
+anterior): a varredura estática foi refeita do zero e bateu, tabela por tabela e privilégio por
+privilégio, com o que já estava documentado aqui — nenhuma correção foi necessária na matriz
+abaixo. O SQL pronto para copiar/colar agora vive em `db/roles/create_runtime_role.sql` (fora de
+`db/migrations/`, então `npm run db:migrate` nunca o executa por engano) — o bloco de SQL abaixo
+continua aqui só como referência de leitura.
+
+**Revisado numa terceira rodada** (última revisão antes de aprovação para commit), com 3 mudanças:
+(1) `scripts/migrate-db.mjs` agora é **fail-closed** em Production/CI — sem `DATABASE_MIGRATION_URL`
+configurada nesses ambientes, o script aborta em vez de cair silenciosamente para `DATABASE_URL`
+(o fallback local continua existindo, só fora de Production/CI, sempre com warning explícito); (2)
+o `ALTER DEFAULT PRIVILEGES` que concedia `SELECT` automático em tabelas futuras foi **removido**
+— ver "Estratégia para migrations futuras" abaixo; (3) adicionado um checklist de validação para
+o Preview, ainda não executado. Nenhuma mudança na matriz de privilégios em si.
+
 ## Situação atual (não verificável a partir deste ambiente)
 
 Este ambiente de trabalho não tem `DATABASE_URL` configurada, então não consigo consultar o
@@ -150,13 +165,9 @@ GRANT USAGE, SELECT ON
   sales_lead_events_id_seq
 TO imesul_vendas_app;
 
--- 8) Garante que tabelas FUTURAS criadas pela role de migration também concedam SELECT
--- automaticamente à role de aplicação, sem precisar repetir o GRANT a cada migration. INSERT/
--- UPDATE/DELETE de uma tabela nova continuam exigindo um GRANT explícito (são específicos por
--- tabela, não um privilégio "genérico" que faça sentido dar de graça a toda tabela nova).
-ALTER DEFAULT PRIVILEGES FOR ROLE <role_atual_de_migration>
-  IN SCHEMA public
-  GRANT SELECT ON TABLES TO imesul_vendas_app;
+-- 8) DE PROPÓSITO SEM "ALTER DEFAULT PRIVILEGES": uma tabela/sequence NOVA criada por uma
+-- migration futura NÃO deve conceder nenhum privilégio a imesul_vendas_app automaticamente - nem
+-- SELECT. Ver "Estratégia para migrations futuras" abaixo.
 
 -- 9) Explicitamente SEM: CREATE, ALTER, DROP, TRUNCATE, SUPERUSER, CREATEROLE, CREATEDB.
 -- (Não precisa de nenhum SQL para "remover" isso - a role só tem o que foi concedido acima.)
@@ -178,9 +189,154 @@ DATABASE_URL=postgresql://imesul_vendas_app:<senha>@<host>/<db>?sslmode=require
 DATABASE_MIGRATION_URL=postgresql://<role_atual_de_migration>:<senha>@<host>/<db>?sslmode=require
 ```
 
-`scripts/migrate-db.mjs` precisaria de um pequeno ajuste (não feito aqui - é código, não só
-proposta) para ler `DATABASE_MIGRATION_URL` em vez de `DATABASE_URL` quando ela existir, mantendo
-`DATABASE_URL` como fallback para não quebrar quem ainda não migrou o setup local.
+`scripts/migrate-db.mjs` **já foi ajustado** para tratar `DATABASE_MIGRATION_URL` como a variável
+oficial de migrations, com comportamento **fail-closed**:
+
+- **Em Production/CI** (`NODE_ENV=production` ou `CI` definido — GitHub Actions e a Vercel
+  definem `CI` automaticamente): sem `DATABASE_MIGRATION_URL`, o script **aborta imediatamente**
+  com uma mensagem genérica e clara, sem nunca cair para `DATABASE_URL`. Rodar migrations com a
+  role de runtime (sem `CREATE`/`ALTER`/`DROP`) falharia de um jeito confuso na melhor hipótese —
+  ou, pior, rodaria "por acidente" contra uma role errada se a separação de roles ainda não tiver
+  sido aplicada ao banco.
+- **Fora de Production/CI** (dev local): se `DATABASE_MIGRATION_URL` estiver ausente, cai para
+  `DATABASE_URL` — mas sempre emitindo o warning `"Usando DATABASE_URL apenas por compatibilidade
+  local. Configure DATABASE_MIGRATION_URL."`, nunca silenciosamente.
+- Nunca loga o valor da connection string, só o nome da variável em uso (`DATABASE_MIGRATION_URL`
+  ou `DATABASE_URL`).
+
+Lógica pura testável em `scripts/migrate-db.mjs#resolveMigrationDatabaseUrl`, coberta por
+`test/migrateDbUrlResolution.test.js`.
+
+`Backend.js/db.js` continua lendo **somente** `DATABASE_URL`, nunca `DATABASE_MIGRATION_URL` -
+confirmado nesta rodada e travado contra regressão futura por
+`test/databaseMigrationUrlIsolation.test.js` (varre `Backend.js/`, `lib/`, `app/` e `components/`
+e falha se qualquer arquivo de runtime referenciar `DATABASE_MIGRATION_URL`).
+
+## Estratégia para migrations futuras
+
+Quando uma migration futura (`db/migrations/00N_*.sql`) criar uma tabela ou sequence nova, a role
+`imesul_vendas_app` **não ganha privilégio nenhum sobre ela automaticamente** — nem `SELECT`. Isso
+é intencional: `db/roles/create_runtime_role.sql` **não usa** `ALTER DEFAULT PRIVILEGES` (removido
+nesta revisão) justamente para não conceder acesso amplo "por conveniência" a uma tabela que
+ninguém revisou ainda — uma tabela futura pode guardar um dado mais sensível que as atuais, e
+`SELECT` automático contornaria a única razão de existir desta role separada.
+
+**Processo obrigatório para toda migration que adicionar tabela/sequence nova:**
+
+1. A migration em si (`db/migrations/00N_*.sql`) só cria o schema (`CREATE TABLE`/`CREATE INDEX`)
+   — nunca inclui `GRANT` (ela roda com `DATABASE_MIGRATION_URL`, que não deveria decidir
+   privilégios de runtime silenciosamente).
+2. Antes (ou junto) do deploy que passa a usar a tabela nova em código de runtime, repetir a
+   mesma auditoria estática desta rodada (`grep` de `INSERT INTO`/`UPDATE`/`DELETE FROM`/`SELECT
+   ... FROM` no código que vai usar a tabela nova).
+3. Adicionar um novo bloco de `GRANT` explícito — em `db/roles/create_runtime_role.sql` (nova
+   seção numerada) ou em um novo arquivo `db/roles/grants_<data>_<tabela>.sql` — cobrindo só as
+   operações confirmadas na auditoria, na mesma linha de "menor privilégio necessário" desta
+   proposta.
+4. Revisar e aprovar manualmente esse bloco (igual a este documento) antes de rodá-lo contra o
+   banco real — nunca aplicado automaticamente pela migration nem por CI/deploy.
+
+**Nunca fazer**: reintroduzir `ALTER DEFAULT PRIVILEGES` (ou qualquer mecanismo equivalente) só
+para "economizar" o passo 3 acima — o custo de um `GRANT` extra por migration é pequeno comparado
+ao risco de conceder acesso não revisado a um dado novo.
+
+## Checklist de validação no Preview (preparado, NÃO executado)
+
+Só deve ser executado contra um ambiente de **Preview/homologação**, nunca Production. Objetivo:
+confirmar que a role `imesul_vendas_app` tem exatamente o necessário — nem menos (quebraria
+funcionalidade) nem mais (privilégio administrativo indevido).
+
+**A) Conectar usando a `DATABASE_URL` da runtime role** (a nova, apontando para
+`imesul_vendas_app`) — via `psql` ou o SQL Editor do provedor, ou simplesmente configurando essa
+`DATABASE_URL` no ambiente de Preview da Vercel.
+
+**B) Confirmar a identidade da conexão**:
+```sql
+SELECT current_user;
+-- Esperado: imesul_vendas_app
+```
+
+**C) Confirmar que as ações normais do site continuam funcionando** (fluxo positivo, testado
+manualmente navegando o Preview):
+- [ ] Login admin (`/admin`) e sessão (criação + validação de `admin_sessions`)
+- [ ] Criação de lead (`POST /api/leads`, qualquer unidade)
+- [ ] Rodízio de Campo Grande (lead com vendedor atribuído)
+- [ ] Alternador Dourados (`/api/dourados/next-store` ou clique real no CTA de Dourados)
+- [ ] Rate limiter (disparar o limite de burst em `/api/leads` e confirmar 429, não 500)
+- [ ] Analytics (`POST /api/analytics/track` + painel admin `GET /api/analytics/events`)
+- [ ] IMEbot, se `IMEBOT_ENABLED=true` no Preview (webhook + processamento de jobs)
+
+**D) Testar NEGATIVAMENTE que a runtime role NÃO consegue fazer DDL/administração** — autenticado
+como `imesul_vendas_app` (mesma conexão do item A), **sempre numa tabela/transação de teste, nunca
+em `sales_leads` ou qualquer tabela real, e nunca em Production**.
+
+**D.1) SUPERUSER / CREATEDB / CREATEROLE — preferir esta consulta primeiro, é só leitura, sem
+efeito colateral nenhum** (roda em qualquer ambiente, inclusive Production, sem risco — mas o
+restante do checklist continua Preview-only):
+
+```sql
+SELECT rolsuper, rolcreatedb, rolcreaterole
+  FROM pg_roles
+ WHERE rolname = current_user;
+-- Esperado: false / false / false
+```
+
+**D.2) CREATE / ALTER / DROP / TRUNCATE — cada teste isolado na SUA PRÓPRIA transação**, nunca
+vários comandos que devem falhar dentro da mesma transação sem `SAVEPOINT` (depois que um comando
+falha, o Postgres marca a transação inteira como abortada — qualquer comando seguinte, mesmo um
+`ROLLBACK` mal posicionado ou um teste "inofensivo", erraria só por causa disso, não pela falta de
+privilégio de verdade — o resultado ficaria difícil de interpretar). Rodar cada bloco abaixo
+**separadamente**, um de cada vez, confirmando o erro de "permission denied" antes de seguir para
+o próximo:
+
+```sql
+-- Teste 1 de 4 - CREATE
+BEGIN;
+CREATE TABLE _privilege_test (id serial primary key);
+ROLLBACK;
+-- Esperado: falha em CREATE TABLE (permission denied for schema public), ROLLBACK só por cautela
+```
+
+```sql
+-- Teste 2 de 4 - ALTER
+BEGIN;
+ALTER TABLE analytics_events ADD COLUMN _privilege_test TEXT;
+ROLLBACK;
+-- Esperado: falha em ALTER TABLE (permission denied), ROLLBACK só por cautela
+```
+
+```sql
+-- Teste 3 de 4 - DROP
+BEGIN;
+DROP TABLE analytics_events;
+ROLLBACK;
+-- Esperado: falha em DROP TABLE (permission denied) - o ROLLBACK aqui é cinto de segurança
+-- extra, nunca confiar só nele para "desfazer" um DROP que porventura tivesse funcionado
+```
+
+```sql
+-- Teste 4 de 4 - TRUNCATE
+BEGIN;
+TRUNCATE analytics_events;
+ROLLBACK;
+-- Esperado: falha em TRUNCATE (permission denied)
+```
+
+Se qualquer um dos 4 acima **não falhar**, pare imediatamente: a role tem privilégio demais e a
+criação (`db/roles/create_runtime_role.sql`) precisa ser revisada antes de usar em Production.
+
+**D.3) CREATE ROLE — opcional, só em ambiente de TESTE, NUNCA em Production.** A consulta D.1
+já confirma `rolcreaterole=false` sem nenhum efeito colateral — este teste é só uma segunda
+confirmação prática, dispensável. Se decidir rodar mesmo assim, faça isso **isoladamente**, numa
+transação própria, nunca junto dos testes D.2 acima:
+
+```sql
+-- Opcional, só em banco de TESTE - NUNCA em Production. D.1 já confirma isso de forma segura.
+BEGIN;
+CREATE ROLE _privilege_test_role;
+ROLLBACK;
+-- Esperado: falha (permission denied to create role)
+```
 
 ## Por que não fiz isso agora
 
@@ -195,10 +351,12 @@ proposta) para ler `DATABASE_MIGRATION_URL` em vez de `DATABASE_URL` quando ela 
 ## Como aplicar, quando você decidir
 
 1. Rode as queries de "Situação atual" acima para confirmar a role/privilégios de hoje.
-2. Rode o SQL da seção "SQL necessário" com a role atual (que tem permissão para criar roles).
-3. Ajuste `scripts/migrate-db.mjs` para usar `DATABASE_MIGRATION_URL` (com fallback para
-   `DATABASE_URL`, para não quebrar ambientes que ainda não migraram).
-4. Teste a nova `DATABASE_URL` (com `imesul_vendas_app`) num ambiente de preview antes de trocar
-   em produção — rode a suíte de testes, faça login admin, crie um lead de teste, confirme que o
-   IMEbot (se habilitado) e o rate limiter continuam funcionando.
-5. Só depois disso, troque a `DATABASE_URL` de produção na Vercel.
+2. Rode `db/roles/create_runtime_role.sql` com a role atual (que tem permissão para criar
+   roles) — troque a senha placeholder e `<role_atual_de_migration>` pelos valores reais antes.
+3. Configure `DATABASE_MIGRATION_URL` (role atual/owner) na Vercel (Production **e** Preview) e
+   localmente — o script de migration agora **exige** essa variável em Production/CI (fail-closed,
+   ver seção acima); sem configurá-la lá, `npm run db:migrate` aborta.
+4. Teste a nova `DATABASE_URL` (com `imesul_vendas_app`) num ambiente de Preview antes de trocar
+   em Production — use o "Checklist de validação no Preview" acima (fluxo positivo + testes
+   negativos de DDL).
+5. Só depois disso, troque a `DATABASE_URL` de Production na Vercel.
