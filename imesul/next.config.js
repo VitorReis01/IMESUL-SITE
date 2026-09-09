@@ -9,6 +9,21 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+// Origem do site de vendas (mesma fonte usada por data/products.js#salesSiteUrl) - o CSP precisa
+// liberar exatamente essa origem no connect-src, senao o fetch cross-origin de
+// lib/leadClient.js#createLead (usado por TODOS os CTAs "Falar no WhatsApp" do institucional)
+// e bloqueado pelo proprio navegador antes de sair da pagina. Achado na homologacao final da
+// Preview: nenhum teste anterior tinha exercitado esse fetch por um navegador real (curl/Node
+// fetch nao aplicam CSP), entao o gap ficou invisivel desde a rodada de hardening que reduziu
+// connect-src de "https:" para uma allowlist explicita.
+const salesSiteOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SALES_URL || "https://imesul-vendas.vercel.app/").origin;
+  } catch {
+    return "https://imesul-vendas.vercel.app";
+  }
+})();
+
 // Restringe os recursos que a pagina pode carregar e fica mais permissiva apenas no desenvolvimento.
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -17,12 +32,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "img-src 'self' data: blob: https://www.facebook.com https://www.google-analytics.com",
   "media-src 'self' blob:",
-  // Antes era "https:" (qualquer origem HTTPS) - reduzido para a allowlist real usada por GA4
-  // (gtag/collect), Meta Pixel e Sentry (ver components/TrackingScripts.jsx e sentry.*.config.js).
-  // Não verificado com tracking ligado de verdade neste ambiente (NEXT_PUBLIC_TRACKING_ENABLED=
-  // false por padrão) - conferir em preview com tracking habilitado antes de considerar validado
-  // (ver relatório de hardening, seção CSP).
-  `connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${salesSiteOrigin} https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.sentry.io https://*.ingest.sentry.io${isDevelopment ? " ws: wss:" : ""}`,
   "frame-src 'self' https://www.facebook.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
