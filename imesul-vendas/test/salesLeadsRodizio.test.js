@@ -90,3 +90,88 @@ describe("seller assignment boundaries", () => {
     expect(withTransaction).not.toHaveBeenCalled();
   });
 });
+
+// ACHADO-02 (pentest desta fase): unit="dourados" enviado direto a createLead (ex.: chamada
+// direta a /api/leads, ignorando o desvio que o FRONTEND ja fazia em lib/leadWhatsApp.js)
+// insercia um lead orfao - sem rodizio, sem seller, nunca atendido por ninguem. A trava abaixo
+// e' do lado do SERVIDOR, verificada antes de qualquer busca de idempotencia, escolha de
+// vendedor ou INSERT - nenhuma consulta ao banco acontece para Dourados neste ponto.
+describe("createLead - Dourados nunca cria sales_leads (ACHADO-02)", () => {
+  beforeEach(() => vi.resetModules());
+  afterEach(() => vi.doUnmock("../Backend.js/db"));
+
+  it("unit=dourados: nao cria lead, nao consulta idempotencia, nao escolhe seller, nao toca no banco", async () => {
+    const query = vi.fn();
+    const withTransaction = vi.fn();
+    vi.doMock("../Backend.js/db", () => ({ query, isDatabaseConfigured: () => true, withTransaction }));
+    const { createLead } = await import("../Backend.js/salesLeadsStore");
+
+    const result = await createLead({ unit: COMMERCIAL_UNITS.DOURADOS, quoteSummary: "teste dourados direto", clientRequestId: "dourados-direto-cr" });
+
+    expect(result).toEqual({ ok: false, reason: "unit_not_supported" });
+    // Nenhuma chamada ao banco - nem findLeadByIdempotencyKey, nem assignNextSeller, nem INSERT.
+    expect(query).not.toHaveBeenCalled();
+    expect(withTransaction).not.toHaveBeenCalled();
+  });
+
+  it("unit=dourados: nao altera o cursor de rodizio de Campo Grande (nenhuma query = nenhum UPDATE no cursor)", async () => {
+    const query = vi.fn();
+    vi.doMock("../Backend.js/db", () => ({ query, isDatabaseConfigured: () => true, withTransaction: vi.fn() }));
+    const { createLead } = await import("../Backend.js/salesLeadsStore");
+
+    await createLead({ unit: COMMERCIAL_UNITS.DOURADOS, quoteSummary: "teste cursor", clientRequestId: "dourados-cursor-cr" });
+
+    // Se o cursor de Campo Grande fosse tocado, seria via query() (campo_grande_create_lead
+    // avanca o cursor na mesma chamada) - como query() nunca e chamada, o cursor fica intocado.
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("unit=dourados: resultado nunca inclui seller", async () => {
+    vi.doMock("../Backend.js/db", () => ({ query: vi.fn(), isDatabaseConfigured: () => true, withTransaction: vi.fn() }));
+    const { createLead } = await import("../Backend.js/salesLeadsStore");
+
+    const result = await createLead({ unit: COMMERCIAL_UNITS.DOURADOS, quoteSummary: "teste seller", clientRequestId: "dourados-seller-cr" });
+
+    expect(result.seller).toBeUndefined();
+    expect(result.ok).toBe(false);
+  });
+
+  it("Campo Grande continua funcionando normalmente apos a trava de Dourados (regressao)", async () => {
+    const query = vi.fn()
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
+        rows: [{
+          lead_id: "150", lead_code: "IMESUL-POSFIX", seller_id: "3",
+          seller_name: "Seller", seller_whatsapp: "5567900000000",
+          deduped: false, no_active_seller: false,
+        }],
+      })
+      .mockResolvedValueOnce({ rowCount: 0 });
+    vi.doMock("../Backend.js/db", () => ({ query, isDatabaseConfigured: () => true, withTransaction: vi.fn() }));
+    const { createLead } = await import("../Backend.js/salesLeadsStore");
+
+    const result = await createLead({ unit: COMMERCIAL_UNITS.CAMPO_GRANDE, quoteSummary: "teste campo grande pos-fix", clientRequestId: "campo-grande-posfix-cr" });
+
+    expect(result).toMatchObject({ ok: true, leadCode: "IMESUL-POSFIX", seller: { id: "3" } });
+    expect(query.mock.calls[1][0]).toContain("campo_grande_create_lead");
+  });
+
+  it("idempotencia de Campo Grande continua funcionando apos a trava de Dourados (regressao)", async () => {
+    const query = vi.fn()
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
+        rows: [{
+          lead_id: "151", lead_code: "IMESUL-JADUPLICADO", seller_id: "4",
+          seller_name: "Seller", seller_whatsapp: "5567900000000",
+          deduped: true, no_active_seller: false,
+        }],
+      })
+      .mockResolvedValueOnce({ rowCount: 0 });
+    vi.doMock("../Backend.js/db", () => ({ query, isDatabaseConfigured: () => true, withTransaction: vi.fn() }));
+    const { createLead } = await import("../Backend.js/salesLeadsStore");
+
+    const result = await createLead({ unit: COMMERCIAL_UNITS.CAMPO_GRANDE, quoteSummary: "teste idempotencia pos-fix", clientRequestId: "mesma-tentativa" });
+
+    expect(result).toMatchObject({ ok: true, deduped: true, leadCode: "IMESUL-JADUPLICADO" });
+  });
+});

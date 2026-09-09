@@ -5,6 +5,7 @@ import { markCartConverted } from "./cartStore";
 import { recordLeadEvent } from "./imebotStore";
 import { createCampoGrandeLead, flushRotationCreationAudit } from "./sellerRotationStore";
 import {
+  COMMERCIAL_UNITS,
   LEAD_FLOW_TYPES,
   LEAD_SITE_ORIGIN,
   CUSTOMER_PHONE_SOURCE,
@@ -203,6 +204,20 @@ export const createLead = async (payload = {}, { allowWhatsappOrigin = false } =
       ? LEAD_SITE_ORIGIN.WHATSAPP
       : LEAD_SITE_ORIGIN.VENDAS;
   const unit = isValidCommercialUnit(payload.unit) ? payload.unit : null;
+
+  // Dourados NUNCA cria sales_leads - regra de arquitetura territorial (ver
+  // lib/douradosDispatch.js/lib/leadWhatsApp.js, que ja desviam antes de chegar aqui pelo
+  // fluxo normal do site). Esta trava e' a garantia do lado do SERVIDOR: sem ela, uma chamada
+  // direta a /api/leads com unit="dourados" (bypassando o frontend) cairia no caminho legado
+  // abaixo e inseriria um lead orfao (sem rodizio, sem seller, nunca atendido por ninguem) -
+  // ver relatorio do pentest desta fase (ACHADO-02). Verificada ANTES de qualquer busca de
+  // idempotencia, escolha de vendedor ou INSERT - nenhuma consulta ao banco acontece para
+  // Dourados neste ponto. Escopo deliberadamente restrito a Dourados (nao um "!isCommercialAutomationEnabledForUnit(unit)"
+  // generico) para nao alterar o comportamento de nenhuma outra unidade legada existente.
+  if (unit === COMMERCIAL_UNITS.DOURADOS) {
+    return { ok: false, reason: "unit_not_supported" };
+  }
+
   const pagePath = safeString(payload.pagePath, "", 180);
   const usesRotation = isCommercialAutomationEnabledForUnit(unit);
   const customerPhone = safeString(payload.customerPhone, "", 40);
