@@ -36,7 +36,13 @@ import { isAffirmativeAnswer, isNegativeAnswer, parseFeedbackRating } from "../.
 import { isActiveInternalSeller } from "../../../../lib/sellerAuth";
 import { checkRateLimitLayers } from "../../../../Backend.js/rateLimiter";
 import { checkInboundAbuseGuard, reservePaidActionBudget } from "../../../../Backend.js/imebotAbuseGuard";
-import { getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../Backend.js/requestGuards";
+import {
+  getRequestIp,
+  methodNotAllowed as sharedMethodNotAllowed,
+  noStoreJson,
+  readRawBodyWithLimit,
+} from "../../../../Backend.js/requestGuards";
+import { safeCompare } from "../../../../Backend.js/adminSecurity";
 import { getSalesSiteUrl } from "../../../../lib/siteUrl";
 
 // Webhook do WhatsApp Cloud API (Meta) para o IMEbot - Fase 2, so ativo para leads de unit =
@@ -70,8 +76,12 @@ export async function GET(request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
+  // Comparacao em tempo constante (mesma safeCompare usada por sessao admin, PDF Bridge e cron
+  // do IMEbot) - antes comparava com "!==" simples (ver relatorio FULL-SCOPE/remediacao). E um
+  // handshake de configuracao unica (nao por mensagem), mas mantem o mesmo padrao do resto do
+  // projeto de nunca comparar segredo com operador simples.
   const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN;
-  if (!expectedToken || mode !== "subscribe" || token !== expectedToken || !challenge) {
+  if (!expectedToken || mode !== "subscribe" || !safeCompare(token, expectedToken) || !challenge) {
     return new Response(null, { status: 403 });
   }
 
@@ -84,11 +94,6 @@ export async function GET(request) {
 // --- POST: eventos (mensagens inbound de vendedores e clientes) --------------------------------
 export async function POST(request) {
   if (!isImebotEnabled()) return imebotUnavailable();
-
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > maxBodyBytes) {
-    return noStoreJson({ ok: false }, { status: 413 });
-  }
 
   // Camada leve de volume, NUNCA a autenticacao (isso e a assinatura HMAC abaixo). Numeros
   // generosos: trafego legitimo da Meta pode vir em rajadas de varias contas ao mesmo tempo.
@@ -106,7 +111,13 @@ export async function POST(request) {
 
   // SEMPRE le o corpo cru (texto) antes de qualquer parse - a assinatura e calculada sobre os
   // bytes exatos recebidos, nunca sobre um JSON re-serializado (poderia diferir por espacamento).
-  const rawBody = await request.text();
+  // Limite REAL de bytes contado do stream (nunca so do Content-Length - ver
+  // Backend.js/requestGuards.js#readRawBodyWithLimit e relatorio FULL-SCOPE/remediacao).
+  const bodyResult = await readRawBodyWithLimit(request, maxBodyBytes);
+  if (bodyResult.status === "too_large") {
+    return noStoreJson({ ok: false }, { status: 413 });
+  }
+  const rawBody = bodyResult.raw;
   const signatureCheck = verifyMetaSignature(rawBody, request.headers.get("x-hub-signature-256"));
   if (!signatureCheck.ok) {
     console.warn("[imebot-webhook] assinatura invalida:", signatureCheck.reason);

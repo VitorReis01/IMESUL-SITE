@@ -17,6 +17,7 @@ import {
   hasValidJsonContentType,
   methodNotAllowed as sharedMethodNotAllowed,
   noStoreJson,
+  readJsonBodyWithLimit,
   tooManyRequests,
 } from "../../../../Backend.js/requestGuards";
 
@@ -81,22 +82,15 @@ export async function POST(request) {
   if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds);
 
   try {
-    // 3) Tamanho do corpo, antes de fazer parse.
-    const contentLength = Number(request.headers.get("content-length") || 0);
-    if (contentLength > maxBodyBytes) {
+    // 3) Tamanho REAL do corpo (contado do stream, nunca so do Content-Length - ver
+    // Backend.js/requestGuards.js#readJsonBodyWithLimit) + 4) parse e schema.
+    const bodyResult = await readJsonBodyWithLimit(request, maxBodyBytes);
+    if (bodyResult.status === "too_large" || bodyResult.status === "invalid_json") {
       registerFailedAdminAttempt(ipKey, "");
       return invalidRequest();
     }
 
-    // 4) Parse e schema.
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      registerFailedAdminAttempt(ipKey, "");
-      return invalidRequest();
-    }
-
+    const body = bodyResult.body;
     const credentials = readCredentialsFromBody(body);
     if (!credentials) {
       registerFailedAdminAttempt(ipKey, typeof body?.user === "string" ? body.user : "");

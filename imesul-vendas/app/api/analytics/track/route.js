@@ -8,6 +8,7 @@ import {
   hasValidJsonContentType,
   methodNotAllowed as sharedMethodNotAllowed,
   noStoreJson,
+  readJsonBodyWithLimit,
 } from "../../../../Backend.js/requestGuards";
 
 // Recebe eventos do site sem confiar em IP ou headers enviados pelo frontend.
@@ -156,18 +157,17 @@ export async function POST(request) {
     );
   }
 
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > 12_000) {
+  // Limite REAL de corpo, contado a partir do stream - nunca confia so no Content-Length
+  // (contornavel com Transfer-Encoding: chunked, ver relatorio FULL-SCOPE/remediacao).
+  const bodyResult = await readJsonBodyWithLimit(request, 12_000);
+  if (bodyResult.status === "too_large") {
     return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 413 });
   }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  if (bodyResult.status === "invalid_json") {
     return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
   }
 
+  const payload = bodyResult.body;
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return noStoreJson({ ok: false, error: "Evento inválido." }, { status: 400 });
   }

@@ -2,9 +2,13 @@ import { safeCompare } from "../../../../../Backend.js/adminSecurity";
 import { processDueFeedbackJobs } from "../../../../../Backend.js/feedbackStore";
 import { imebotUnavailable, isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { logger } from "../../../../../Backend.js/logger";
-import { noStoreJson } from "../../../../../Backend.js/requestGuards";
+import {
+  methodNotAllowed as sharedMethodNotAllowed,
+  noStoreJson,
+} from "../../../../../Backend.js/requestGuards";
 
 const unauthorized = () => noStoreJson({ ok: false }, { status: 401 });
+const methodNotAllowed = () => sharedMethodNotAllowed("POST");
 
 // Comparação em tempo constante (mesma safeCompare usada por sessão admin e pelo PDF Bridge) -
 // antes comparava com "===" simples, vulnerável a timing attack (ver CLAUDE.md, "Problemas
@@ -33,4 +37,11 @@ export async function POST(request) {
   }
 }
 
-export const GET = POST;
+// Processamento de jobs muda estado (efeito colateral real) - so deve responder a POST. Antes
+// GET era um alias de POST (ver relatorio FULL-SCOPE/remediacao); nao era explorável via CSRF de
+// navegador (a rota exige Authorization: Bearer, que nenhum navegador anexa automaticamente
+// entre sites), mas violava a semantica HTTP de que GET nunca deveria ter efeito colateral.
+export const GET = methodNotAllowed;
+export const PUT = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;

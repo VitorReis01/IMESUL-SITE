@@ -7,6 +7,7 @@ import {
   hasValidJsonContentType,
   methodNotAllowed as sharedMethodNotAllowed,
   noStoreJson,
+  readJsonBodyWithLimit,
 } from "../../../../Backend.js/requestGuards";
 
 // Sincroniza o carrinho no servidor para métricas de abandono (GERAL, seção "carrinho" do
@@ -53,18 +54,17 @@ export async function POST(request) {
     );
   }
 
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > 20_000) {
+  // Limite REAL de corpo, contado a partir do stream - nunca confia so no Content-Length
+  // (contornavel com Transfer-Encoding: chunked, ver relatorio FULL-SCOPE/remediacao).
+  const bodyResult = await readJsonBodyWithLimit(request, 20_000);
+  if (bodyResult.status === "too_large") {
     return noStoreJson({ ok: false, error: "Carrinho inválido." }, { status: 413 });
   }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  if (bodyResult.status === "invalid_json") {
     return noStoreJson({ ok: false, error: "Carrinho inválido." }, { status: 400 });
   }
 
+  const payload = bodyResult.body;
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return noStoreJson({ ok: false, error: "Carrinho inválido." }, { status: 400 });
   }

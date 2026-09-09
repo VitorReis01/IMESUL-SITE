@@ -116,6 +116,65 @@ export const hasValidJsonContentType = (request) => {
   return contentType.startsWith("application/json");
 };
 
+// Le o corpo cru de uma requisicao aplicando um limite REAL de bytes, contado a partir do
+// ReadableStream - nunca confia so no header Content-Length. Um cliente pode omitir esse header
+// (ou enviar com Transfer-Encoding: chunked) e o corpo real ainda assim ultrapassar o limite
+// pretendido (achado da auditoria FULL-SCOPE: /api/analytics/track aceitava corpos maiores que
+// o anunciado dessa forma). Content-Length, quando presente e ja maior que maxBytes, ainda serve
+// como rejeicao ANTECIPADA (evita abrir o stream a toa) - mas quem garante o limite de verdade e
+// a contagem abaixo, byte a byte, com corte (reader.cancel()) assim que ultrapassa maxBytes, sem
+// nunca acumular mais que isso em memoria.
+//
+// Retorna sempre um objeto com "status" distinguivel - nunca lanca:
+// - { status: "too_large" } - Content-Length adiantou OU o stream ultrapassou maxBytes
+// - { status: "ok", raw } - dentro do limite (raw pode ser string vazia, corpo ausente/vazio)
+export const readRawBodyWithLimit = async (request, maxBytes) => {
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > maxBytes) return { status: "too_large" };
+
+  const reader = request.body?.getReader?.();
+  if (!reader) return { status: "ok", raw: "" };
+
+  const chunks = [];
+  let receivedBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    receivedBytes += value.byteLength;
+    if (receivedBytes > maxBytes) {
+      await reader.cancel().catch(() => {});
+      return { status: "too_large" };
+    }
+
+    chunks.push(value);
+  }
+
+  return { status: "ok", raw: Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString("utf8") };
+};
+
+// Mesma garantia de readRawBodyWithLimit, com o corpo ja parseado como JSON - para rotas que
+// nunca precisam dos bytes crus (ao contrario do webhook do Meta, que precisa do texto exato
+// para validar a assinatura HMAC - ver readRawBodyWithLimit direto em app/api/imebot/webhook).
+//
+// - { status: "too_large" } - mesmo criterio de readRawBodyWithLimit
+// - { status: "invalid_json" } - dentro do limite, mas o conteudo nao e JSON valido (inclui
+//   corpo vazio, que nunca e um JSON valido)
+// - { status: "ok", body } - JSON valido dentro do limite
+export const readJsonBodyWithLimit = async (request, maxBytes) => {
+  const result = await readRawBodyWithLimit(request, maxBytes);
+  if (result.status === "too_large") return { status: "too_large" };
+
+  if (!result.raw) return { status: "invalid_json" };
+
+  try {
+    return { status: "ok", body: JSON.parse(result.raw) };
+  } catch {
+    return { status: "invalid_json" };
+  }
+};
+
 // Correlaciona uma requisicao com seus logs/erros/monitoramento. Usa x-vercel-id (a Vercel ja
 // injeta esse header em toda invocacao de function, identifica o request na infraestrutura
 // dela) quando disponivel; gera um UUID so como fallback (dev local, onde esse header nao

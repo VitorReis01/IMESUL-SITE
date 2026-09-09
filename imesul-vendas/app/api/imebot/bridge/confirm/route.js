@@ -6,6 +6,7 @@ import {
   hasValidJsonContentType,
   methodNotAllowed as sharedMethodNotAllowed,
   noStoreJson,
+  readJsonBodyWithLimit,
 } from "../../../../../Backend.js/requestGuards";
 
 // Confirmação final do Bridge: já baixou, validou magic bytes/tamanho, escaneou com o Microsoft
@@ -33,18 +34,17 @@ export async function POST(request) {
     return noStoreJson({ ok: false, error: "Serviço temporariamente indisponível." }, { status: 503 });
   }
 
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > 4_000) {
+  // Limite REAL de corpo, contado a partir do stream - nunca confia so no Content-Length
+  // (contornavel com Transfer-Encoding: chunked, ver relatorio FULL-SCOPE/remediacao).
+  const bodyResult = await readJsonBodyWithLimit(request, 4_000);
+  if (bodyResult.status === "too_large") {
     return noStoreJson({ ok: false, error: "Solicitação inválida." }, { status: 413 });
   }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  if (bodyResult.status === "invalid_json") {
     return noStoreJson({ ok: false, error: "Solicitação inválida." }, { status: 400 });
   }
 
+  const payload = bodyResult.body;
   const fileId = Number(payload?.fileId);
   if (!Number.isInteger(fileId) || fileId <= 0) {
     return noStoreJson({ ok: false, error: "fileId inválido." }, { status: 400 });

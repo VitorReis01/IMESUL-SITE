@@ -1,5 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
+import { checkSimpleRateLimit, getRequestIp, readJsonBodyWithLimit } from "../../../../lib/apiRequestGuards";
+
+// Token real e sempre curto (payload base64url + "." + assinatura sha256, algumas dezenas de
+// caracteres) - a folga e generosa o bastante para nunca quebrar o fluxo institucional<->vendas,
+// mas fecha o corpo ilimitado que a auditoria FULL-SCOPE encontrou (rota nunca teve limite de
+// tamanho nem rate limit - ver relatorio).
+const maxBodyBytes = 2_000;
 
 const secret = () => process.env.CONSENT_SYNC_SECRET || "";
 
@@ -32,13 +39,23 @@ export async function POST(request) {
     return NextResponse.json({ ok: false }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
+  const rateLimit = checkSimpleRateLimit({ key: `consent-sync-import:${getRequestIp(request)}`, windowMs: 60_000, max: 30 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false },
+      { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
+  const bodyResult = await readJsonBodyWithLimit(request, maxBodyBytes);
+  if (bodyResult.status === "too_large") {
+    return NextResponse.json({ ok: false }, { status: 413, headers: { "Cache-Control": "no-store" } });
+  }
+  if (bodyResult.status === "invalid_json") {
     return NextResponse.json({ ok: false }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
 
+  const body = bodyResult.body;
   const consent = parseToken(body?.token);
   if (!consent) {
     return NextResponse.json({ ok: false }, { status: 400, headers: { "Cache-Control": "no-store" } });
