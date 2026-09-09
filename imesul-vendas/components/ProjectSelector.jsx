@@ -1116,7 +1116,7 @@ export default function ProjectSelector() {
           <div className="mt-8 grid auto-rows-fr grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:mt-14 xl:grid-cols-5">
             {projectShowcaseCards.map((card, index) => {
               const project = projects.find((item) => item.id === card.projectId);
-              const isSelected = card.projectId === recommendedProject?.projectId;
+              const isSelected = card.projectId === selectedProjectId;
               const isHighlighted = card.projectId === highlightedProjectId;
 
               return (
@@ -1127,8 +1127,8 @@ export default function ProjectSelector() {
                   data-testid={`project-${card.projectId}`}
                   style={{ "--reveal-delay": `${index * 70}ms` }}
                   aria-pressed={isSelected}
-                  aria-label={`Ver materiais indicados para ${card.title}`}
-                  onClick={() => showRecommendedMaterials(card)}
+                  aria-label={`Montar orçamento para ${card.title}`}
+                  onClick={() => selectProject(card.projectId)}
                   className={`group relative flex min-h-[300px] cursor-pointer flex-col overflow-hidden rounded-[8px] border bg-[#071321] text-left shadow-[0_20px_62px_rgba(0,0,0,0.2)] transition-all duration-300 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-imesul-red focus-visible:ring-offset-2 focus-visible:ring-offset-imesul-blue sm:min-h-[360px] ${
                     isSelected
                       ? "border-[#f0c776]/80 shadow-[0_22px_66px_rgba(240,199,118,0.12)]"
@@ -1158,7 +1158,7 @@ export default function ProjectSelector() {
                       {card.description}
                     </span>
                     <span className="mt-auto flex items-center gap-2 pt-6 font-condensed text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                      VER MATERIAIS INDICADOS
+                      MONTAR ORÇAMENTO
                       <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
                     </span>
                   </span>
@@ -1168,7 +1168,7 @@ export default function ProjectSelector() {
           </div>
 
           {selectedProject && (
-            <div className="mt-10">
+            <div id="project-quote-flow" className="mt-10 scroll-mt-20">
               <ProjectQuoteFlow
                 key={selectedProject.id}
                 project={selectedProject}
