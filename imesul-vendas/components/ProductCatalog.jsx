@@ -55,6 +55,15 @@ const materialShowcaseCards = [
     title: "KIT PARA PORTÃO",
     image: "/catalog-products/atualizadas/catalogo-kit-para-portao.webp",
   },
+  {
+    categoryId: "tintas-solventes-consumiveis",
+    title: "Tintas e Consumíveis",
+    // Reaproveita a mesma imagem ja usada por dois dos tres produtos desta categoria e pelo
+    // proprio catalogCategories.js - nao existe "categoria-tintas-e-consumiveis.webp" dedicada em
+    // images/vendas/materiais/ (padrao usado pelas outras 9 categorias), e criar um asset novo
+    // esta fora do escopo deste fix.
+    image: "/catalog-products/tintas-solventes.webp",
+  },
 ];
 
 // Mostra categorias e, depois da escolha, somente os produtos ligados a ela.
