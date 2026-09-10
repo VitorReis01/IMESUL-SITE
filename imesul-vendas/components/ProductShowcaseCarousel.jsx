@@ -21,22 +21,6 @@ const carouselFallbackTargets = {
   acessorios: { categoryId: "acessorios-serralheria", productId: null },
 };
 
-// Produtos que continuam no catalogo normalmente, mas nao devem aparecer nesta vitrine.
-// "consumiveis-acabamento" (Consumíveis para Acabamento e Proteção) foi removido da categoria
-// Tintas - era eletrodo/consumivel de solda classificado por engano ali; o produto correto
-// (Eletrodo) ja existe em Acessórios. "primers" virou "tinta-primer-primertex" (produto real com
-// 2 variacoes de cor/acabamento) - continua excluido da vitrine, mesmo comportamento de antes.
-// "tinta-oxido-metalico-zarcotex" e "tinta-primer-zarcotex"/"tinta-primer-zincotex" (marcas/linhas
-// diferentes da Primertex) seguem o mesmo criterio de categoria: nenhum produto de Tintas aparece
-// nesta vitrine hoje. "galvanizantes-frio" foi removido do catalogo (produto descontinuado nesta
-// categoria) e nao existe mais - nao precisa mais constar aqui.
-const carouselExcludedProductIds = new Set([
-  "tinta-primer-primertex",
-  "tinta-oxido-metalico-zarcotex",
-  "tinta-primer-zarcotex",
-  "tinta-primer-zincotex",
-]);
-
 const normalizeSlug = (value) =>
   String(value)
     .normalize("NFD")
@@ -93,7 +77,6 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
   const products = useMemo(
     () =>
       catalogProducts
-        .filter((product) => !carouselExcludedProductIds.has(product.id))
         .map((product) => {
           const category = catalogCategories.find((categoryItem) => categoryItem.id === product.categoryId);
           const item = {

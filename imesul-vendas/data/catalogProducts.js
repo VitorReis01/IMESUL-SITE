@@ -55,7 +55,7 @@ export const catalogProducts = [
     name: "Tubo Redondo",
     description: "Usado em corrimãos, estruturas, suportes e peças de uso industrial.",
     usage: ["Corrimãos", "Estruturas", "Indústria"],
-    image: "/catalog-products/tubo-redondo.webp",
+    image: "/catalog-products/atualizadas/tubo-redondo.png",
     specifications: catalogSpecifications.tubosMetalicos.redondo,
   }),
 
