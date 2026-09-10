@@ -1110,6 +1110,37 @@ export const catalogProducts = [
     specifications: catalogSpecifications.acessorios,
   }),
 
+  // Selante PU40 MS Selantes, 400 g - selante e adesivo elastico de uso geral. Embrulhado numa unica
+  // variante (mesmo padrao das tintas de conteudo unico - Tinta Primer Zarcotex/Zincotex) para que o
+  // conteudo (400 g) preencha "Medida" automaticamente e nao se perca no resumo/carrinho/WhatsApp
+  // (ver PRODUCTS_WITH_FIXED_MEASURE em QuoteBuilder.jsx). Badges (usage) ficam so com classificacao
+  // segura (Vedação/Acabamento/conteudo) - os termos de superficie que a embalagem menciona
+  // (construção/vidro/metal/plástico) vao so para busca guiada (productSearchAliases), nunca como
+  // badge visivel na pagina do produto, para nao parecerem uma promessa tecnica adicional nao
+  // confirmada. Sem cor/rendimento/tempo de cura/resistencia inventados - specifications continua
+  // incompleta de proposito.
+  product({
+    id: "selante-pu40-ms-selantes",
+    categoryId: "acessorios-serralheria",
+    name: "Selante PU40 MS Selantes",
+    description: "Selante e adesivo elástico MS Selantes, linha PU40, para uso geral, embalagem de 400 g.",
+    usage: ["Vedação", "Acabamento", "400 g"],
+    image: "/catalog-products/atualizadas/selante-pu40-ms-selantes-400g.png",
+    specifications: catalogSpecifications.acessorios,
+    variants: [
+      {
+        id: "selante-pu40-ms-selantes-400g",
+        slug: "selante-pu40-ms-selantes-400g",
+        name: "Selante PU40 MS Selantes",
+        measure: "400 g",
+        group: "Selante PU40 MS Selantes",
+        description: "Selante e adesivo elástico MS Selantes, linha PU40, para uso geral, embalagem de 400 g.",
+        usage: ["Vedação", "Acabamento", "400 g"],
+        image: "/catalog-products/atualizadas/selante-pu40-ms-selantes-400g.png",
+      },
+    ],
+  }),
+
   // Tinta Primer Primertex / Solventex, 18 L - duas variacoes reais de cor/acabamento
   // confirmadas (Cinza Escuro Fosco e Cinza Claro Acetinado). Sem tabela tecnica de rendimento/
   // diluicao (specifications continua incompleta de proposito - nunca inventar dado nao

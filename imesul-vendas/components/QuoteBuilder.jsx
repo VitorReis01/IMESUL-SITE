@@ -523,15 +523,21 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
 }
 
 // Monta o fluxo direto e valida combinacoes tecnicas antes de abrir o WhatsApp.
-// Produtos de tinta cuja variante (cor/acabamento) ja fixa o conteudo real (litragem) - o form
-// inicial pre-preenche "Medida" com esse valor para nao perder a informacao no resumo/WhatsApp/
-// carrinho (nenhum desses produtos tem specifications.variacoes, entao ProductOptionSelector nunca
-// mexe em form.measure - ver ProductOptionSelector.jsx, so auto-seleciona quando ha exatamente 1
-// opcao estruturada). Escopado só a estes produtos de proposito - nenhum outro produto deste
-// catalogo tem um campo "measure" fixo no nivel do produto/variante que devesse virar o valor
-// inicial do formulario (para produtos com variants como Eletrodo/Roldanas, measure e so um rotulo
-// do card de selecao, nunca um dado a herdar no formulario).
-const PRODUCTS_WITH_FIXED_MEASURE = new Set(["tinta-primer-primertex", "tinta-oxido-metalico-zarcotex", "tinta-primer-zarcotex", "tinta-primer-zincotex"]);
+// Produtos cuja variante ja fixa o conteudo real (litragem/peso) - o form inicial pre-preenche
+// "Medida" com esse valor para nao perder a informacao no resumo/WhatsApp/carrinho (nenhum desses
+// produtos tem specifications.variacoes, entao ProductOptionSelector nunca mexe em form.measure -
+// ver ProductOptionSelector.jsx, so auto-seleciona quando ha exatamente 1 opcao estruturada).
+// Escopado só a estes produtos de proposito - nenhum outro produto deste catalogo tem um campo
+// "measure" fixo no nivel do produto/variante que devesse virar o valor inicial do formulario (para
+// produtos com variants como Eletrodo/Roldanas, measure e so um rotulo do card de selecao, nunca um
+// dado a herdar no formulario).
+const PRODUCTS_WITH_FIXED_MEASURE = new Set([
+  "tinta-primer-primertex",
+  "tinta-oxido-metalico-zarcotex",
+  "tinta-primer-zarcotex",
+  "tinta-primer-zincotex",
+  "selante-pu40-ms-selantes",
+]);
 
 export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImageChange }) {
   const [form, setForm] = useState(() =>

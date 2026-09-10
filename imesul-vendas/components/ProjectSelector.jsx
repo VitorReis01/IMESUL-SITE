@@ -68,7 +68,7 @@ const searchAliases = {
   chapas: ["chapa", "chapas", "piso", "corte", "dobra", "fechamento", "metal", "aço"],
   "perfis-estruturais": ["perfil", "perfis", "perfil u", "cantoneira", "cantoneiras", "estrutura", "galpão", "cobertura", "ferro", "aço"],
   "perfis-serralheria": ["kit", "kits", "kit para portão", "portão", "portões", "cabo de aço", "roldana", "roldanas", "barra chata", "braço", "montagem", "caixa"],
-  "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria"],
+  "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria", "selante", "adesivo", "vedação", "pu40", "pu 40"],
   "thinner-fixadores": ["thinner", "thinsol", "solvente", "solventes", "solventex", "multiuso", "900ml", "900 ml", "5l", "5 l", "18l", "18 l", "diluição", "limpeza", "pintura", "preparação"],
   "tintas-solventes-consumiveis": ["tinta", "tintas", "primer", "primers", "óxido", "oxido", "metálico", "metalico", "zarcotex", "zincotex", "solventex", "pintura", "cinza", "preto", "vermelho", "laranja", "verde", "fosco", "acetinado", "18 litros", "3,6", "3.6", "3,6 litros", "acabamento", "proteção"],
 };
@@ -108,6 +108,7 @@ const productSearchAliases = {
   "thinner-thinsol": ["thinner", "thinsol", "solvente", "solventes", "5l", "5 l", "limpeza", "diluição"],
   "thinner-solventex": ["thinner", "solventex", "solvente", "solventes", "900ml", "900 ml", "limpeza", "diluição"],
   "thinner-thinsol-multiuso": ["thinner", "thinsol", "multiuso", "solvente", "solventes", "18l", "18 l", "limpeza", "diluição"],
+  "selante-pu40-ms-selantes": ["pu40", "pu 40", "selante", "adesivo", "adesivo elástico", "ms selantes", "vedação", "metal", "vidro", "plástico", "400g", "400 g"],
 };
 
 const relatedSearchTerms = {
