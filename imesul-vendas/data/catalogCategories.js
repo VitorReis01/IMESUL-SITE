@@ -79,7 +79,7 @@ export const catalogCategories = [
   {
     id: "tintas-solventes-consumiveis",
     name: "Tintas",
-    description: "Tintas, primers e galvanizantes para preparação, acabamento e proteção de peças metálicas.",
+    description: "Tintas e primers para preparação, acabamento e proteção de peças metálicas.",
     image: "/catalog-products/tintas-solventes.webp",
     icon: FlaskConical,
   },
