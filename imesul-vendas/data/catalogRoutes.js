@@ -11,6 +11,7 @@ export const catalogCategorySlugs = {
   "acessorios-serralheria": "acessorios",
   "thinner-fixadores": "thinner-e-solventes",
   "perfis-serralheria": "serralheria-e-acabamentos",
+  "tintas-solventes-consumiveis": "tintas-e-consumiveis",
 };
 
 export const legacyCatalogCategoryRedirects = {
