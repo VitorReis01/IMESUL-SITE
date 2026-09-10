@@ -48,7 +48,7 @@ const materialShowcaseCards = [
   {
     categoryId: "thinner-fixadores",
     title: "Solventes",
-    image: "/images/vendas/materiais/categoria-thinner-solventes-premium.webp",
+    image: "/images/vendas/materiais/categoria-solventes.png",
   },
   {
     categoryId: "perfis-serralheria",
@@ -58,10 +58,7 @@ const materialShowcaseCards = [
   {
     categoryId: "tintas-solventes-consumiveis",
     title: "Tintas",
-    // Reaproveita a mesma imagem ja usada pelo proprio catalogCategories.js - nao existe
-    // "categoria-tintas.webp" dedicada em images/vendas/materiais/ (padrao usado pelas outras
-    // categorias), e criar um asset novo esta fora do escopo deste fix.
-    image: "/catalog-products/tintas-solventes.webp",
+    image: "/images/vendas/materiais/categoria-tintas.png",
   },
 ];
 
