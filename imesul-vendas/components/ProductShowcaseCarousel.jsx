@@ -26,7 +26,13 @@ const carouselFallbackTargets = {
 // Tintas - era eletrodo/consumivel de solda classificado por engano ali; o produto correto
 // (Eletrodo) ja existe em Acessórios. "primers" virou "tinta-primer-primertex" (produto real com
 // 2 variacoes de cor/acabamento) - continua excluido da vitrine, mesmo comportamento de antes.
-const carouselExcludedProductIds = new Set(["tinta-primer-primertex", "galvanizantes-frio"]);
+// "tinta-oxido-metalico-zarcotex" segue o mesmo padrao (2 variacoes de cor, sem imagem unica
+// canonica que represente o produto pai na vitrine).
+const carouselExcludedProductIds = new Set([
+  "tinta-primer-primertex",
+  "tinta-oxido-metalico-zarcotex",
+  "galvanizantes-frio",
+]);
 
 const normalizeSlug = (value) =>
   String(value)

@@ -1161,6 +1161,45 @@ export const catalogProducts = [
     ],
   }),
 
+  // Tinta Óxido Metálico Zarcotex / Solventex, 18 L - duas variacoes reais de cor confirmadas
+  // (Preto Fosco e Vermelho Fosco). Mesmo padrao da Tinta Primer Primertex: sem tabela tecnica de
+  // rendimento/diluicao/composicao/aplicacao/secagem (specifications continua incompleta de
+  // proposito - nunca inventar dado nao confirmado).
+  product({
+    id: "tinta-oxido-metalico-zarcotex",
+    categoryId: "tintas-solventes-consumiveis",
+    name: "Tinta Óxido Metálico Zarcotex",
+    description:
+      "Tinta óxido metálico Zarcotex / Solventex, embalagem de 18 litros, disponível nas cores Preto Fosco e Vermelho Fosco.",
+    usage: ["Preparação", "Proteção", "Acabamento"],
+    image: "/catalog-products/atualizadas/tinta-oxido-metalico-preto-fosco-18l.png",
+    specifications: catalogSpecifications.tintasSolventes,
+    variants: [
+      {
+        id: "tinta-oxido-metalico-preto-fosco",
+        slug: "tinta-oxido-metalico-preto-fosco",
+        name: "Tinta Óxido Metálico Preto Fosco",
+        measure: "18 Litros",
+        finish: "Fosco",
+        group: "Tinta Óxido Metálico Zarcotex",
+        description: "Tinta óxido metálico Zarcotex / Solventex Preto Fosco, embalagem de 18 litros.",
+        usage: ["Preto", "Fosco", "18 Litros"],
+        image: "/catalog-products/atualizadas/tinta-oxido-metalico-preto-fosco-18l.png",
+      },
+      {
+        id: "tinta-oxido-metalico-vermelho-fosco",
+        slug: "tinta-oxido-metalico-vermelho-fosco",
+        name: "Tinta Óxido Metálico Vermelho Fosco",
+        measure: "18 Litros",
+        finish: "Fosco",
+        group: "Tinta Óxido Metálico Zarcotex",
+        description: "Tinta óxido metálico Zarcotex / Solventex Vermelho Fosco, embalagem de 18 litros.",
+        usage: ["Vermelho", "Fosco", "18 Litros"],
+        image: "/catalog-products/atualizadas/tinta-oxido-metalico-vermelho-fosco-18l.png",
+      },
+    ],
+  }),
+
   ...[
     ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/atualizadas/solventes.webp", catalogSpecifications.tintasSolventes],
     ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/atualizadas/thinner.webp", catalogSpecifications.tintasSolventes],
