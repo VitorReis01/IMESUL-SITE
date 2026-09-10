@@ -71,8 +71,8 @@ export const catalogCategories = [
   },
   {
     id: "thinner-fixadores",
-    name: "Thinner e Solventes",
-    description: "Thinner, solventes e itens de apoio para acabamento.",
+    name: "Solventes",
+    description: "Thinners para diluição e limpeza em processos de pintura e serralheria.",
     image: "/catalog-products/tintas-solventes.webp",
     icon: FlaskConical,
   },

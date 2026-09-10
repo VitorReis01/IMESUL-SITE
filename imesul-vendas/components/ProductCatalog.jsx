@@ -47,7 +47,7 @@ const materialShowcaseCards = [
   },
   {
     categoryId: "thinner-fixadores",
-    title: "Thinner e Solventes",
+    title: "Solventes",
     image: "/images/vendas/materiais/categoria-thinner-solventes-premium.webp",
   },
   {

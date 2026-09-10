@@ -1264,20 +1264,40 @@ export const catalogProducts = [
     ],
   }),
 
-  ...[
-    ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/atualizadas/solventes.webp", catalogSpecifications.tintasSolventes],
-    ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/atualizadas/thinner.webp", catalogSpecifications.tintasSolventes],
-  ].map(([id, name, description, image, specifications]) =>
-    product({
-      id,
-      categoryId: "thinner-fixadores",
-      name,
-      description,
-      usage: ["Diluição", "Limpeza", "Preparação"],
-      image,
-      specifications,
-    })
-  ),
+  // Categoria "Solventes" (ex-"Thinner e Solventes") - os 2 produtos genericos antigos ("solventes"
+  // e "thinner") foram substituidos pelos 3 produtos reais confirmados abaixo. Produtos flat (sem
+  // variants) - cada um tem um unico conteudo/embalagem confirmado, sem cor/acabamento para
+  // diferenciar, entao nao ha por que abrir uma pagina extra de selecao de modelo. Conteudo mostrado
+  // via badge (usage) na propria pagina do produto. Sem tabela tecnica de composicao/rendimento/
+  // finalidade especifica/diluicao (specifications continua incompleta de proposito - nunca inventar
+  // dado nao confirmado alem do que aparece nas imagens).
+  product({
+    id: "thinner-thinsol",
+    categoryId: "thinner-fixadores",
+    name: "Thinner Thinsol",
+    description: "Thinner Thinsol, embalagem de 5 litros.",
+    usage: ["Diluição", "Limpeza", "5 Litros"],
+    image: "/catalog-products/atualizadas/thinner-thinsol-5l.png",
+    specifications: catalogSpecifications.tintasSolventes,
+  }),
+  product({
+    id: "thinner-solventex",
+    categoryId: "thinner-fixadores",
+    name: "Thinner Solventex",
+    description: "Thinner Solventex, embalagem de 900 ml.",
+    usage: ["Diluição", "Limpeza", "900 ml"],
+    image: "/catalog-products/atualizadas/thinner-solventex-900ml.png",
+    specifications: catalogSpecifications.tintasSolventes,
+  }),
+  product({
+    id: "thinner-thinsol-multiuso",
+    categoryId: "thinner-fixadores",
+    name: "Thinner Thinsol Multiuso",
+    description: "Thinner Thinsol Multiuso, embalagem de 18 litros.",
+    usage: ["Diluição", "Limpeza", "18 Litros"],
+    image: "/catalog-products/atualizadas/thinner-thinsol-multiuso-18l.png",
+    specifications: catalogSpecifications.tintasSolventes,
+  }),
 ];
 
 // Filtra os cards exibidos depois que o cliente escolhe uma categoria.

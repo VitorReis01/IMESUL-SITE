@@ -9,7 +9,7 @@ export const catalogCategorySlugs = {
   "telhas-metalicas": "telhas-metalicas",
   laminados: "barras",
   "acessorios-serralheria": "acessorios",
-  "thinner-fixadores": "thinner-e-solventes",
+  "thinner-fixadores": "solventes",
   "perfis-serralheria": "serralheria-e-acabamentos",
   "tintas-solventes-consumiveis": "tintas",
 };
@@ -19,6 +19,10 @@ export const legacyCatalogCategoryRedirects = {
   // Categoria renomeada de "Tintas e Consumíveis" para "Tintas" (o produto de consumíveis/
   // eletrodo de solda que justificava o nome antigo foi removido desta categoria).
   "tintas-e-consumiveis": "tintas",
+  // Categoria renomeada de "Thinner e Solventes" para "Solventes" (os 2 produtos genericos antigos
+  // - "solventes" e "thinner" - foram substituidos pelos 3 produtos reais confirmados: Thinner
+  // Thinsol 5L, Thinner Solventex 900ml e Thinner Thinsol Multiuso 18L).
+  "thinner-e-solventes": "solventes",
 };
 
 // Produtos que migraram de categoria mantem a rota antiga funcionando via redirect.

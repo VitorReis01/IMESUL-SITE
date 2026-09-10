@@ -69,7 +69,7 @@ const searchAliases = {
   "perfis-estruturais": ["perfil", "perfis", "perfil u", "cantoneira", "cantoneiras", "estrutura", "galpão", "cobertura", "ferro", "aço"],
   "perfis-serralheria": ["kit", "kits", "kit para portão", "portão", "portões", "cabo de aço", "roldana", "roldanas", "barra chata", "braço", "montagem", "caixa"],
   "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria"],
-  "thinner-fixadores": ["thinner", "solvente", "solventes", "diluição", "limpeza", "pintura", "acabamento", "preparação"],
+  "thinner-fixadores": ["thinner", "thinsol", "solvente", "solventes", "solventex", "multiuso", "900ml", "900 ml", "5l", "5 l", "18l", "18 l", "diluição", "limpeza", "pintura", "preparação"],
   "tintas-solventes-consumiveis": ["tinta", "tintas", "primer", "primers", "óxido", "oxido", "metálico", "metalico", "zarcotex", "zincotex", "solventex", "pintura", "cinza", "preto", "vermelho", "laranja", "verde", "fosco", "acetinado", "18 litros", "3,6", "3.6", "3,6 litros", "acabamento", "proteção"],
 };
 
@@ -105,8 +105,9 @@ const productSearchAliases = {
   guias: ["guia", "guias", "trilho", "trilhos", "portão"],
   parafusos: ["parafuso", "parafusos", "fixador", "fixadores", "montagem"],
   fechaduras: ["fechadura", "fechaduras", "portão", "porta", "segurança"],
-  solventes: ["solvente", "solventes", "thinner", "limpeza", "diluição"],
-  thinner: ["thinner", "solvente", "solventes", "limpeza", "diluição", "pintura"],
+  "thinner-thinsol": ["thinner", "thinsol", "solvente", "solventes", "5l", "5 l", "limpeza", "diluição"],
+  "thinner-solventex": ["thinner", "solventex", "solvente", "solventes", "900ml", "900 ml", "limpeza", "diluição"],
+  "thinner-thinsol-multiuso": ["thinner", "thinsol", "multiuso", "solvente", "solventes", "18l", "18 l", "limpeza", "diluição"],
 };
 
 const relatedSearchTerms = {
