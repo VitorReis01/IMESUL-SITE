@@ -1152,7 +1152,7 @@ export const catalogProducts = [
     categoryId: "tintas-solventes-consumiveis",
     name: "Tinta Primer Primertex",
     description:
-      "Tinta primer Primertex / Solventex, embalagem de 18 litros, disponível nos acabamentos Cinza Escuro Fosco e Cinza Claro Acetinado.",
+      "Tinta primer Primertex / Solventex, disponível em Cinza Escuro Fosco (18 litros e 3,6 litros) e Cinza Claro Acetinado (18 litros).",
     usage: ["Preparação", "Proteção", "Acabamento"],
     image: "/catalog-products/atualizadas/tinta-primer-cinza-escuro-fosco.png",
     specifications: catalogSpecifications.tintasSolventes,
@@ -1167,6 +1167,21 @@ export const catalogProducts = [
         description: "Tinta primer Primertex / Solventex Cinza Escuro Fosco, embalagem de 18 litros.",
         usage: ["Cinza Escuro", "Fosco", "18 Litros"],
         image: "/catalog-products/atualizadas/tinta-primer-cinza-escuro-fosco.png",
+      },
+      // Mesma cor/acabamento da variacao acima, mas embalagem menor (3,6 L) - id/slug/name distintos
+      // de proposito para nunca ser confundida com a variacao de 18 L (mesmo padrao da Tinta Óxido
+      // Metálico Vermelho Fosco 3,6L: nome inclui a litragem para ficar visivel no seletor de modelo
+      // mesmo antes de ler o subtitulo "Medida").
+      {
+        id: "tinta-primer-cinza-escuro-fosco-3-6l",
+        slug: "tinta-primer-cinza-escuro-fosco-3-6l",
+        name: "Tinta Primer Cinza Escuro Fosco 3,6L",
+        measure: "3,6 Litros",
+        finish: "Fosco",
+        group: "Tinta Primer Primertex",
+        description: "Tinta primer Primertex / Solventex Cinza Escuro Fosco, embalagem de 3,6 litros.",
+        usage: ["Cinza Escuro", "Fosco", "3,6 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-cinza-escuro-fosco-3-6l.png",
       },
       {
         id: "tinta-primer-cinza-claro-acetinado",
@@ -1247,7 +1262,7 @@ export const catalogProducts = [
     categoryId: "tintas-solventes-consumiveis",
     name: "Tinta Primer Zarcotex",
     description:
-      "Tinta primer Zarcotex / Solventex, embalagem de 18 litros, disponível no acabamento Laranja Fosco.",
+      "Tinta primer Zarcotex / Solventex, disponível no acabamento Laranja Fosco (18 litros e 3,6 litros).",
     usage: ["Preparação", "Proteção", "Acabamento"],
     image: "/catalog-products/atualizadas/tinta-primer-laranja-fosco-18l.png",
     specifications: catalogSpecifications.tintasSolventes,
@@ -1263,6 +1278,19 @@ export const catalogProducts = [
         usage: ["Laranja", "Fosco", "18 Litros"],
         image: "/catalog-products/atualizadas/tinta-primer-laranja-fosco-18l.png",
       },
+      // Mesma cor/acabamento da variacao acima, mas embalagem menor (3,6 L) - id/slug/name distintos
+      // de proposito para nunca ser confundida com a variacao de 18 L.
+      {
+        id: "tinta-primer-laranja-fosco-3-6l",
+        slug: "tinta-primer-laranja-fosco-3-6l",
+        name: "Tinta Primer Laranja Fosco 3,6L",
+        measure: "3,6 Litros",
+        finish: "Fosco",
+        group: "Tinta Primer Zarcotex",
+        description: "Tinta primer Zarcotex / Solventex Laranja Fosco, embalagem de 3,6 litros.",
+        usage: ["Laranja", "Fosco", "3,6 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-laranja-fosco-3-6l.png",
+      },
     ],
   }),
 
@@ -1276,7 +1304,7 @@ export const catalogProducts = [
     categoryId: "tintas-solventes-consumiveis",
     name: "Tinta Primer Zincotex",
     description:
-      "Tinta primer Zincotex / Solventex, embalagem de 18 litros, disponível no acabamento Verde Fosco.",
+      "Tinta primer Zincotex / Solventex, disponível no acabamento Verde Fosco (18 litros e 3,6 litros).",
     usage: ["Preparação", "Proteção", "Acabamento"],
     image: "/catalog-products/atualizadas/tinta-primer-verde-fosco-18l.png",
     specifications: catalogSpecifications.tintasSolventes,
@@ -1291,6 +1319,19 @@ export const catalogProducts = [
         description: "Tinta primer Zincotex / Solventex Verde Fosco, embalagem de 18 litros.",
         usage: ["Verde", "Fosco", "18 Litros"],
         image: "/catalog-products/atualizadas/tinta-primer-verde-fosco-18l.png",
+      },
+      // Mesma cor/acabamento da variacao acima, mas embalagem menor (3,6 L) - id/slug/name distintos
+      // de proposito para nunca ser confundida com a variacao de 18 L.
+      {
+        id: "tinta-primer-verde-fosco-3-6l",
+        slug: "tinta-primer-verde-fosco-3-6l",
+        name: "Tinta Primer Verde Fosco 3,6L",
+        measure: "3,6 Litros",
+        finish: "Fosco",
+        group: "Tinta Primer Zincotex",
+        description: "Tinta primer Zincotex / Solventex Verde Fosco, embalagem de 3,6 litros.",
+        usage: ["Verde", "Fosco", "3,6 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-verde-fosco-3-6l.png",
       },
     ],
   }),
