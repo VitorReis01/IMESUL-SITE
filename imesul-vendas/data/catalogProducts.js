@@ -1110,21 +1110,56 @@ export const catalogProducts = [
     specifications: catalogSpecifications.acessorios,
   }),
 
-  ...[
-    ["primers", "Primers", "Preparação de superfícies metálicas antes do acabamento.", "/catalog-products/tintas-solventes.webp"],
-    ["galvanizantes-frio", "Galvanizantes a Frio", "Proteção de áreas metálicas e pontos de manutenção.", "/catalog-products/tintas-solventes.webp"],
-    ["consumiveis-acabamento", "Consumíveis para Acabamento e Proteção", "Itens de apoio para acabamento e proteção de estruturas metálicas.", "/catalog-products/atualizadas/consumiveis.webp"],
-  ].map(([id, name, description, image]) =>
-    product({
-      id,
-      categoryId: "tintas-solventes-consumiveis",
-      name,
-      description,
-      usage: ["Preparação", "Proteção", "Acabamento"],
-      image,
-      specifications: catalogSpecifications.tintasSolventes,
-    })
-  ),
+  product({
+    id: "galvanizantes-frio",
+    categoryId: "tintas-solventes-consumiveis",
+    name: "Galvanizantes a Frio",
+    description: "Proteção de áreas metálicas e pontos de manutenção.",
+    usage: ["Preparação", "Proteção", "Acabamento"],
+    image: "/catalog-products/tintas-solventes.webp",
+    specifications: catalogSpecifications.tintasSolventes,
+  }),
+
+  // Tinta Primer Primertex / Solventex, 18 L - duas variacoes reais de cor/acabamento
+  // confirmadas (Cinza Escuro Fosco e Cinza Claro Acetinado). Sem tabela tecnica de rendimento/
+  // diluicao (specifications continua incompleta de proposito - nunca inventar dado nao
+  // confirmado). "Consumíveis para Acabamento e Proteção" foi removido desta categoria - era
+  // eletrodo/consumivel de solda classificado por engano aqui; o produto correto (Eletrodo) ja
+  // existe em Acessórios e não foi duplicado.
+  product({
+    id: "tinta-primer-primertex",
+    categoryId: "tintas-solventes-consumiveis",
+    name: "Tinta Primer Primertex",
+    description:
+      "Tinta primer Primertex / Solventex, embalagem de 18 litros, disponível nos acabamentos Cinza Escuro Fosco e Cinza Claro Acetinado.",
+    usage: ["Preparação", "Proteção", "Acabamento"],
+    image: "/catalog-products/atualizadas/tinta-primer-cinza-escuro-fosco.png",
+    specifications: catalogSpecifications.tintasSolventes,
+    variants: [
+      {
+        id: "tinta-primer-cinza-escuro-fosco",
+        slug: "tinta-primer-cinza-escuro-fosco",
+        name: "Tinta Primer Cinza Escuro Fosco",
+        measure: "18 Litros",
+        finish: "Fosco",
+        group: "Tinta Primer Primertex",
+        description: "Tinta primer Primertex / Solventex Cinza Escuro Fosco, embalagem de 18 litros.",
+        usage: ["Cinza Escuro", "Fosco", "18 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-cinza-escuro-fosco.png",
+      },
+      {
+        id: "tinta-primer-cinza-claro-acetinado",
+        slug: "tinta-primer-cinza-claro-acetinado",
+        name: "Tinta Primer Cinza Claro Acetinado",
+        measure: "18 Litros",
+        finish: "Acetinado",
+        group: "Tinta Primer Primertex",
+        description: "Tinta primer Primertex / Solventex Cinza Claro Acetinado, embalagem de 18 litros.",
+        usage: ["Cinza Claro", "Acetinado", "18 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-cinza-claro-acetinado.png",
+      },
+    ],
+  }),
 
   ...[
     ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/atualizadas/solventes.webp", catalogSpecifications.tintasSolventes],

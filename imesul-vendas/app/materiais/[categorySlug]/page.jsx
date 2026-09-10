@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import MaterialCategoryPage from "../../../components/MaterialCategoryPage";
 import SalesFooter from "../../../components/SalesFooter";
 import {
@@ -33,7 +33,10 @@ export async function generateMetadata({ params }) {
 export default async function MaterialRoutePage({ params }) {
   const { categorySlug } = await params;
   const legacyRedirectPath = getLegacyCategoryRedirectPath(categorySlug);
-  if (legacyRedirectPath) redirect(legacyRedirectPath);
+  // Rota antiga de categoria renomeada nunca deve virar 404 - permanentRedirect (308) em vez de
+  // redirect (307), porque a URL antiga nunca vai voltar a existir (ver
+  // data/catalogRoutes.js#legacyCatalogCategoryRedirects).
+  if (legacyRedirectPath) permanentRedirect(legacyRedirectPath);
 
   const category = getCatalogCategoryBySlug(categorySlug);
 

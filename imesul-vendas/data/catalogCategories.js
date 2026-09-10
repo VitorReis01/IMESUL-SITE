@@ -78,8 +78,8 @@ export const catalogCategories = [
   },
   {
     id: "tintas-solventes-consumiveis",
-    name: "Tintas e Consumíveis",
-    description: "Tintas, primers, galvanizantes e consumíveis para proteção das peças.",
+    name: "Tintas",
+    description: "Tintas, primers e galvanizantes para preparação, acabamento e proteção de peças metálicas.",
     image: "/catalog-products/tintas-solventes.webp",
     icon: FlaskConical,
   },

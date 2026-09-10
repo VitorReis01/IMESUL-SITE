@@ -70,7 +70,7 @@ const searchAliases = {
   "perfis-serralheria": ["kit", "kits", "kit para portão", "portão", "portões", "cabo de aço", "roldana", "roldanas", "barra chata", "braço", "montagem", "caixa"],
   "acessorios-serralheria": ["acessorio", "acessório", "acessorios", "acessórios", "fixador", "fixadores", "parafuso", "parafusos", "roldana", "roldanas", "trilho", "trilhos", "guia", "guias", "fechadura", "fechaduras", "fecho", "fechos", "dobradiça", "dobradiças", "portão", "serralheria"],
   "thinner-fixadores": ["thinner", "solvente", "solventes", "diluição", "limpeza", "pintura", "acabamento", "preparação"],
-  "tintas-solventes-consumiveis": ["tinta", "tintas", "primer", "primers", "galvanizante", "galvanizantes", "consumível", "consumíveis", "disco", "discos", "corte", "solda", "eletrodo", "eletrodos", "acabamento", "proteção"],
+  "tintas-solventes-consumiveis": ["tinta", "tintas", "primer", "primers", "galvanizante", "galvanizantes", "pintura", "cinza", "fosco", "acetinado", "acabamento", "proteção"],
 };
 
 const productSearchAliases = {

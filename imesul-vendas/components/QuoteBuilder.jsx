@@ -524,7 +524,19 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
 
 // Monta o fluxo direto e valida combinacoes tecnicas antes de abrir o WhatsApp.
 export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImageChange }) {
-  const [form, setForm] = useState(materialInitialForm);
+  // Tinta Primer Primertex: cada variante (cor/acabamento) ja fixa o conteudo real (18 Litros) -
+  // pre-preenche "Medida" com esse valor para nao perder a informacao no resumo/WhatsApp/carrinho
+  // (o produto nao tem specifications.variacoes, entao ProductOptionSelector nunca mexe em
+  // form.measure - ver ProductOptionSelector.jsx, so auto-seleciona quando ha exatamente 1 opcao
+  // estruturada). Escopado só a este produto de proposito - nenhum outro produto deste catalogo
+  // tem um campo "measure" fixo no nivel do produto/variante que devesse virar o valor inicial do
+  // formulario (para produtos com variants como Eletrodo/Roldanas, measure e so um rotulo do
+  // card de selecao, nunca um dado a herdar no formulario).
+  const [form, setForm] = useState(() =>
+    product.id === "tinta-primer-primertex"
+      ? { ...materialInitialForm, measure: product.measure || "" }
+      : materialInitialForm
+  );
   const [customQuantity, setCustomQuantity] = useState("");
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);

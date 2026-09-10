@@ -57,11 +57,10 @@ const materialShowcaseCards = [
   },
   {
     categoryId: "tintas-solventes-consumiveis",
-    title: "Tintas e Consumíveis",
-    // Reaproveita a mesma imagem ja usada por dois dos tres produtos desta categoria e pelo
-    // proprio catalogCategories.js - nao existe "categoria-tintas-e-consumiveis.webp" dedicada em
-    // images/vendas/materiais/ (padrao usado pelas outras 9 categorias), e criar um asset novo
-    // esta fora do escopo deste fix.
+    title: "Tintas",
+    // Reaproveita a mesma imagem ja usada pelo proprio catalogCategories.js - nao existe
+    // "categoria-tintas.webp" dedicada em images/vendas/materiais/ (padrao usado pelas outras
+    // categorias), e criar um asset novo esta fora do escopo deste fix.
     image: "/catalog-products/tintas-solventes.webp",
   },
 ];

@@ -11,11 +11,14 @@ export const catalogCategorySlugs = {
   "acessorios-serralheria": "acessorios",
   "thinner-fixadores": "thinner-e-solventes",
   "perfis-serralheria": "serralheria-e-acabamentos",
-  "tintas-solventes-consumiveis": "tintas-e-consumiveis",
+  "tintas-solventes-consumiveis": "tintas",
 };
 
 export const legacyCatalogCategoryRedirects = {
   "chapas-frisadas-lambris": "chapas",
+  // Categoria renomeada de "Tintas e Consumíveis" para "Tintas" (o produto de consumíveis/
+  // eletrodo de solda que justificava o nome antigo foi removido desta categoria).
+  "tintas-e-consumiveis": "tintas",
 };
 
 // Produtos que migraram de categoria mantem a rota antiga funcionando via redirect.

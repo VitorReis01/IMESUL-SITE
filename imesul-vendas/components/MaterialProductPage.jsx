@@ -172,7 +172,7 @@ export default function MaterialProductPage({ category, product, backLink = null
                                   ? "PUXADORES DISPONÍVEIS"
                                   : isEletrodoSection
                                     ? "ELETRODOS E ARAMES DISPONÍVEIS"
-                                    : "Roldanas disponíveis"}
+                                    : "MODELOS DISPONÍVEIS"}
                   </h2>
                 </div>
                 <p className="max-w-md text-sm leading-6 text-imesul-steel-light/68">

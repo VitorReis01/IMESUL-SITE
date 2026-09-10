@@ -13,21 +13,20 @@ const autoplaySpeed = 0.32;
 const resumeDelay = 420;
 const inertiaFriction = 0.935;
 const maxDragVelocity = 22;
-const carouselDisplayNames = {
-  "consumiveis-acabamento": "Consumíveis",
-};
+const carouselDisplayNames = {};
 
-const carouselDisplayCategories = {
-  "consumiveis-acabamento": "Acabamento e Proteção",
-};
+const carouselDisplayCategories = {};
 
 const carouselFallbackTargets = {
-  consumiveis: { categoryId: "tintas-solventes-consumiveis", productId: "consumiveis-acabamento" },
   acessorios: { categoryId: "acessorios-serralheria", productId: null },
 };
 
 // Produtos que continuam no catalogo normalmente, mas nao devem aparecer nesta vitrine.
-const carouselExcludedProductIds = new Set(["primers", "galvanizantes-frio"]);
+// "consumiveis-acabamento" (Consumíveis para Acabamento e Proteção) foi removido da categoria
+// Tintas - era eletrodo/consumivel de solda classificado por engano ali; o produto correto
+// (Eletrodo) ja existe em Acessórios. "primers" virou "tinta-primer-primertex" (produto real com
+// 2 variacoes de cor/acabamento) - continua excluido da vitrine, mesmo comportamento de antes.
+const carouselExcludedProductIds = new Set(["tinta-primer-primertex", "galvanizantes-frio"]);
 
 const normalizeSlug = (value) =>
   String(value)
