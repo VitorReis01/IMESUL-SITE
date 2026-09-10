@@ -1160,7 +1160,7 @@ export const catalogProducts = [
     categoryId: "tintas-solventes-consumiveis",
     name: "Tinta Óxido Metálico Zarcotex",
     description:
-      "Tinta óxido metálico Zarcotex / Solventex, embalagem de 18 litros, disponível nas cores Preto Fosco e Vermelho Fosco.",
+      "Tinta óxido metálico Zarcotex / Solventex, disponível em Preto Fosco (18 litros) e Vermelho Fosco (18 litros e 3,6 litros).",
     usage: ["Preparação", "Proteção", "Acabamento"],
     image: "/catalog-products/atualizadas/tinta-oxido-metalico-preto-fosco-18l.png",
     specifications: catalogSpecifications.tintasSolventes,
@@ -1186,6 +1186,21 @@ export const catalogProducts = [
         description: "Tinta óxido metálico Zarcotex / Solventex Vermelho Fosco, embalagem de 18 litros.",
         usage: ["Vermelho", "Fosco", "18 Litros"],
         image: "/catalog-products/atualizadas/tinta-oxido-metalico-vermelho-fosco-18l.png",
+      },
+      // Mesma cor/acabamento da variacao acima, mas embalagem menor (3,6 L) - id/slug/name distintos
+      // de proposito para nunca ser confundida com a variacao de 18 L (nome inclui a litragem,
+      // diferente do padrao usual do catalogo, exatamente para deixar a diferenca visivel no
+      // seletor de modelo mesmo antes de ler o subtitulo "Medida").
+      {
+        id: "tinta-oxido-metalico-vermelho-fosco-3-6l",
+        slug: "tinta-oxido-metalico-vermelho-fosco-3-6l",
+        name: "Tinta Óxido Metálico Vermelho Fosco 3,6L",
+        measure: "3,6 Litros",
+        finish: "Fosco",
+        group: "Tinta Óxido Metálico Zarcotex",
+        description: "Tinta óxido metálico Zarcotex / Solventex Vermelho Fosco, embalagem de 3,6 litros.",
+        usage: ["Vermelho", "Fosco", "3,6 Litros"],
+        image: "/catalog-products/atualizadas/tinta-oxido-metalico-vermelho-fosco-3-6l.png",
       },
     ],
   }),
