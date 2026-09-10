@@ -1200,6 +1200,36 @@ export const catalogProducts = [
     ],
   }),
 
+  // Tinta Primer Zarcotex / Solventex, 18 L - linha/marca diferente da Tinta Primer Primertex
+  // (mesma categoria "Tintas", mas embalagem Zarcotex, nao deve ser misturada como variacao do
+  // produto Primertex). Uma unica variacao de cor confirmada (Laranja Fosco) - getCatalogProductPath
+  // encaminha direto para a variacao quando ha so 1 (sem grade de selecao de modelo). Mesmo padrao
+  // dos demais produtos de tinta: sem tabela tecnica de rendimento/diluicao/composicao/secagem
+  // (specifications continua incompleta de proposito - nunca inventar dado nao confirmado).
+  product({
+    id: "tinta-primer-zarcotex",
+    categoryId: "tintas-solventes-consumiveis",
+    name: "Tinta Primer Zarcotex",
+    description:
+      "Tinta primer Zarcotex / Solventex, embalagem de 18 litros, disponível no acabamento Laranja Fosco.",
+    usage: ["Preparação", "Proteção", "Acabamento"],
+    image: "/catalog-products/atualizadas/tinta-primer-laranja-fosco-18l.png",
+    specifications: catalogSpecifications.tintasSolventes,
+    variants: [
+      {
+        id: "tinta-primer-laranja-fosco",
+        slug: "tinta-primer-laranja-fosco",
+        name: "Tinta Primer Laranja Fosco",
+        measure: "18 Litros",
+        finish: "Fosco",
+        group: "Tinta Primer Zarcotex",
+        description: "Tinta primer Zarcotex / Solventex Laranja Fosco, embalagem de 18 litros.",
+        usage: ["Laranja", "Fosco", "18 Litros"],
+        image: "/catalog-products/atualizadas/tinta-primer-laranja-fosco-18l.png",
+      },
+    ],
+  }),
+
   ...[
     ["solventes", "Solventes", "Produtos para limpeza, preparação e diluição.", "/catalog-products/atualizadas/solventes.webp", catalogSpecifications.tintasSolventes],
     ["thinner", "Thinner", "Diluição e limpeza em processos de pintura e serralheria.", "/catalog-products/atualizadas/thinner.webp", catalogSpecifications.tintasSolventes],

@@ -27,10 +27,13 @@ const carouselFallbackTargets = {
 // (Eletrodo) ja existe em Acessórios. "primers" virou "tinta-primer-primertex" (produto real com
 // 2 variacoes de cor/acabamento) - continua excluido da vitrine, mesmo comportamento de antes.
 // "tinta-oxido-metalico-zarcotex" segue o mesmo padrao (2 variacoes de cor, sem imagem unica
-// canonica que represente o produto pai na vitrine).
+// canonica que represente o produto pai na vitrine). "tinta-primer-zarcotex" (marca/linha diferente
+// da Tinta Primer Primertex, 1 variacao de cor) segue o mesmo criterio de categoria: nenhum produto
+// de Tintas aparece nesta vitrine hoje.
 const carouselExcludedProductIds = new Set([
   "tinta-primer-primertex",
   "tinta-oxido-metalico-zarcotex",
+  "tinta-primer-zarcotex",
   "galvanizantes-frio",
 ]);
 

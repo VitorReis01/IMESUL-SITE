@@ -531,7 +531,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
 // catalogo tem um campo "measure" fixo no nivel do produto/variante que devesse virar o valor
 // inicial do formulario (para produtos com variants como Eletrodo/Roldanas, measure e so um rotulo
 // do card de selecao, nunca um dado a herdar no formulario).
-const PRODUCTS_WITH_FIXED_MEASURE = new Set(["tinta-primer-primertex", "tinta-oxido-metalico-zarcotex"]);
+const PRODUCTS_WITH_FIXED_MEASURE = new Set(["tinta-primer-primertex", "tinta-oxido-metalico-zarcotex", "tinta-primer-zarcotex"]);
 
 export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImageChange }) {
   const [form, setForm] = useState(() =>
