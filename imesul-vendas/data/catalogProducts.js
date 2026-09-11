@@ -139,7 +139,7 @@ export const catalogProducts = [
     description: "Guiamento de portões e sistemas deslizantes.",
     usage: ["Serralheria", "Montagem", "Manutenção"],
     image: "/catalog-products/atualizadas/perfil-trilho.webp",
-    specifications: catalogSpecifications.acessorios,
+    specifications: catalogSpecifications.perfisSerralheria.trilhos,
   }),
   product({
     id: "barras-chatas",
