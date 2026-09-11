@@ -14,6 +14,7 @@ describe("GET/POST /api/imebot/jobs/process - mudança de método (remediação 
   afterEach(() => {
     process.env = { ...originalEnv };
     vi.doUnmock("../Backend.js/feedbackStore");
+    vi.doUnmock("../Backend.js/rateLimiter");
   });
 
   it("GET agora retorna 405 (Método não permitido) - antes disparava o mesmo processamento de POST", async () => {
@@ -43,6 +44,9 @@ describe("GET/POST /api/imebot/jobs/process - mudança de método (remediação 
   it("POST continua funcionando normalmente com Bearer correto (comportamento preservado)", async () => {
     vi.doMock("../Backend.js/feedbackStore", () => ({
       processDueFeedbackJobs: vi.fn().mockResolvedValue({ ok: true, processed: 3 }),
+    }));
+    vi.doMock("../Backend.js/rateLimiter", () => ({
+      checkRateLimitLayers: vi.fn().mockResolvedValue({ allowed: true }),
     }));
     const { POST } = await import("../app/api/imebot/jobs/process/route");
 

@@ -2,7 +2,9 @@ import { safeCompare } from "../../../../../Backend.js/adminSecurity";
 import { processDueFeedbackJobs } from "../../../../../Backend.js/feedbackStore";
 import { imebotUnavailable, isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { logger } from "../../../../../Backend.js/logger";
+import { checkRateLimitLayers } from "../../../../../Backend.js/rateLimiter";
 import {
+  getRequestIp,
   methodNotAllowed as sharedMethodNotAllowed,
   noStoreJson,
 } from "../../../../../Backend.js/requestGuards";
@@ -24,6 +26,25 @@ export async function POST(request) {
   if (!isImebotEnabled()) return imebotUnavailable();
 
   if (!isAuthorized(request)) return unauthorized();
+
+  // Mesmo com o Bearer correto, limita execucoes repetidas (ex.: credencial vazada disparando o
+  // processamento em loop) - camada especifica desta rota, FAIL CLOSED se o Postgres do rate
+  // limiter falhar (nunca libera o processamento so porque o rate limiter caiu - ver
+  // Backend.js/rateLimiter.js). Mesmo padrao de "auth primeiro, rate limit depois" ja usado em
+  // app/api/imebot/bridge/confirm/route.js (outra rota protegida por Bearer secret).
+  try {
+    const rateLimit = await checkRateLimitLayers([
+      { key: `imebot-jobs-process:${getRequestIp(request)}`, windowMs: 60_000, max: 5 },
+    ]);
+    if (!rateLimit.allowed) {
+      return noStoreJson(
+        { ok: false },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false }, { status: 503 });
+  }
 
   try {
     const result = await processDueFeedbackJobs();

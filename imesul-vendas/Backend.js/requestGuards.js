@@ -12,15 +12,33 @@ import { NextResponse } from "next/server";
 
 export const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
 
-// Ordem de confianca: headers especificos de infra (Vercel/Cloudflare/Fastly) antes do generico
-// x-forwarded-for, que pode ter varios IPs concatenados por proxies intermediarios - sempre usa
-// so o primeiro. request.ip e o ultimo fallback (nem sempre populado pelo runtime).
+// Ordem de confianca revisada (hardening desta fase) - confirmada contra a documentacao oficial
+// da Vercel (vercel.com/docs/headers/request-headers, seções x-forwarded-for/x-vercel-forwarded-for/
+// x-real-ip), não só por comentário antigo:
+//
+// - x-forwarded-for: a Vercel SOBRESCREVE esse header na própria borda e "não repassa IPs
+//   externos" (texto oficial) - em um deploy padrão (sem Trusted Proxy, recurso só de Enterprise),
+//   não é possível um cliente forjar o valor que a função recebe.
+// - x-vercel-forwarded-for: documentado pela própria Vercel como "idêntico a x-forwarded-for",
+//   porém MAIS resistente quando existe um proxy própio na FRENTE da Vercel (ex.: CDN/WAF externo)
+//   que poderia reescrever x-forwarded-for de novo depois da borda da Vercel já ter definido o
+//   valor correto - por isso vem primeiro aqui, mesmo sem essa topologia confirmada hoje.
+// - x-real-ip: também documentado como "idêntico a x-forwarded-for" (mesma confiança).
+// - cf-connecting-ip / fastly-client-ip FORAM REMOVIDOS da cadeia: não são headers que a Vercel
+//   define ou sobrescreve (não aparecem na documentação oficial de headers da Vercel), e este
+//   projeto não está confirmado atrás de Cloudflare nem Fastly (nenhuma configuração de CDN/WAF
+//   externo encontrada no repositório) - em um deploy direto na Vercel, um cliente pode simplesmente
+//   enviar esses dois headers com qualquer valor e a função os recebe sem alteração. Mantê-los
+//   como fallback, à frente de um header realmente controlado pela Vercel, permitiria spoofing de
+//   IP em qualquer rota que use getRequestIp() para rate limit (ex.: multiplicar a cota
+//   fingindo vir de outro IP a cada requisição). Se este projeto algum dia ficar atrás de
+//   Cloudflare/Fastly de verdade, o cabeçalho correto a confiar nesse cenário precisa ser
+//   revalidado explicitamente, não reintroduzido "por via das dúvidas".
+// - request.ip e a string fixa de fallback fecham a cadeia, como antes.
 export const getRequestIp = (request) =>
+  getFirstForwardedIp(request.headers.get("x-vercel-forwarded-for") || "") ||
   getFirstForwardedIp(request.headers.get("x-forwarded-for") || "") ||
   request.headers.get("x-real-ip") ||
-  request.headers.get("cf-connecting-ip") ||
-  request.headers.get("fastly-client-ip") ||
-  getFirstForwardedIp(request.headers.get("x-vercel-forwarded-for") || "") ||
   request.ip ||
   "não identificado";
 

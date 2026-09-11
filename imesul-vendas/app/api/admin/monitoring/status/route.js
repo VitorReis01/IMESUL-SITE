@@ -4,7 +4,8 @@ import { isImebotEnabled } from "../../../../../Backend.js/imebotFeatureGate";
 import { logger } from "../../../../../Backend.js/logger";
 import { isMonitoringEnabled } from "../../../../../Backend.js/monitoringAuth";
 import { query } from "../../../../../Backend.js/db";
-import { checkOrigin, forbidden, getRequestId, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
+import { checkGlobalApiRateLimit, checkRateLimitLayers } from "../../../../../Backend.js/rateLimiter";
+import { checkOrigin, forbidden, getRequestId, getRequestIp, methodNotAllowed as sharedMethodNotAllowed, noStoreJson } from "../../../../../Backend.js/requestGuards";
 
 const timeoutMs = 1500;
 // Acima disso o banco respondeu mas devagar - sinaliza "degraded" em vez de esperar o timeout
@@ -133,6 +134,37 @@ export async function GET(request) {
     }
   } catch {
     return noStoreJson({ ok: false, message: "Acesso não autorizado." }, { status: 401 });
+  }
+
+  // Rota consulta banco + faz 2 fetches HTTP + le estado global do IMEbot a cada chamada - uma
+  // sessao admin comprometida (ou um script rodando no console do navegador) nao pode floodar
+  // isso. Mesmo padrao ja usado em admin/commercial-report/route.js: camada global (compartilhada
+  // por toda /api) + limite especifico da rota, FAIL CLOSED se o Postgres do rate limiter falhar
+  // (nunca libera a rota so porque o rate limiter caiu - ver Backend.js/rateLimiter.js).
+  try {
+    const globalLimit = await checkGlobalApiRateLimit(request);
+    if (!globalLimit.allowed) {
+      return noStoreJson(
+        { ok: false, message: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(globalLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false, message: "Serviço temporariamente indisponível." }, { status: 503 });
+  }
+
+  try {
+    const rateLimit = await checkRateLimitLayers([
+      { key: `admin-monitoring-status:${getRequestIp(request)}`, windowMs: 60_000, max: 30 },
+    ]);
+    if (!rateLimit.allowed) {
+      return noStoreJson(
+        { ok: false, message: "Muitas solicitações. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+  } catch {
+    return noStoreJson({ ok: false, message: "Serviço temporariamente indisponível." }, { status: 503 });
   }
 
   const checkedAt = new Date().toISOString();
