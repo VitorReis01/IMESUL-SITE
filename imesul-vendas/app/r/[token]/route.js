@@ -29,7 +29,14 @@ const checkHandoffRateLimit = async (request) => {
 };
 
 export async function GET(request, { params }) {
-  const token = params?.token;
+  // context.params é uma Promise nos Route Handlers desde o Next.js 15 (confirmado contra a
+  // documentação oficial: nextjs.org/docs/app/api-reference/file-conventions/route) - este
+  // projeto está no Next.js 16. Ler params?.token diretamente (sem await) sempre resolvia
+  // undefined em produção, porque .token não existe numa Promise: TODO clique num link de
+  // handoff real caía em "Link inválido." (400), para qualquer token, mesmo válido. Bug
+  // pré-existente, descoberto durante o smoke test da rodada de hardening (commit f041e7a) -
+  // corrigido agora, isolado a este arquivo.
+  const { token } = (await params) || {};
   if (!token) return noStore("Link inválido.", { status: 400 });
   if (token.length > maxTokenLength) return noStore("Link inválido.", { status: 400 });
 
