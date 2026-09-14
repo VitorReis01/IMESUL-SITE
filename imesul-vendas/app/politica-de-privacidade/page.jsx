@@ -135,10 +135,10 @@ const sections = [
         <ul className="list-disc space-y-1.5 pl-5 marker:text-imesul-red">
           <li>Com a equipe interna de atendimento e comercial da IMESUL, para dar seguimento a solicitações;</li>
           <li>
-            Com a <strong>Vercel</strong>, responsável pela hospedagem deste site, e com a{" "}
-            <strong>Neon</strong>, responsável pelo banco de dados utilizado — ambos operadores
-            técnicos que processam dados necessários ao funcionamento do site, nunca com
-            finalidade própria de uso desses dados;
+            Com o provedor de infraestrutura e hospedagem contratado pela IMESUL para este site, e
+            com a <strong>Neon</strong>, responsável pelo banco de dados utilizado — ambos
+            operadores técnicos que processam dados necessários ao funcionamento do site, nunca
+            com finalidade própria de uso desses dados;
           </li>
           <li>
             Com o <strong>Google</strong>, quando o usuário opta por entrar com sua conta Google
@@ -357,7 +357,6 @@ export default function PrivacyPolicyPage() {
           </p>
         </header>
 
-        {/* Indice com ancoras para as 16 secoes abaixo. */}
         <nav aria-label="Índice da política" className="mt-10 rounded-[14px] border border-white/10 bg-white/[0.03] p-6 sm:p-7">
           <p className="font-condensed text-xs font-bold uppercase tracking-[0.24em] text-imesul-steel-light/60">
             Índice

@@ -1,17 +1,13 @@
 "use client";
 
-// Central de links por unidade, inspirada na logica de selecao de um "avatar picker" (avatar
-// grande no centro, opcoes menores abaixo, conteudo trocando de forma simples) mas escrita do
-// zero para a IMESUL: sem shadcn, sem /components/ui, sem TypeScript. O "avatar" e o simbolo oficial
-// da IMESUL (nao uma foto/pessoa). Todos os dados (endereco, telefone, maps, instagram, facebook,
-// whatsapp) vem de data/products.js — nada aqui e inventado; se um canal nao existir para a
-// unidade, o botao correspondente simplesmente nao aparece.
+// Central de links por unidade, no padrao "avatar picker" (simbolo grande no centro, opcoes
+// menores abaixo). Dados (endereco, telefone, maps, instagram, facebook, whatsapp) vem de
+// data/products.js; se um canal nao existir para a unidade, o botao correspondente nao aparece.
 //
-// Estrutura: dois cards separados — Dourados (com seletor Centro/Loja de Fábrica) e Campo Grande
-// (unidade unica, sem seletor, conteudo estatico). Cada card com seletor usa a mesma logica segura
-// de troca: existe APENAS UM bloco de conteudo no DOM (nao remonta via key, nao usa AnimatePresence,
-// nao usa position:absolute); o texto so muda enquanto o bloco esta invisivel, entao nunca ha duas
-// unidades sobrepostas.
+// Dois cards: Dourados (com seletor Centro/Loja de Fabrica) e Campo Grande (unidade unica, sem
+// seletor). Cada card com seletor mantem APENAS UM bloco de conteudo no DOM (nao remonta via key,
+// sem AnimatePresence/position:absolute) - o texto so muda enquanto o bloco esta invisivel, entao
+// nunca ha duas unidades sobrepostas na tela.
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { officialUnits, officialSocialLinks, whatsapp } from "../data/products";

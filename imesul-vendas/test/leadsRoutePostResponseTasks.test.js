@@ -6,7 +6,7 @@ import { logger } from "../Backend.js/logger";
 // eram chamados sem await em app/api/leads/route.js, sem garantia de terminar antes da function
 // serverless ser congelada (agora agendados via next/server#after - ver route.js). O contrato
 // testável aqui, sem precisar invocar a rota HTTP inteira (nenhuma rota de API deste projeto tem
-// teste direto - ver CLAUDE.md), é a função extraída que envolve cada tarefa: nunca deve rejeitar
+// teste direto), é a função extraída que envolve cada tarefa: nunca deve rejeitar
 // (isso viraria unhandled rejection dentro de after()) e deve logar com segurança em caso de
 // falha, nunca a resposta do lead em si (que já foi enviada ao cliente antes de after() rodar).
 describe("runBestEffortTask (app/api/leads/route.js)", () => {

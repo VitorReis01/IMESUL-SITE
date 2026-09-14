@@ -12,15 +12,26 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
 // Origem do site de vendas (mesma fonte usada por data/products.js#salesSiteUrl) - o CSP precisa
 // liberar exatamente essa origem no connect-src, senao o fetch cross-origin de
 // lib/leadClient.js#createLead (usado por TODOS os CTAs "Falar no WhatsApp" do institucional)
-// e bloqueado pelo proprio navegador antes de sair da pagina. Achado na homologacao final da
-// Preview: nenhum teste anterior tinha exercitado esse fetch por um navegador real (curl/Node
-// fetch nao aplicam CSP), entao o gap ficou invisivel desde a rodada de hardening que reduziu
-// connect-src de "https:" para uma allowlist explicita.
+// e bloqueado pelo proprio navegador antes de sair da pagina. Em producao, exige
+// NEXT_PUBLIC_SALES_URL configurada explicitamente - nunca libera um host antigo/generico no
+// CSP (falha alto e claro no build em vez disso). Em desenvolvimento, cai no localhost do site
+// de vendas.
+const isProductionBuild = process.env.NODE_ENV === "production";
+
+if (!process.env.NEXT_PUBLIC_SALES_URL && isProductionBuild) {
+  throw new Error(
+    "NEXT_PUBLIC_SALES_URL nao configurada em producao - configure a URL real do site de vendas antes do build."
+  );
+}
+
 const salesSiteOrigin = (() => {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SALES_URL || "https://imesul-vendas.vercel.app/").origin;
+    return new URL(process.env.NEXT_PUBLIC_SALES_URL || "http://localhost:3001").origin;
   } catch {
-    return "https://imesul-vendas.vercel.app";
+    if (isProductionBuild) {
+      throw new Error("NEXT_PUBLIC_SALES_URL configurada com valor invalido em producao.");
+    }
+    return "http://localhost:3001";
   }
 })();
 

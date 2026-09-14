@@ -81,7 +81,7 @@ const sanitizePayload = (payload = {}) => ({
 // mensagem de erro, via logger.error que ja sanitiza - ver Backend.js/logger.js).
 // Exportado só para teste (test/leadsRoutePostResponseTasks.test.js) - o contrato testável é
 // "nunca rejeita, sempre loga com segurança em caso de falha", não a rota inteira (nenhuma rota
-// de API deste projeto tem teste direto, ver CLAUDE.md - o handler HTTP em si continua sem
+// de API deste projeto tem teste direto - o handler HTTP em si continua sem
 // cobertura automatizada, só esta função extraída).
 export const runBestEffortTask = (taskName, promise) =>
   promise.catch((err) => {

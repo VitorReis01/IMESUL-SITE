@@ -4,41 +4,35 @@
 
 **Não executado.** Este documento só propõe; nenhuma mudança de role foi aplicada ao banco.
 Rodar isso em produção sem cuidado pode derrubar o site (uma role sem privilégio suficiente faz
-toda query falhar), por isso a decisão e a execução ficam com você.
+toda query falhar), por isso a decisão e a execução ficam a cargo da equipe responsável pelo
+banco.
 
-**Atualizado nesta rodada de hardening** para refletir exatamente as tabelas das migrations
-`001` a `005` (a versão anterior deste documento listava só 5 tabelas de `001`–`002`; hoje o
-schema tem 17 tabelas, 11 delas adicionadas pela `004_commercial_funnel.sql`). O privilégio por
+A matriz de privilégios cobre as 17 tabelas das migrations `001` a `005`. O privilégio por
 tabela abaixo (SELECT/INSERT/UPDATE/DELETE) foi levantado por análise estática do código
 (`grep` de `INSERT INTO`/`UPDATE`/`DELETE FROM`/`ON CONFLICT ... DO UPDATE` em `Backend.js/*.js` e
 `lib/*.js`) — é um bom ponto de partida, não uma auditoria de runtime. Antes de aplicar em
 produção, confirme com uma consulta real (`pg_stat_statements` ou logs de query) que nenhuma
-operação foi perdida nessa varredura estática.
+operação foi perdida nessa varredura estática. O SQL pronto para copiar/colar vive em
+`db/roles/create_runtime_role.sql` (fora de `db/migrations/`, então `npm run db:migrate` nunca o
+executa por engano) — o bloco de SQL abaixo continua aqui só como referência de leitura.
 
-**Reconferido numa rodada posterior** (auditoria dedicada a este documento, independente da
-anterior): a varredura estática foi refeita do zero e bateu, tabela por tabela e privilégio por
-privilégio, com o que já estava documentado aqui — nenhuma correção foi necessária na matriz
-abaixo. O SQL pronto para copiar/colar agora vive em `db/roles/create_runtime_role.sql` (fora de
-`db/migrations/`, então `npm run db:migrate` nunca o executa por engano) — o bloco de SQL abaixo
-continua aqui só como referência de leitura.
-
-**Revisado numa terceira rodada** (última revisão antes de aprovação para commit), com 3 mudanças:
-(1) `scripts/migrate-db.mjs` agora é **fail-closed** em Production/CI — sem `DATABASE_MIGRATION_URL`
+Três pontos já resolvidos no código atual, refletidos neste documento: (1)
+`scripts/migrate-db.mjs` é **fail-closed** em Production/CI — sem `DATABASE_MIGRATION_URL`
 configurada nesses ambientes, o script aborta em vez de cair silenciosamente para `DATABASE_URL`
 (o fallback local continua existindo, só fora de Production/CI, sempre com warning explícito); (2)
-o `ALTER DEFAULT PRIVILEGES` que concedia `SELECT` automático em tabelas futuras foi **removido**
-— ver "Estratégia para migrations futuras" abaixo; (3) adicionado um checklist de validação para
-o Preview, ainda não executado. Nenhuma mudança na matriz de privilégios em si.
+o SQL proposto **não usa** `ALTER DEFAULT PRIVILEGES` para conceder `SELECT` automático em
+tabelas futuras — ver "Estratégia para migrations futuras" abaixo; (3) há um checklist de
+validação para o Preview, ainda não executado.
 
-## Situação atual (não verificável a partir deste ambiente)
+## Situação atual (não verificada contra o banco real)
 
-Este ambiente de trabalho não tem `DATABASE_URL` configurada, então não consigo consultar o
-Postgres real para confirmar qual role a aplicação usa hoje nem quais privilégios ela tem. O mais
-provável, dado que a `DATABASE_URL` foi criada diretamente no provedor (Neon), é que a aplicação
-está usando a role **owner/admin do banco** — a mesma que consegue `CREATE`, `DROP`, `ALTER`,
-`TRUNCATE` em qualquer tabela. Isso funciona, mas significa que qualquer bug de SQL injection
-(mesmo que hoje não exista nenhum — todas as queries são parametrizadas) ou vazamento da
-`DATABASE_URL` daria ao atacante controle total do banco, não só das tabelas da aplicação.
+A role/privilégios usados hoje pela aplicação não foram confirmados por consulta direta ao
+Postgres de produção. O mais provável, dado que a `DATABASE_URL` foi criada diretamente no
+provedor (Neon), é que a aplicação está usando a role **owner/admin do banco** — a mesma que
+consegue `CREATE`, `DROP`, `ALTER`, `TRUNCATE` em qualquer tabela. Isso funciona, mas significa
+que qualquer bug de SQL injection (mesmo que hoje não exista nenhum — todas as queries são
+parametrizadas) ou vazamento da `DATABASE_URL` daria ao atacante controle total do banco, não só
+das tabelas da aplicação.
 
 Para confirmar a role atual e seus privilégios, rode isto com a `DATABASE_URL` de produção (via
 `psql` ou o SQL Editor do Neon):
@@ -208,9 +202,8 @@ Lógica pura testável em `scripts/migrate-db.mjs#resolveMigrationDatabaseUrl`, 
 `test/migrateDbUrlResolution.test.js`.
 
 `Backend.js/db.js` continua lendo **somente** `DATABASE_URL`, nunca `DATABASE_MIGRATION_URL` -
-confirmado nesta rodada e travado contra regressão futura por
-`test/databaseMigrationUrlIsolation.test.js` (varre `Backend.js/`, `lib/`, `app/` e `components/`
-e falha se qualquer arquivo de runtime referenciar `DATABASE_MIGRATION_URL`).
+garantido por `test/databaseMigrationUrlIsolation.test.js` (varre `Backend.js/`, `lib/`, `app/` e
+`components/` e falha se qualquer arquivo de runtime referenciar `DATABASE_MIGRATION_URL`).
 
 ## Estratégia para migrations futuras
 
@@ -338,17 +331,18 @@ ROLLBACK;
 -- Esperado: falha (permission denied to create role)
 ```
 
-## Por que não fiz isso agora
+## Por que isso não foi aplicado automaticamente
 
-1. Não tenho acesso à `DATABASE_URL` de produção neste ambiente para executar o SQL acima.
+1. A execução do SQL acima requer acesso à `DATABASE_URL` de produção, que não deve ser usada
+   fora de uma decisão deliberada de quem administra o banco.
 2. Trocar a role em produção sem testar primeiro pode quebrar TODAS as queries do site
    (analytics, leads, sessão admin, IMEbot) se algum privilégio necessário for esquecido no
-   `GRANT` — e a tabela acima, embora mais precisa que a versão anterior deste documento, ainda é
-   baseada em análise estática, não em execução real contra o banco.
-3. Você pediu explicitamente para não aplicar mudança de role sem aprovação e informação prévia —
-   isso é exatamente o que este documento é.
+   `GRANT` — e a tabela acima, embora seja um bom ponto de partida, ainda é baseada em análise
+   estática, não em execução real contra o banco.
+3. Mudança de role em produção exige aprovação explícita e execução controlada — este documento
+   existe para viabilizar essa decisão, não para substituí-la.
 
-## Como aplicar, quando você decidir
+## Como aplicar, quando aprovado
 
 1. Rode as queries de "Situação atual" acima para confirmar a role/privilégios de hoje.
 2. Rode `db/roles/create_runtime_role.sql` com a role atual (que tem permissão para criar

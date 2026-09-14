@@ -53,10 +53,8 @@ ADMIN_DEMO_USER=
 ADMIN_DEMO_PASSWORD=
 ```
 
-`imesul-vendas/.env.example` não foi atualizado neste trabalho porque já tinha uma alteração
-local pendente e não relacionada (`NEXT_PUBLIC_INSTITUTIONAL_SITE_URL`) no momento em que este
-documento foi criado — não sobrescrever mudanças de outra tarefa. `DATABASE_URL` fica
-documentada aqui até que `.env.example` possa ser atualizado sem esse conflito.
+`DATABASE_URL`, `ANALYTICS_SECURITY_KEY`, `ADMIN_DEMO_USER` e `ADMIN_DEMO_PASSWORD` já constam
+em `imesul-vendas/.env.example`; use-o como referência de nomes ao configurar o ambiente.
 
 ## Migration
 
@@ -109,15 +107,15 @@ arquivo temporário). Isso é o comportamento padrão sem `DATABASE_URL`.
 Não existe limite de retenção automático (o `maxEvents = 2000` do arquivo JSON era uma
 limitação do armazenamento em arquivo, não copiada para o Postgres). Se o volume de eventos
 crescer a ponto de precisar de rotação/expiração, isso é uma decisão de produto que precisa ser
-tomada explicitamente (ex.: `DELETE` de eventos com mais de N dias) - não implementado aqui sem
-essa decisão.
+tomada explicitamente (ex.: `DELETE` de eventos com mais de N dias) - não implementado até que
+essa decisão seja tomada.
 
 ## Limitações conhecidas, deixadas de fora de propósito
 
 - **Rate limiting continua em memória** (`Map()`), não migrado para o Postgres nesta etapa. Não
   é global entre instâncias serverless - cada instância tem seus próprios contadores. Migrar
-  isso é um trabalho separado, avaliado só depois que analytics e sessão já estivessem
-  persistentes (prioridade explícita desta tarefa).
+  isso para o Postgres é um trabalho separado, a ser avaliado depois que analytics e sessão já
+  estiverem persistentes.
 - **Rankings do painel** (visitantes, botões mais clicados, localização) usam um recorte dos
   500 eventos mais recentes do período selecionado, não o histórico inteiro - evita
   `SELECT * FROM analytics_events` sem limite. Os cards de métricas (que precisam ser exatos)

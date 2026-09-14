@@ -98,8 +98,8 @@ const sections = [
             clica em um botão de contato;
           </li>
           <li>
-            Com a <strong>Vercel</strong>, responsável pela hospedagem deste site — operadora
-            técnica que processa dados necessários ao funcionamento do site;
+            Com o provedor de infraestrutura e hospedagem contratado pela IMESUL para este site —
+            operador técnico que processa dados necessários ao funcionamento do site;
           </li>
           <li>
             Com o <strong>Google</strong>, para o carregamento de fontes tipográficas (Google

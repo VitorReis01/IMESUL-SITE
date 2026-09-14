@@ -7,12 +7,12 @@ executado contra o banco real.** Todas as afirmações abaixo vêm de leitura di
 (arquivos citados por caminho) — onde não havia como confirmar por código (limites reais do plano
 Vercel/Supabase, capacidade real sob carga), isso é dito explicitamente, nunca inventado.
 
-## Revisão desta rodada (2026-09-08)
+## Histórico de revisão (2026-09-08)
 
-Rodada de revisão sobre os 4 pontos levantados após a análise inicial. Resumo do que mudou —
+Revisão sobre os 4 pontos levantados após a análise inicial. Resumo do que mudou —
 detalhes em cada seção linkada:
 
-1. **Pooler (P0)** — continua não confirmável por código; esta rodada troca a afirmação solta por
+1. **Pooler (P0)** — continua não confirmável por código; esta revisão troca a afirmação solta por
    uma **checklist manual objetiva** (seção 5-A) para ser conferida no dashboard Supabase/Vercel.
 2. **Tarefas pós-resposta** — `linkCartToLead`/`notifyImebotOfNewLead` agora rodam dentro de
    `after()` (`next/server`), com `.catch` explícito e log seguro — implementado e testado (seção
@@ -22,7 +22,7 @@ detalhes em cada seção linkada:
    Mitigação de retry curto implementada e testada (mock). **Status: MITIGADO, NÃO RESOLVIDO** —
    retry de 3 tentativas não é garantia matemática de `seller != null` sob qualquer nível de
    concorrência, só reduz a janela de perda. Teste de concorrência real (10/50/100 leads, 2
-   vendedores) escrito e **NÃO EXECUTADO** (sem banco de teste disponível nesta sessão - ver seção
+   vendedores) escrito e **NÃO EXECUTADO** (sem banco de teste disponível - ver seção
    9-C) — este P1 não deve ser considerado resolvido até esse teste rodar. Opções arquiteturais
    apresentadas, nenhuma implementada ainda (seção 9-D).
 4. **Idempotência (borda de 60s)** — bug confirmado por teste (`Date.now` cruzando a fronteira do
@@ -34,11 +34,11 @@ detalhes em cada seção linkada:
 6. **Linguagem de capacidade** — "Conclusão objetiva" (seção final) revisada para nunca declarar
    capacidade numérica sem teste de carga real.
 
-## Revisão final antes do commit (2026-09-08, rodada seguinte)
+## Revisão final antes do commit (2026-09-08, revisão seguinte)
 
-Última revisão antes de aprovação, focada em 2 lacunas reais encontradas na rodada anterior:
+Última revisão antes de aprovação, focada em 2 lacunas reais encontradas na revisão anterior:
 
-1. **`clientRequestId` — bug de duplicação em timeout + novo clique, CORRIGIDO.** A rodada
+1. **`clientRequestId` — bug de duplicação em timeout + novo clique, CORRIGIDO.** A revisão
    anterior corrigiu a borda de 60s, mas não cobria o caso "servidor cria o lead e responde 200,
    mas a resposta nunca chega ao navegador (timeout) + o cliente clica de novo" — isso GERAVA um
    `clientRequestId` novo a cada clique, então o segundo clique criava um SEGUNDO lead (a dedup
@@ -108,7 +108,7 @@ ao Postgres por lead**, todos parametrizados, nenhum `SELECT *`.
 externa (Meta, Sentry, analytics) está no caminho síncrono hoje — confirmado lendo
 `app/api/leads/route.js` linha a linha.
 
-**Achado real, CORRIGIDO nesta rodada**: `linkCartToLead` e `notifyImebotOfNewLead` eram chamados
+**Achado real, CORRIGIDO nesta revisão**: `linkCartToLead` e `notifyImebotOfNewLead` eram chamados
 **sem `await`** em `app/api/leads/route.js`, com comentário "best-effort, nunca atrasa a
 resposta". A intenção estava certa, mas a implementação não usava `waitUntil()`/`after()`
 (Next.js) para garantir que a promise realmente terminasse depois da resposta ser enviada — numa
@@ -116,8 +116,8 @@ function serverless da Vercel, a execução pode ser congelada assim que a respo
 então essas duas chamadas podiam simplesmente não completar sob carga, silenciosamente.
 
 **Correção aplicada**: as duas chamadas agora rodam dentro de `after()` (`next/server`, estável
-na versão 16.3.1 já usada neste projeto — confirmado por `node -e "require('next/server').after"`
-nesta sessão), que garante que a função passada roda até o fim mesmo depois da resposta HTTP já
+na versão já usada neste projeto — confirmado por `node -e "require('next/server').after"`),
+que garante que a função passada roda até o fim mesmo depois da resposta HTTP já
 ter sido despachada ao cliente. Cada chamada é envolvida por `runBestEffortTask` (novo, exportado
 em `app/api/leads/route.js`), que sempre resolve (nunca propaga rejeição — evita unhandled
 rejection dentro de `after()`) e loga com segurança via `logger.error("post_lead_task_failed",
@@ -128,7 +128,7 @@ Next.js para exatamente este caso, sem acoplamento a um provedor específico.
 
 Testado em `test/leadsRoutePostResponseTasks.test.js` (4 casos: sucesso não loga, rejeição nunca
 propaga, rejeição loga evento+tarefa+só a mensagem do erro, rejeição não-Error também é tratada).
-Por convenção deste projeto nenhuma rota de API tem teste direto (ver `CLAUDE.md`) — o teste cobre
+Por convenção deste projeto nenhuma rota de API tem teste direto — o teste cobre
 a função extraída `runBestEffortTask`, não o handler HTTP inteiro.
 
 **Lock/transação**: só um lock real no caminho crítico — `FOR UPDATE SKIP LOCKED` em
@@ -152,7 +152,7 @@ configuração.
    **inerentemente serializado**: toda requisição de Dourados espera o lock de linha da anterior.
    Não é bug — é o único jeito correto de garantir alternância estrita — mas é o único ponto do
    sistema onde concorrência alta vira fila de verdade, mesmo que só por microsegundos cada.
-2. **`linkCartToLead`/`notifyImebotOfNewLead` sem `await`/`waitUntil`** — CORRIGIDO nesta rodada
+2. **`linkCartToLead`/`notifyImebotOfNewLead` sem `await`/`waitUntil`** — CORRIGIDO nesta revisão
    via `after()` (ver item 2). Era risco de confiabilidade, não de performance.
 3. **`DATABASE_POOL_MAX=3` (default)** combinado com potencial de muitas instâncias serverless
    simultâneas — ver seção 5.
@@ -187,10 +187,10 @@ instância fria cria seu próprio pool.
 
 Isso é o **teto teórico por código** (cada instância nunca abre mais que `POOL_MAX`) — não é uma
 previsão de quantas instâncias a Vercel realmente vai criar (isso depende do plano contratado e
-do autoscaling deles, que não está no código nem posso confirmar aqui) nem de quantas conexões o
+do autoscaling do provedor, que não está no código) nem de quantas conexões o
 Postgres real aceita (isso depende do plano Supabase/Neon e de estar usando o **Transaction
-Pooler** ou a conexão direta — `DATABASE_URL` não está configurada neste ambiente de trabalho,
-então não dá pra confirmar qual dos dois modos está em uso agora). **Isso precisa ser confirmado
+Pooler** ou a conexão direta — `DATABASE_URL` não está configurada no ambiente local,
+então não é possível confirmar qual dos dois modos está em uso). **Isso precisa ser confirmado
 manualmente no dashboard do Supabase antes de qualquer decisão de capacidade.**
 
 `idleTimeoutMillis: 10_000` e `connectionTimeoutMillis: 5_000` já existem — uma instância que
@@ -205,7 +205,7 @@ conexão real (que não devo pedir/ver aqui).
 ### 5-A. Checklist manual objetiva (dashboard Supabase + Vercel — não código)
 
 Continua não sendo algo que o código sozinho prova (a `DATABASE_URL` real não está configurada
-neste ambiente de trabalho, e mesmo que estivesse, não é para eu ler/logar o valor). Checklist
+no ambiente local, e mesmo que estivesse, o valor não deve ser lido nem logado). Checklist
 para conferir manualmente, sem colar senha nem connection string completa em lugar nenhum:
 
 | # | Item | Onde conferir | Como ler o resultado |
@@ -249,7 +249,7 @@ propositalmente, é o objetivo da rota).
 
 ## 8. Estado das queries
 
-Já auditado com detalhe em `RELIABILITY.md` (seção 11) nesta mesma rodada de trabalho anterior.
+Já auditado com detalhe em `RELIABILITY.md` (seção 11).
 Resumo aplicado ao caminho crítico: `sales_leads` tem índice em `idempotency_key` (UNIQUE) e
 `lead_code` (UNIQUE) — a única leitura da transação de lead usa o índice UNIQUE, é O(1)/O(log n).
 `sales_sellers` tem índice composto cobrindo quase toda a query (falta só `unit`, tabela pequena
@@ -266,12 +266,12 @@ homologação antes de qualquer teste de carga real** (não executado aqui, só 
 
 `FOR UPDATE SKIP LOCKED` + transação única + `idempotency_key` único garante **correção**
 (nenhum lost update, nenhuma dupla escolha do mesmo vendedor, ordem consistente via
-`last_assigned_at ASC NULLS FIRST` + `UPDATE` imediato na mesma transação). Esta rodada foi além
+`last_assigned_at ASC NULLS FIRST` + `UPDATE` imediato na mesma transação). Esta análise foi além
 de confirmar correção e investigou o requisito funcional levantado: **uma rajada legítima pode
 transformar concorrência momentânea em "nenhum vendedor disponível" mesmo havendo vendedores
 ativos?**
 
-> **STATUS (revisado nesta rodada): MITIGADO, NÃO RESOLVIDO.** O retry de 3 tentativas (9-B) é
+> **STATUS (revisado nesta revisão): MITIGADO, NÃO RESOLVIDO.** O retry de 3 tentativas (9-B) é
 > uma **mitigação**, não uma garantia matemática de `seller != null` sob qualquer nível de
 > concorrência — ela reduz a janela de perda para rajadas pequenas/moderadas, mas não elimina a
 > causa raiz (9-A) sob contenção sustentada. A solução estrutural (9-D, Opção B) continua
@@ -280,7 +280,7 @@ ativos?**
 > leads simultâneos** e os números confirmarem se a mitigação é suficiente ou se a Opção B é
 > necessária.
 
-### 9-A. Causa raiz real (achado desta rodada, não estava na análise anterior)
+### 9-A. Causa raiz real (achado desta revisão, não estava na análise anterior)
 
 A análise anterior (seção 9, versão original) tratava a janela de contenção como "microsegundos"
 — isso está **incompleto**. `SELECT ... FOR UPDATE SKIP LOCKED` roda dentro de
@@ -302,7 +302,7 @@ transação de criação do lead (tipicamente dezenas de milissegundos, dependen
 rede até o Postgres), tempo suficiente para que uma rajada real de leads simultâneos produza
 `seller_id NULL` só por causa de concorrência, mesmo com vendedores ativos cadastrados.
 
-### 9-B. Mitigação implementada nesta rodada: retry curto e limitado
+### 9-B. Mitigação implementada nesta revisão: retry curto e limitado
 
 `Backend.js/salesLeadsStore.js#assignNextSeller` agora tenta a consulta `FOR UPDATE SKIP LOCKED`
 até **3 vezes** (a 1ª tentativa + 2 retries), com um espaçamento curto entre tentativas (25ms na
@@ -332,8 +332,8 @@ Também inclui o cenário de idempotência (ver seção 11-A). Nenhuma chamada a
 real acontece (chama `createLead` diretamente, não a rota HTTP — a notificação do IMEbot só é
 disparada por `app/api/leads/route.js`, nunca por `createLead`).
 
-**Por que não rodou nesta sessão**: não há `DATABASE_URL` configurada neste ambiente de trabalho,
-e a instrução explícita foi não conectar nem executar SQL contra o banco real sem autorização. O
+**Por que não foi executado**: não há `DATABASE_URL` configurada no ambiente local, e conectar
+ou executar SQL contra o banco real exige autorização explícita. O
 teste tem uma trava dupla deliberada (`DATABASE_URL` **e** `ALLOW_DB_INTEGRATION_TESTS=1`
 precisam estar presentes) para nunca rodar sem intenção clara, nem em CI, nem por engano. Rodar
 manualmente contra um banco de **homologação** já migrado, quando autorizado:
@@ -356,7 +356,7 @@ porque o que prende o lock é a duração da transação, não a primitiva de lo
 
 | Opção | Descrição | Resolve a causa raiz? | Risco/custo |
 |---|---|---|---|
-| **A — Retry curto (implementado nesta rodada)** | Repetir a consulta `SKIP LOCKED` 2-3x com espaçamento curto antes de desistir | Só parcialmente — cobre rajadas pequenas/moderadas, não contenção sustentada | Baixíssimo — mudança confinada a uma função, sem schema, reversível |
+| **A — Retry curto (implementado nesta revisão)** | Repetir a consulta `SKIP LOCKED` 2-3x com espaçamento curto antes de desistir | Só parcialmente — cobre rajadas pequenas/moderadas, não contenção sustentada | Baixíssimo — mudança confinada a uma função, sem schema, reversível |
 | **B — Separar a escolha do vendedor da criação do lead (recomendada)** | Fase 1: transação curta e independente só com `SELECT FOR UPDATE SKIP LOCKED` + `UPDATE last_assigned_at` + `COMMIT` (libera o lock em milissegundos). Fase 2: cria o lead já com o `seller_id` decidido | **Sim** — elimina a causa raiz (lock nunca mais fica preso pela criação do lead inteira) | Moderado — muda a estrutura da transação de `createLead`; precisa decidir o que fazer se a fase 2 falhar depois da fase 1 já ter "gasto" um vendedor (caso raro, mas precisa de uma decisão explícita: aceitar como fairness ligeiramente imperfeita, ou compensar) |
 | **C — Advisory lock por unidade em vez de `SKIP LOCKED` nas linhas** | `pg_advisory_xact_lock(hashtext(unit))` serializando a escolha, com `FOR UPDATE` simples (sem skip) | **Não, sozinha** — se a seção protegida continua dentro da mesma transação do lead, o lock fica preso do mesmo jeito (e pior: sem skip, quem espera FILA em vez de pular) | Só faz sentido combinada com a Opção B |
 | **D — Contador/sequence atômico (round robin determinístico)** | Uma linha única de "ponteiro de rodízio" por unidade, avançada atomicamente, mapeada para o vendedor da vez | **Não, sozinha** — mesma limitação da Opção C se ficar na mesma transação; e ainda seria só 1 linha para todo o tráfego da unidade (contenção pior, não melhor) | Só faz sentido combinada com a Opção B, e mesmo assim não traz vantagem clara sobre continuar usando `SKIP LOCKED` já isolado na fase 1 |
@@ -365,8 +365,9 @@ porque o que prende o lock é a duração da transação, não a primitiva de lo
 pode deixar uma transação longa bloquear o sistema" — encurtar a transação é o próprio mecanismo
 da correção), mantendo `SKIP LOCKED` como já está dentro da fase 1 (não precisa trocar a
 primitiva de lock, seções C/D não agregam nada sozinhas). É uma mudança arquitetural real —
-**não implementada nesta rodada**, conforme instrução explícita de só apresentar opções quando a
-mudança for grande. Antes de implementar, decidir explicitamente o comportamento de
+**não implementada nesta revisão**, já que mudanças estruturais desse porte exigem aprovação
+explícita antes de qualquer implementação. Antes de implementar, decidir explicitamente o
+comportamento de
 compensação para o caso raro de falha na fase 2 após a fase 1 já ter avançado o rodízio, e
 validar contra o teste de concorrência real (seção 9-C) antes/depois da mudança para comparar
 números.
@@ -378,12 +379,12 @@ realistas (mesmo 1.000-5.000 simultâneos, seção 17), um `UPDATE` de uma linha
 da ordem de frações de milissegundo — o Postgres serializa isso facilmente nessa escala. Só
 viraria gargalo real num volume ordens de magnitude maior que qualquer cenário modelado aqui.
 
-**Não alterado nesta rodada** (instrução explícita: só mexer no alternador havendo
-vulnerabilidade real, e não foi encontrada nenhuma) — o `UPDATE` atômico de linha única
+**Não alterado nesta revisão** (o alternador só deve ser modificado havendo vulnerabilidade
+real confirmada, e nenhuma foi encontrada) — o `UPDATE` atômico de linha única
 (`Backend.js/douradosAlternatorStore.js`) já garante serialização correta enquanto o Postgres
 está disponível, sem qualquer mudança necessária.
 
-**Documentado explicitamente (pedido desta rodada)**: o fallback em arquivo local
+**Documentado explicitamente**: o fallback em arquivo local
 (`os.tmpdir()`) usado quando o banco está indisponível **não consegue garantir alternância
 global entre diferentes Functions/instâncias da Vercel** — cada instância serverless tem seu
 próprio `os.tmpdir()`, então duas instâncias diferentes respondendo simultaneamente sob
@@ -399,16 +400,16 @@ em todos os casos, nunca fica sem WhatsApp. Nenhuma correção necessária.
 | Operação | Idempotente hoje? | Como |
 |---|---|---|
 | Criação de lead | **Sim** | `idempotency_key` (UNIQUE) por visitante+resumo+janela de 60s; colisão tratada explicitamente devolvendo o lead já criado |
-| Webhook IMEbot | **Sim** | Dedup por `wamid` (`registerWebhookEventOnce`, `imebot_webhook_events`), auditado a fundo em rodada anterior desta sessão |
+| Webhook IMEbot | **Sim** | Dedup por `wamid` (`registerWebhookEventOnce`, `imebot_webhook_events`), auditado a fundo em revisão anterior |
 | Jobs de feedback | **Parcial** | Processados com `FOR UPDATE SKIP LOCKED` (evita processar o mesmo job 2x em paralelo), mas o lote inteiro é uma transação — uma falha no meio derruba o lote todo (não é reentrância por job, é atomicidade por lote) |
 | Alternador Dourados | **Sim, por natureza** | Um `UPDATE` atômico não tem "duplo clique" possível — cada chamada sempre avança exatamente uma vez |
 | Carrinho (`linkCartToLead`) | **Sim** | `markCartConverted` é idempotente por `cartCode`; chamada best-effort não bloqueia nem duplica |
-| Devoluções | **Sim** | `ON CONFLICT (idempotency_key) DO UPDATE` confirmado em rodada anterior |
+| Devoluções | **Sim** | `ON CONFLICT (idempotency_key) DO UPDATE` confirmado em revisão anterior |
 
-**Onde ainda falta (já corrigido nesta rodada)**: o ponto de atenção citado na análise anterior
+**Onde ainda falta (já corrigido nesta revisão)**: o ponto de atenção citado na análise anterior
 (`notifyImebotOfNewLead`/`linkCartToLead` sem `waitUntil`) foi corrigido — ver seção 2. Esta
-rodada também investigou e corrigiu um segundo ponto, mais sutil, na própria dedup de criação de
-lead — ver 11-A abaixo.
+revisão também identificou e corrigiu um segundo ponto, mais sutil, na própria dedup de criação
+de lead — ver 11-A abaixo.
 
 ### 11-A. Bug de borda do bucket de 60s — CONFIRMADO por teste e CORRIGIDO
 
@@ -464,13 +465,13 @@ tentativas.
 - **100 requisições concorrentes com a mesma `idempotency_key` → exatamente 1 lead**: escrito em
   `test/dbIntegration.concurrency.test.js` (contra Postgres real) e em
   `test/salesLeadsIdempotency.test.js` (garantia de hash estável, sem I/O) — o cenário de
-  concorrência real contra banco **não foi executado** nesta sessão, mesma razão/trava da seção
+  concorrência real contra banco **não foi executado**, mesma razão/trava da seção
   9-C (sem banco de teste disponível, sem autorização para conectar ao banco real).
 
-### 11-B. Ciclo de vida completo do `clientRequestId` (revisão final desta rodada)
+### 11-B. Ciclo de vida completo do `clientRequestId` (revisão final)
 
-A rodada anterior corrigiu a fronteira de 60s, mas não tinha sido revisada contra o ciclo de vida
-completo de retries. Nesta revisão, tracei os 5 cenários pedidos:
+A revisão anterior corrigiu a fronteira de 60s, mas não tinha sido revisada contra o ciclo de vida
+completo de retries. Esta revisão mapeia os 5 cenários relevantes:
 
 | Cenário | Comportamento |
 |---|---|
@@ -480,7 +481,7 @@ completo de retries. Nesta revisão, tracei os 5 cenários pedidos:
 | **D) Usuário clica de novo após o timeout de C** | **Antes desta correção: podia criar um SEGUNDO lead** (ver abaixo). Agora: como o resultado de C foi `ambiguous:true`, o `clientRequestId` da tentativa anterior continua em cache (`pendingClientRequestIds`, TTL de 3 minutos) e é REAPROVEITADO — o servidor encontra o lead já criado pela tentativa C (mesma `idempotency_key`) e devolve ele, sem duplicar. |
 | **E) Orçamento novo legítimo alguns minutos depois** | Se o resultado da tentativa anterior foi DEFINITIVO (sucesso ou falha explícita do servidor - `ambiguous:false`), a chave em cache é apagada IMEDIATAMENTE - a próxima tentativa (mesmo com texto idêntico) já ganha uma chave nova, sem esperar o TTL. Se a tentativa anterior ficou ambígua e o usuário tenta de novo DEPOIS do TTL de 3 minutos, também ganha uma chave nova (tratado como desistência da tentativa anterior). |
 
-**C+D consegue criar dois leads hoje? Não mais — corrigido nesta rodada.** Antes da correção,
+**C+D consegue criar dois leads hoje? Não mais — corrigido nesta revisão.** Antes da correção,
 `clientRequestId` era gerado a cada chamada de `openWhatsAppWithLead` (mesmo para o mesmo
 conteúdo), então um timeout ambíguo seguido de um novo clique gerava uma chave diferente da
 primeira tentativa — o servidor não tinha como saber que era a mesma tentativa, e criava um
@@ -515,7 +516,7 @@ continua gerando chave nova).
 | Operação | Onde já está isolada |
 |---|---|
 | Analytics | Rota própria (`/api/analytics/track`), fetch separado do cliente, nunca dentro de `createLead` |
-| IMEbot (notificação) | Agendado via `after()` após a resposta já montada (corrigido nesta rodada, seção 2) |
+| IMEbot (notificação) | Agendado via `after()` após a resposta já montada (corrigido nesta revisão, seção 2) |
 | Sentry | SDK gerencia sua própria fila/descarte, nunca bloqueia |
 | Meta Pixel/GA4 | Scripts client-side, fora de qualquer rota de API |
 | Pós-venda/handoff | Fila própria em Postgres (`sales_feedback_jobs`), processada por cron separado |
@@ -525,7 +526,7 @@ região/unidade, transação de rodízio/alternador, criação do lead, definiç
 exatamente a lista que o pedido classificou como "provavelmente deve ser síncrona".
 
 **Conclusão desta seção**: não há operação secundária "vazando" para dentro do caminho crítico
-hoje. O ajuste técnico (`after()`) já foi aplicado nesta rodada, não é mais pendência.
+hoje. O ajuste técnico (`after()`) já foi aplicado nesta revisão, não é mais pendência.
 
 ## 13. Proposta de fila (não implementar agora)
 
@@ -620,7 +621,7 @@ provedor externo, que é configuração de conta, não código.
 
 ## 18. Plano CI/CD (não implementar mudança nova agora — o pipeline básico já existe)
 
-Já implementado nesta sessão: `.github/workflows/ci.yml` (lint+test+build por projeto, sem
+Já implementado: `.github/workflows/ci.yml` (lint+test+build por projeto, sem
 secrets, sem deploy). O que falta para chegar no fluxo completo pedido — **só configuração no
 GitHub, não código**:
 
@@ -711,7 +712,7 @@ POSTGRES PRIMARY
 
                     ┌─────────────────────────────┐
 LEAD CONFIRMADO →   │  after() (Next.js) - já      │  futuro: QUEUE (Postgres-fila,
-                    │  corrigido nesta rodada      │  extensão de sales_feedback_jobs)
+                    │  corrigido nesta revisão      │  extensão de sales_feedback_jobs)
                     └─────────────────────────────┘
                               ↓ (futuro)
                           WORKERS
@@ -733,14 +734,14 @@ LEAD CONFIRMADO →   │  after() (Next.js) - já      │  futuro: QUEUE (Post
 - Confirmar no dashboard do Supabase/Vercel se `DATABASE_URL` usa o **Transaction Pooler** (não a
   conexão direta) — checklist objetiva pronta na seção 5-A, ainda não conferida manualmente.
 
-**P1 — implementado nesta rodada**
+**P1 — implementado nesta revisão**
 - ~~Trocar `linkCartToLead`/`notifyImebotOfNewLead` (sem `await`) por `after()` do Next.js~~ —
   **feito** (seção 2).
 - Ativar branch protection no GitHub exigindo os checks do CI já existente antes de merge em
   `main` (seção 18) — configuração de plataforma, sem código novo, ainda pendente (fora do
-  escopo de código desta rodada).
+  escopo de código desta revisão).
 
-**P1 — novo, desta rodada**
+**P1 — novo, desta revisão**
 - Rodar `test/dbIntegration.concurrency.test.js` contra um banco de homologação real, quando
   autorizado, para medir os números reais de contenção do rodízio e confirmar (ou não) a
   necessidade da correção arquitetural da seção 9-D (Opção B).
@@ -769,7 +770,7 @@ pergunta não pode ser respondida com um número. O que a análise estática (c�
 unitários/mockados, sem infraestrutura real) permite afirmar é que o caminho crítico da venda é
 **arquiteturalmente compatível** com os cenários modelados na seção 20 (dezenas de req/s
 sustentado, picos de centenas/milhares de pessoas em poucos minutos): transação atômica,
-idempotência por `clientRequestId` (sem a fronteira de 60s corrigida nesta rodada), retry curto
+idempotência por `clientRequestId` (sem a fronteira de 60s corrigida nesta revisão), retry curto
 no rodízio, rate limit distribuído, zero acoplamento síncrono a integrações secundárias,
 fail-closed onde precisa e fail-open (com fallback pro WhatsApp padrão) onde a venda não pode
 parar. **Isso não é uma declaração de capacidade** ("o sistema aguenta X req/s") — é uma
@@ -788,5 +789,5 @@ real observada, limites do plano Vercel, e o comportamento medido do rodízio so
    de capacidade.
 
 Os dois ajustes de código pequenos e de baixo risco identificados na análise anterior (`after()`
-nas tarefas pós-resposta, dedup por `clientRequestId`) já foram implementados e testados nesta
-rodada — não são mais pendência.
+nas tarefas pós-resposta, dedup por `clientRequestId`) já foram implementados e testados — não
+são mais pendência.

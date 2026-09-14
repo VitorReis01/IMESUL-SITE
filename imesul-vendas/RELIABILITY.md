@@ -2,7 +2,7 @@
 
 # Confiabilidade e infraestrutura
 
-Documento de auditoria/planejamento desta rodada de hardening de infraestrutura. **Nada aqui foi
+Documento de auditoria/planejamento de hardening de infraestrutura. **Nada aqui foi
 executado contra produção** - é a mesma regra dos outros documentos deste tipo no repositório
 (`POSTGRES_ROLE_PROPOSAL.md`).
 
@@ -28,21 +28,21 @@ feature/dev → preview/mobile-ajustes → CI (.github/workflows/ci.yml) → Ver
 → homologação manual → aprovação → merge/promote → Production
 ```
 
-**Auditado nesta rodada**: não existe `vercel.json` versionado (confirmado em auditoria anterior)
+**Auditado nesta revisão**: não existe `vercel.json` versionado (confirmado em auditoria anterior)
 e não há branch protection/status checks configurados no GitHub neste momento - qualquer push
 direto a `main` hoje dispara Preview na Vercel sem nenhum gate automático de CI (o workflow novo
-desta rodada só passa a existir a partir do commit em que for aplicado; antes disso, não havia CI
-nenhum). Nada foi alterado nas configurações do GitHub/Vercel nesta rodada - só a auditoria.
+desta revisão só passa a existir a partir do commit em que for aplicado; antes disso, não havia CI
+nenhum). Nada foi alterado nas configurações do GitHub/Vercel nesta revisão - só a auditoria.
 
-**Checks que recomendo tornar obrigatórios no futuro** (Settings → Branches → Branch protection
-rule, no GitHub, quando você decidir aplicar):
-- `imesul-vendas (lint, test, build)` - job do `.github/workflows/ci.yml` desta rodada.
+**Checks recomendados para tornar obrigatórios no futuro** (Settings → Branches → Branch protection
+rule, no GitHub):
+- `imesul-vendas (lint, test, build)` - job do `.github/workflows/ci.yml`.
 - `imesul-institucional (lint, build)` - idem.
 - Exigir PR (sem push direto) para `main` antes de promover para Production.
 - Exigir branch atualizada com a base antes do merge.
 
-Não configurei nada disso agora - só listo o que os nomes dos jobs seriam, para quando você for
-ativar a proteção pelo dashboard do GitHub.
+Nada disso está configurado hoje - a lista acima documenta os nomes exatos dos jobs para quando
+a proteção for ativada pelo dashboard do GitHub.
 
 ## 3. Health checks - público vs interno
 
@@ -54,7 +54,7 @@ ativar a proteção pelo dashboard do GitHub.
 | `GET /api/admin/monitoring/status` (vendas) | Painel interno completo, exige sessão admin (cookie) | Agrega os serviços abaixo, nunca segredo/stack trace |
 
 Os três primeiros já satisfaziam a separação público/interno pedida - não precisaram de mudança.
-`/api/admin/monitoring/status` ganhou nesta rodada:
+`/api/admin/monitoring/status` ganhou nesta revisão:
 - Estado `degraded` para o banco quando a query `SELECT 1` responde mas acima de 500ms (antes só
   existia `online`/`offline` - esperava o timeout de 1500ms inteiro para dizer "algo errado").
 - Estado `paused` para o IMEbot, refletindo o circuit breaker de custo já existente
@@ -81,7 +81,7 @@ existia), sem scan de tabela nem agregação.
 | Banco em função não essencial | `/api/leads` (crítico) **não depende de analytics/Sentry/monitoramento** - só de `checkGlobalApiRateLimit`/`checkRateLimitLayers` (intencionalmente fail-closed, é segurança, não disponibilidade) e `createLead` | Confirmado por leitura direta de `app/api/leads/route.js` |
 
 **Nada precisou de implementação nova aqui** - a arquitetura já isola bem os componentes
-secundários. O único ponto que mudou de comportamento nesta rodada foi o health check do banco
+secundários. O único ponto que mudou de comportamento nesta revisão foi o health check do banco
 (`degraded` antes de `offline`), que é justamente uma forma de detectar degradação sem esperar
 falha total.
 
@@ -108,8 +108,8 @@ com a Meta (envio de mensagem, download de mídia) ainda não está implementada
 `/api/imebot/bridge/download/[fileId]` devolve `501` documentado em vez de tentar uma chamada
 real sem credenciais.
 
-**Não implementei circuit breaker novo** porque não há chamada externa repetitiva hoje para
-proteger. **Quando a Meta for implementada de verdade**, esse é o ponto candidato: mesmo padrão
+**Nenhum circuit breaker novo foi implementado** porque não há chamada externa repetitiva hoje
+para proteger. **Quando a Meta for implementada de verdade**, esse é o ponto candidato: mesmo padrão
 já usado pelo IMEbot (falha repetida → pausa temporária → fallback para atendimento humano →
 alerta → tenta de novo após cooldown) - reaproveitando `Backend.js/rateLimiter.js`, não um
 sistema novo.
@@ -123,7 +123,7 @@ sistema novo.
 | Download de mídia da Meta (PDF Bridge) | Não se aplica ainda - chamada não implementada (ver seção 6) |
 
 Nenhuma chamada HTTP externa importante fica esperando indefinidamente hoje - as únicas que
-existem já tinham timeout antes desta rodada. Não havia timeout "faltando" para adicionar.
+existem já tinham timeout antes desta revisão. Não havia timeout "faltando" para adicionar.
 
 ## 8. Retries - auditoria
 
@@ -144,7 +144,7 @@ jitter, nunca loop infinito - mesmo espírito do `IMEBOT_HANDOFF_MAX_RETRIES` qu
 ## 9. Observabilidade
 
 `Backend.js/logger.js` já existia (info/warn/error, sempre sanitizado via
-`lib/monitoring/sanitize.js`). Nesta rodada ganhou duas categorias adicionais - `logger.security`
+`lib/monitoring/sanitize.js`). Ganhou duas categorias adicionais - `logger.security`
 e `logger.circuitBreaker` - que são os mesmos `console.warn` de sempre, só com um campo
 `category` a mais no JSON para dar pra filtrar/alertar no provedor de log (Better Stack) sem
 criar um sistema de observabilidade novo.
@@ -170,11 +170,11 @@ Adicionado `getRequestId(request)` em `Backend.js/requestGuards.js`: usa `x-verc
 própria Vercel injeta esse header em toda invocação) quando disponível, gera `crypto.randomUUID()`
 como fallback (dev local). Nunca deriva de dado pessoal.
 
-**Adoção**: fiz a implementação de referência em `/api/admin/monitoring/status` (devolve
-`X-Request-ID` no header da resposta e inclui o mesmo valor no log `health_degraded`). Não apliquei
-nas outras ~20 rotas — isso exigiria tocar cada uma delas, o que você pediu para evitar ("não
-fazer se isso exigir mudança grande"). A função já está pronta para qualquer rota adotar
-incrementalmente: `noStoreJson(body, { headers: { "X-Request-ID": getRequestId(request) } })`.
+**Adoção**: implementação de referência em `/api/admin/monitoring/status` (devolve
+`X-Request-ID` no header da resposta e inclui o mesmo valor no log `health_degraded`). Não
+aplicado nas outras ~20 rotas ainda — isso exigiria tocar cada uma delas, fora do escopo de uma
+mudança pequena. A função já está pronta para qualquer rota adotar incrementalmente:
+`noStoreJson(body, { headers: { "X-Request-ID": getRequestId(request) } })`.
 
 ## 11. Banco - escalabilidade (auditoria, nada implementado)
 
@@ -217,14 +217,14 @@ Vercel) antes de Redis/SQS. **Não implementado agora** - nenhuma dessas condiç
 
 ## 13. Prevenção de cascata
 
-Cenário do pedido (banco lento → API acumula → chamadas externas aumentam → funções lentas →
+Cenário de cascata (banco lento → API acumula → chamadas externas aumentam → funções lentas →
 usuário tenta de novo → carga aumenta) - o que já protege isso hoje:
 
 - **Timeout**: 1500ms nas checagens de banco do painel (evita function pendurada esperando o
   Postgres).
 - **Rate limit**: camada global (10 req/10s por IP) + camada específica por rota, distribuído via
-  Postgres - já existia, agora com log (`rate_limit_triggered`, seção 9) para você ver quando
-  está acontecendo.
+  Postgres - já existia, agora com log (`rate_limit_triggered`, seção 9) para dar visibilidade
+  de quando está acontecendo.
 - **Pool pequeno por instância** (`DATABASE_POOL_MAX=3`): limita quantas conexões uma única
   instância trava esperando, mesmo sob carga.
 - **Idempotência**: dedup de lead (60s), dedup de webhook por `wamid`, UPSERT idempotente em
@@ -235,14 +235,14 @@ usuário tenta de novo → carga aumenta) - o que já protege isso hoje:
   memória/no-op em vez dederrubar a instância inteira.
 
 Nenhuma lacuna simples e óbvia foi encontrada para preencher agora - as proteções que já existiam
-cobrem o cenário descrito. O health check `degraded` (seção 3) é o único acréscimo real desta
-rodada aqui: dá visibilidade ANTES do cenário de cascata começar, não depois.
+cobrem o cenário descrito. O health check `degraded` (seção 3) é o único acréscimo real aqui:
+dá visibilidade ANTES do cenário de cascata começar, não depois.
 
 ## 14. Status no painel
 
 Ver seção 3 - `MonitoringPanel.jsx` não foi redesenhado; os estados `online/degraded/offline/
 disabled/paused` (mapeados para ONLINE/DEGRADADO/OFFLINE/DESATIVADO/PAUSED na UI) já existiam em
-`statusStyles`/`statusLabels` antes desta rodada - só precisavam de dados reais alimentando-os
+`statusStyles`/`statusLabels` antes desta revisão - só precisavam de dados reais alimentando-os
 (banco "degraded" por latência, IMEbot "paused" pelo circuit breaker, mais as linhas Rate Limiter
 e Monitoramento Externo). Nenhum segredo é exibido - mesmo padrão de antes (nome do serviço,
 status, latência, timestamp).
@@ -262,7 +262,7 @@ prático que essa distinção teria aqui. Um probe estilo Kubernetes (verificaç
 decidindo se reinicia/tira de rotação) não se aplica: a Vercel não expõe esse controle para
 functions serverless.
 
-## O que fica de fora desta rodada (nunca implementar sem decisão explícita)
+## O que fica de fora desta revisão (nunca implementar sem decisão explícita)
 
 EC2, ECS, RDS, Application Load Balancer, AWS Auto Scaling, CloudFront, Kubernetes, Redis, Kafka,
 SQS, read replica, multi-region, microservices - nenhum tem necessidade real hoje, todos citados

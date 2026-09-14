@@ -382,7 +382,6 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
     if (cityRegion) setStoredUnit(cityRegion);
   }, [cityRegion]);
 
-  // Evita recalcular os nomes enquanto o cliente altera somente o formulario.
   const recommendationNames = useMemo(() => {
     const catalogMaterials = getMaterialsByIds(project.materialIds).map((material) => material.name);
     return [...catalogMaterials, ...project.complementaryMaterials];

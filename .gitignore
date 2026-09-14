@@ -21,26 +21,22 @@ Thumbs.db
 
 # Editores
 .vscode/
+.idea/
+*.swp
+*~
 
 # Backups locais
 *.bak
 *.tmp
 
-# Ferramentas e arquivos de analise
-claude-proxy.ps1
-index.html
-.codex-dev-check/
-**/.codex-dev-check/
-.claude/
-skills-lock.json
-AGENTS.md
-DESIGN_DIRECTION.md
+# Cobertura de testes e cache de build/lint
+coverage/
+*.tsbuildinfo
+.eslintcache
 
-# Memoria/config local do Claude Code - nunca documentacao versionada do projeto
-# (README.md, docs/ etc. continuam fora desta regra, so o nome exato CLAUDE.md).
-.mcp.json
-CLAUDE.md
-**/CLAUDE.md
+# Arquivos de analise local, nao fazem parte do app
+index.html
+DESIGN_DIRECTION.md
 
 # Analytics local de desenvolvimento
 Backend.js/analytics-events.json

@@ -1,6 +1,16 @@
-// Destino comercial compartilhado pela navegacao, showroom e CTA final.
-export const salesSiteUrl =
-  process.env.NEXT_PUBLIC_SALES_URL || "https://imesul-vendas.vercel.app/";
+// Destino comercial compartilhado pela navegacao, showroom, CTA final e lib/leadClient.js (envio
+// de lead). Em producao, exige NEXT_PUBLIC_SALES_URL configurada explicitamente - nunca cai num
+// host antigo/generico (falharia alto e claro no build, em vez de mandar navegacao/lead para um
+// destino desconhecido). Em desenvolvimento, cai no localhost padrao do site de vendas.
+const configuredSalesUrl = process.env.NEXT_PUBLIC_SALES_URL;
+
+if (!configuredSalesUrl && process.env.NODE_ENV === "production") {
+  throw new Error(
+    "NEXT_PUBLIC_SALES_URL nao configurada em producao - configure a URL real do site de vendas antes do deploy."
+  );
+}
+
+export const salesSiteUrl = configuredSalesUrl || "http://localhost:3001";
 
 // Cada produto exige ID estavel, textos, variacoes, uso, imagem e ordem visual.
 // ProductScrollExperience consome todos os campos nos layouts mobile e desktop.

@@ -1,6 +1,6 @@
 // Helpers server-side minimos para as rotas utilitarias deste projeto (hoje: /api/consent-sync/*
-// - /api/health nao precisa de nada disto). O site institucional NAO tem banco (ver CLAUDE.md,
-// "Backend: so 2 rotas utilitarias... sem persistencia"), entao o rate limit aqui e em memoria,
+// - /api/health nao precisa de nada disto). O site institucional NAO tem banco (so 2 rotas
+// utilitarias, sem persistencia), entao o rate limit aqui e em memoria,
 // por instancia da funcao serverless (best-effort, nao distribuido entre lambdas da Vercel como
 // o rate limiter Postgres de imesul-vendas) - o mesmo padrao ja documentado no projeto irmao para
 // camadas de "friction" nao-criticas (nunca a unica defesa de algo que precisa bloquear de
@@ -8,7 +8,7 @@
 // sensivel nem grava nada.
 //
 // Implementacao propria (nao importada de imesul-vendas): os dois projetos sao deploys
-// independentes, sem pacote compartilhado (ver CLAUDE.md, secao 1) - o contrato de
+// independentes, sem pacote compartilhado - o contrato de
 // readJsonBodyWithLimit espelha de proposito imesul-vendas/Backend.js/requestGuards.js para os
 // dois ficarem faceis de comparar lado a lado.
 

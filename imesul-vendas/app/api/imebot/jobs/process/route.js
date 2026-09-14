@@ -13,8 +13,8 @@ const unauthorized = () => noStoreJson({ ok: false }, { status: 401 });
 const methodNotAllowed = () => sharedMethodNotAllowed("POST");
 
 // Comparação em tempo constante (mesma safeCompare usada por sessão admin e pelo PDF Bridge) -
-// antes comparava com "===" simples, vulnerável a timing attack (ver CLAUDE.md, "Problemas
-// conhecidos", e relatório de hardening desta fase).
+// antes comparava com "===" simples, vulnerável a timing attack (corrigido em uma revisão de
+// hardening de segurança).
 const isAuthorized = (request) => {
   const secret = process.env.IMEBOT_CRON_SECRET;
   if (!secret) return false;

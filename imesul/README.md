@@ -33,9 +33,9 @@ O endereco comercial e lido de `NEXT_PUBLIC_SALES_URL`. Os links de produtos e o
 Copie `.env.example` para `.env.local` e informe os enderecos publicos:
 
 ```env
-SITE_URL=https://imesul-site.vercel.app
+SITE_URL=https://www.exemplo.com.br
 SITE_LASTMOD=2026-08-01
-NEXT_PUBLIC_SALES_URL=https://imesul-vendas.vercel.app/
+NEXT_PUBLIC_SALES_URL=https://vendas.exemplo.com.br
 ```
 
 `SITE_URL` alimenta metadata, canonical, sitemap e dados estruturados. Troque para `https://www.grupoimesul.com.br` no cutover do domínio. Variáveis com prefixo `NEXT_PUBLIC_` ficam visíveis no navegador e não devem conter segredos.

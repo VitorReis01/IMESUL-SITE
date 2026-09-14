@@ -89,7 +89,7 @@ describe("proteção de custo do IMEbot", () => {
     // route.js#processInboundMessage): registerWebhookEventOnce roda ANTES de qualquer chamada a
     // checkInboundAbuseGuard/reservePaidActionBudget, e um evento repetido faz o handler
     // retornar sem nunca alcançar essas guardas. Rotas de API não têm teste automatizado direto
-    // neste projeto (ver CLAUDE.md), então este teste fixa o contrato no nível das funções puras
+    // neste projeto, então este teste fixa o contrato no nível das funções puras
         // que a rota consome.
     const runQuery = vi.fn()
       .mockResolvedValueOnce({ rowCount: 1 })
