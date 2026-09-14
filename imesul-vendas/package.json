@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cpanel": "next build && node scripts/prepare-standalone.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",

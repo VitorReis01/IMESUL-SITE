@@ -52,6 +52,11 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig = {
+  // Gera um bundle server.js autocontido em .next/standalone (traced deps + server minimo) -
+  // necessario para rodar em cPanel/Passenger, que nao usa a infraestrutura serverless da Vercel.
+  // Nao copia public/ nem .next/static automaticamente (comportamento documentado do Next.js) -
+  // ver scripts/prepare-standalone.mjs, que copia os dois apos o build.
+  output: "standalone",
   // Permite informar origens locais de desenvolvimento sem versionar IP da rede.
   allowedDevOrigins,
   productionBrowserSourceMaps: false,
