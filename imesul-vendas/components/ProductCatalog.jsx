@@ -33,7 +33,7 @@ const materialShowcaseCards = [
   {
     categoryId: "telhas-metalicas",
     title: "Telhas Metálicas",
-    image: "/images/vendas/materiais/categoria-telhas-metalicas.webp",
+    image: "/images/vendas/materiais/categoria-telhas-metalicas.png",
   },
   {
     categoryId: "laminados",
