@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { removeCurrentVisitorEvents, startAdminSession, trackLocalEvent } from "../lib/localAnalytics";
+import { useModalFocusTrap } from "../hooks/useModalFocusTrap";
 
 const inputClassName =
   "h-12 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[15px] text-white outline-none transition-all duration-200 placeholder:text-imesul-steel/42 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
@@ -163,6 +164,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
   const [adminError, setAdminError] = useState("");
   // So a tela de cadastro usa esse aviso: reforca que o envio nao cria login ativo, antes de fechar.
   const [registrationNotice, setRegistrationNotice] = useState(false);
+  const dialogRef = useRef(null);
 
   const closeModal = useCallback(() => {
     setMode("start");
@@ -264,11 +266,28 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
     closeModal();
   };
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, closeModal]);
+
+  useModalFocusTrap(dialogRef, open);
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#030811]/82 px-4 py-6 backdrop-blur-md">
-      <div className="relative max-h-[92vh] w-full max-w-[760px] overflow-y-auto rounded-[10px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(5,12,22,0.99))] shadow-[0_30px_110px_rgba(0,0,0,0.56)]">
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        className="relative max-h-[92vh] w-full max-w-[760px] overflow-y-auto rounded-[10px] border border-white/[0.12] bg-[linear-gradient(145deg,rgba(12,30,51,0.98),rgba(5,12,22,0.99))] shadow-[0_30px_110px_rgba(0,0,0,0.56)]">
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 opacity-[0.075] blur-[1px] sm:h-[560px] sm:w-[560px]">
           <Image
             src="/logo/imesul-symbol.png"
@@ -292,7 +311,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-imesul-red">
             IMESUL VENDAS
           </p>
-          <h2 className="mt-3 font-display text-5xl leading-none text-white">
+          <h2 id="auth-modal-title" className="mt-3 font-display text-5xl leading-none text-white">
             Acesse sua conta
           </h2>
           {mode === "start" && (
@@ -432,7 +451,7 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
                 Acesso restrito à equipe IMESUL.
               </div>
               {adminError && (
-                <p className="rounded-[8px] border border-imesul-red/35 bg-imesul-red/[0.09] p-4 text-sm leading-6 text-white">
+                <p role="alert" className="rounded-[8px] border border-imesul-red/35 bg-imesul-red/[0.09] p-4 text-sm leading-6 text-white">
                   {adminError}
                 </p>
               )}

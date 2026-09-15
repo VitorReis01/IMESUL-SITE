@@ -4,16 +4,21 @@
 // unidade e não há preferência salva ainda (ver lib/unitPickerBridge.js e
 // lib/commercialContact.js). Nunca abre sozinho/automaticamente. "Usar minha localização" só
 // pede geolocalização depois do clique explícito neste botão - nunca antes.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeToUnitRequests, resolveUnitRequests } from "../lib/unitPickerBridge";
 import { requestDeviceLocationOnce } from "../lib/consent";
 import { estimateUnitFromCoordinates } from "../lib/regionResolver";
 import { COMMERCIAL_UNITS } from "../lib/unitPreference";
 import { trackEvent } from "../lib/trackEvent";
 
+const focusableSelector =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export default function UnitPickerModal() {
   const [open, setOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  const dialogRef = useRef(null);
+  const previouslyFocusedRef = useRef(null);
 
   useEffect(() => subscribeToUnitRequests(() => setOpen(true)), []);
 
@@ -32,6 +37,44 @@ export default function UnitPickerModal() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, choose]);
+
+  // Foco inicial no dialog, focus trap (Tab/Shift+Tab preso dentro do modal) e restauracao do
+  // foco no elemento que abriu o modal ao fechar.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    previouslyFocusedRef.current = document.activeElement;
+    const dialog = dialogRef.current;
+    const focusTimer = window.setTimeout(() => dialog?.focus(), 0);
+
+    const handleTabTrap = (event) => {
+      if (event.key !== "Tab" || !dialog) return;
+
+      const focusable = Array.from(dialog.querySelectorAll(focusableSelector)).filter(
+        (el) => el.offsetParent !== null
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleTabTrap);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleTabTrap);
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [open]);
 
   const useMyLocation = async () => {
     setLocating(true);
@@ -57,6 +100,8 @@ export default function UnitPickerModal() {
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
       />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Escolha de unidade de atendimento"

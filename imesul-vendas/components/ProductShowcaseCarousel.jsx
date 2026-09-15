@@ -343,12 +343,20 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
         <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[clamp(42px,10vw,170px)] bg-gradient-to-r from-[#06101d] via-[#06101d]/82 to-transparent" />
         <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-[clamp(42px,10vw,170px)] bg-gradient-to-l from-[#06101d] via-[#06101d]/82 to-transparent" />
         <div ref={trackRef} className="flex w-max gap-4 pl-5 will-change-transform sm:gap-5 sm:pl-8 lg:pl-12">
-          {loopProducts.map((product, index) => (
+          {loopProducts.map((product, index) => {
+            // A segunda metade e uma copia PURAMENTE VISUAL (necessaria para o loop continuo do
+            // autoplay/drag) - nunca deve ganhar foco por TAB nem ser anunciada por leitor de
+            // tela, so a primeira copia de cada produto e a parada de teclado/AT real.
+            const isVisualDuplicate = index >= products.length;
+
+            return (
             <button
               key={`${product.id}-${index}`}
               type="button"
               data-carousel-product-id={product.id}
               aria-label={`Ver opções de ${product.name}`}
+              aria-hidden={isVisualDuplicate || undefined}
+              tabIndex={isVisualDuplicate ? -1 : undefined}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -382,7 +390,8 @@ export default function ProductShowcaseCarousel({ onSelectProduct, onTrackIntera
               </span>
               <span className="pointer-events-none absolute inset-0 opacity-0 ring-1 ring-inset ring-[#f0c776]/25 transition-opacity duration-300 group-hover:opacity-100" />
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

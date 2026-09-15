@@ -60,6 +60,8 @@ export default function Navbar() {
         className={`fixed inset-x-0 top-0 z-[150] border-b border-slate-200/80 bg-white/95 backdrop-blur-xl transition-all duration-500 ${
           scrolled ? "shadow-[0_10px_30px_rgba(15,23,42,0.08)]" : "shadow-none"
         }`}
+        aria-hidden={shouldHideNavbar}
+        {...(shouldHideNavbar ? { inert: true } : {})}
       >
         <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
           <div className="flex h-[72px] items-center justify-between gap-4">
@@ -118,6 +120,8 @@ export default function Navbar() {
           animate={{ height: menuOpen ? "auto" : 0, opacity: menuOpen ? 1 : 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className="overflow-hidden border-t border-slate-200 bg-white/98 backdrop-blur-xl xl:hidden"
+          aria-hidden={!menuOpen}
+          {...(!menuOpen ? { inert: true } : {})}
         >
           <div className="flex flex-col gap-2 px-6 py-6">
             {navLinks.map((link) => (

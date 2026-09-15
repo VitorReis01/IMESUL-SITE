@@ -19,11 +19,12 @@
 // quando existir um provedor aprovado de coordenadas -> município, reintroduzir aqui um passo
 // inicial com o botão "Usar minha localização" chamando esse provedor e depois
 // getCommercialRegionByCity(municipio) antes de resolve(...).
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { subscribeToUnitRequests, resolveUnitRequests } from "../lib/unitPickerBridge";
 import { ALL_MS_COMMERCIAL_CITIES, getCommercialRegionByCity } from "../lib/commercialRegions";
 import { trackEvent } from "../lib/trackEvent";
+import { useModalFocusTrap } from "../hooks/useModalFocusTrap";
 
 const selectClassName =
   "h-14 w-full rounded-[8px] border border-white/[0.12] bg-[#071828] px-4 text-[16px] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] outline-none transition-all duration-200 hover:border-white/[0.2] focus:border-imesul-red/75 focus:bg-[#0a1d30] focus:ring-4 focus:ring-imesul-red/[0.08]";
@@ -31,6 +32,8 @@ const selectClassName =
 export default function CommercialRegionModal() {
   const [open, setOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState("");
+  const dialogRef = useRef(null);
+  useModalFocusTrap(dialogRef, open);
 
   useEffect(
     () =>
@@ -72,6 +75,8 @@ export default function CommercialRegionModal() {
         className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
       />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Escolha da região de atendimento"
