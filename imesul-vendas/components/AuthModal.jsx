@@ -175,16 +175,11 @@ export default function AuthModal({ open, onClose, onAuthenticated, onAdminAuthe
 
   const completeVisualAuth = (event) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
     const isRegister = mode === "client-register";
-    const client = isRegister
-      ? {
-          name: String(formData.get("name") || ""),
-          phone: String(formData.get("phone") || ""),
-          email: String(formData.get("email") || ""),
-          status: "Cliente com login",
-        }
-      : { status: "Cliente com login" };
+    // Fluxo demonstrativo (nao cria conta real - ver aviso na tela). Nome/telefone/e-mail
+    // digitados aqui ficam so no formulario, nunca saem para analytics: nao ha finalidade de
+    // negocio real para persistir esse dado pessoal fora de um cadastro que nao existe de fato.
+    const client = { status: "Cliente com login" };
 
     trackLocalEvent({
       type: "login",

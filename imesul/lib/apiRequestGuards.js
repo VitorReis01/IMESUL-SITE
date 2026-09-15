@@ -29,10 +29,25 @@ export const getRequestIp = (request) => {
 
 const buckets = new Map();
 
+// Processo Passenger de longa duracao (nao serverless efemero): sem poda, um IP novo por
+// requisicao viraria uma entrada permanente e o Map cresceria sem limite ao longo de
+// semanas de uptime. maxTrackedKeys da um teto previsivel de memoria (mesmo padrao ja usado
+// em imesul-vendas/Backend.js/adminSecurity.js#createSlidingWindowLimiter): so varre entradas
+// expiradas quando o Map cresce demais, nunca em toda chamada.
+const maxTrackedKeys = 5000;
+
+const cleanupExpiredIfLarge = (now) => {
+  if (buckets.size < maxTrackedKeys) return;
+  buckets.forEach((bucket, key) => {
+    if (bucket.resetAt <= now) buckets.delete(key);
+  });
+};
+
 // Janela fixa simples (nao sliding window) - suficiente para o proposito de friction aqui, sem
 // exigir nenhuma infraestrutura nova (Postgres, KV, etc.) neste projeto.
 export const checkSimpleRateLimit = ({ key, windowMs, max }) => {
   const now = Date.now();
+  cleanupExpiredIfLarge(now);
   const bucket = buckets.get(key);
 
   if (!bucket || now >= bucket.resetAt) {

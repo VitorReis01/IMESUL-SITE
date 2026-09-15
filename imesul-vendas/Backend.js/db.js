@@ -33,6 +33,11 @@ const getPool = () => {
     max: Number(process.env.DATABASE_POOL_MAX || 3),
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 5_000,
+    // Sem isso, uma query travada (lock, rede degradada ate o provedor gerenciado) prende uma
+    // conexao indefinidamente - grave num pool pequeno de processo unico (Passenger), que nao se
+    // autorrecupera como uma instancia serverless que simplesmente morre e sobe limpa.
+    statement_timeout: 10_000,
+    query_timeout: 10_000,
   });
 
   pool.on("error", (err) => {
