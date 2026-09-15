@@ -111,7 +111,7 @@ export const catalogProducts = [
     name: "Telha Sanduíche",
     description: "Telha termoacústica com núcleo isolante, indicada para coberturas com conforto térmico e acústico.",
     usage: ["Cobertura", "Termoacústica", "Isolamento"],
-    image: "/catalog-products/atualizadas/telha-sanduiche.webp",
+    image: "/catalog-products/atualizadas/telha-sanduiche.png",
   }),
   product({
     id: "telhas-translucidas",
