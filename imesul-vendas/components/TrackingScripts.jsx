@@ -17,6 +17,7 @@ export const canSendTracking = ({ enabled, consent }) => enabled === true && Boo
 export default function TrackingScripts() {
   const pathname = usePathname() || "/";
   const lastGooglePageViewPath = useRef("");
+  const lastMetaPageViewPath = useRef("");
   const [googleReady, setGoogleReady] = useState(false);
   const [metaReady, setMetaReady] = useState(false);
   const consentRaw = useSyncExternalStore(subscribeToConsent, getStoredConsentRaw, getServerConsentRaw);
@@ -39,7 +40,12 @@ export default function TrackingScripts() {
 
   useEffect(() => {
     if (!canTrack || !metaReady || typeof window.fbq !== "function") return;
+    // Mesma guarda de idempotencia do GA4 acima - sem isso, alternar o consentimento (rejeitar/
+    // aceitar de novo pelo banner) sem navegar refazia o efeito e disparava um PageView duplicado
+    // no Meta para a mesma pagina.
+    if (lastMetaPageViewPath.current === pathname) return;
     window.fbq("track", "PageView");
+    lastMetaPageViewPath.current = pathname;
   }, [canTrack, metaReady, pathname]);
 
   if (!canTrack) return null;
