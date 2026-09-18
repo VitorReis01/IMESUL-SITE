@@ -8,8 +8,6 @@ import { ArrowRight, Check, ClipboardList, MessageCircle, Ruler, ShoppingCart } 
 import { getMaterialsByIds } from "../data/materials";
 import { getCatalogCategory } from "../data/catalogCategories";
 import {
-  brazilianStates,
-  citiesByState,
   msCities,
   projectSizeOptions,
   projectUrgencyOptions,
@@ -29,7 +27,8 @@ import ProductSummary from "./ProductSummary";
 
 const customQuantityValue = "__custom_quantity__";
 
-// Campos do caminho por projeto; medidas tecnicas sao confirmadas pela equipe comercial.
+// Campos do caminho por projeto; medidas tecnicas sao confirmadas pela equipe comercial. Estado
+// fixo em MS (mesma regra definitiva de negocio do caminho por material acima).
 const projectInitialForm = {
   projectSize: "",
   urgency: "",
@@ -39,7 +38,9 @@ const projectInitialForm = {
   notes: "",
 };
 
-// Campos compartilhados pelo produto estruturado e pelo produto sob consulta.
+// Campos compartilhados pelo produto estruturado e pelo produto sob consulta. Estado fixo em MS
+// (regra definitiva de negocio: atendimento so em Mato Grosso do Sul, sem selecao de outro estado
+// - ver SelectField "Estado" removido em MaterialQuoteFlow).
 const materialInitialForm = {
   measure: "",
   thickness: "",
@@ -47,7 +48,7 @@ const materialInitialForm = {
   details: "",
   quantity: "",
   city: "",
-  state: "",
+  state: "MS",
   notes: "",
 };
 
@@ -470,7 +471,11 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
               <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
                 <SelectField label="Quantidade" value={form.quantity} onChange={updateField("quantity")} options={quantityOptions} placeholder="Selecione" required />
                 <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={msCities} placeholder="Selecione" required />
-                <SelectField label="Estado" value={form.state} onChange={updateField("state")} options={brazilianStates} placeholder="Selecione" required />
+                <Field label="Estado" required>
+                  <div className={`${inputClassName} flex items-center text-imesul-steel-light/85`}>
+                    Mato Grosso do Sul
+                  </div>
+                </Field>
               </div>
               <Field label="Observações">
                 <textarea
@@ -502,7 +507,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
               <SummaryRow label="Momento da compra" value={form.urgency} />
               <SummaryRow label="Quantidade" value={form.quantity} />
               <SummaryRow label="Cidade" value={form.city} />
-              <SummaryRow label="Estado" value={form.state} />
+              <SummaryRow label="Estado" value="Mato Grosso do Sul" />
               <SummaryRow label="Observações" value={form.notes} />
             </dl>
             <WhatsAppButton
@@ -547,10 +552,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   const [customQuantity, setCustomQuantity] = useState("");
   const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
-  const cityOptions = form.state ? citiesByState[form.state] || ["Outra"] : [];
-  // Mesma resolucao territorial do fluxo por projeto (ver ProjectQuoteFlow acima) - aqui o estado
-  // e sempre escolhido pelo cliente (sem default "MS"), entao so resolve regiao quando MS foi
-  // selecionado.
+  // Mesma resolucao territorial do fluxo por projeto (ver ProjectQuoteFlow acima) - estado fixo em
+  // "MS" (regra definitiva de negocio), entao sempre resolve regiao a partir da cidade escolhida.
   const storedUnit = useSyncExternalStore(subscribeToUnitPreference, getStoredUnit, () => "");
   const cityRegion = resolveCityRegion(form);
   const resolvedUnit = cityRegion || storedUnit;
@@ -631,11 +634,6 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
       event.preventDefault();
     }
   };
-  const updateState = (event) => {
-    const state = event.target.value;
-    setForm((current) => ({ ...current, state, city: "" }));
-  };
-
   const message = buildProductMessage({
     category,
     product,
@@ -705,8 +703,12 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
               placeholder="Selecione"
               required
             />
-            <SelectField label="Estado" value={form.state} onChange={updateState} options={brazilianStates} placeholder="Selecione" required />
-            <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={cityOptions} placeholder={form.state ? "Selecione" : "Selecione o estado"} required disabled={!form.state} />
+            <Field label="Estado" required>
+              <div className={`${inputClassName} flex items-center text-imesul-steel-light/85`}>
+                Mato Grosso do Sul
+              </div>
+            </Field>
+            <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={msCities} placeholder="Selecione" required />
           </div>
           {(usesSimplifiedModelQuote || isTelaEletrossoldada) && isCustomQuantity && (
             <div className="mt-5 max-w-sm">

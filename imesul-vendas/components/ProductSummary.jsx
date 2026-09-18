@@ -58,7 +58,7 @@ export default function ProductSummary({
         )}
         <SummaryRow label={labels.quantity} value={form.quantity} />
         <SummaryRow label="Cidade" value={form.city} />
-        <SummaryRow label="Estado" value={form.state} />
+        <SummaryRow label="Estado" value="Mato Grosso do Sul" />
         <SummaryRow label="Observações" value={form.notes} />
       </dl>
 
