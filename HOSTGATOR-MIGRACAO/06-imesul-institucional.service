@@ -1,0 +1,59 @@
+# ============================================================================
+# imesul-institucional.service — destino: /etc/systemd/system/imesul-institucional.service
+# ============================================================================
+# Mesmo padrão de 05-imesul-vendas.service. Diferenças: porta 3002, diretório
+# /var/www/imesul-institucional, e este app NÃO tem app.js no repositório
+# hoje — ExecStart aponta direto para o server.js gerado pelo build
+# standalone. Se um app.js equivalente for adicionado depois (recomendado,
+# só copiar o padrão do vendas), trocar o ExecStart para "node app.js".
+#
+# Depois de instalar:
+#   systemctl daemon-reload
+#   systemctl enable --now imesul-institucional
+#   systemctl status imesul-institucional
+#   journalctl -u imesul-institucional -f
+# ============================================================================
+[Unit]
+Description=IMESUL Institucional (Next.js standalone)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=imesul
+Group=imesul
+WorkingDirectory=/var/www/imesul-institucional
+
+EnvironmentFile=/etc/imesul/imesul-institucional.env
+Environment=PORT=3002
+Environment=HOSTNAME=127.0.0.1
+Environment=NODE_ENV=production
+
+ExecStart=/usr/bin/node .next/standalone/server.js
+
+Restart=on-failure
+RestartSec=3
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+StandardOutput=append:/var/log/imesul/institucional.log
+StandardError=append:/var/log/imesul/institucional-error.log
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/imesul
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+
+MemoryMax=512M
+TasksMax=256
+CPUWeight=80
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,70 @@
+# ============================================================================
+# imesul-vendas.service — destino: /etc/systemd/system/imesul-vendas.service
+# ============================================================================
+# Depende de:
+#   - código + build standalone já em /var/www/imesul-vendas (ver 08-deploy.md)
+#   - /etc/imesul/imesul-vendas.env preenchido (ver 07-env-checklist.md), 600, dono root:imesul
+#   - usuário de serviço "imesul" criado por 02-provisionamento.sh
+#
+# Depois de instalar:
+#   systemctl daemon-reload
+#   systemctl enable --now imesul-vendas
+#   systemctl status imesul-vendas
+#   journalctl -u imesul-vendas -f
+# ============================================================================
+[Unit]
+Description=IMESUL Vendas (Next.js standalone)
+After=network-online.target
+Wants=network-online.target
+# Se algum dia precisar tocar o banco antes do app subir, não há dependência
+# local a declarar aqui: o Supabase é externo, não é um serviço desta VPS.
+
+[Service]
+Type=simple
+User=imesul
+Group=imesul
+WorkingDirectory=/var/www/imesul-vendas
+
+EnvironmentFile=/etc/imesul/imesul-vendas.env
+# PORT e HOSTNAME também podem vir só do arquivo .env acima; deixados aqui
+# como valor padrão redundante caso o arquivo seja esquecido — nunca abre
+# para fora (HOSTNAME=127.0.0.1): só o Nginx local fala com esta porta.
+Environment=PORT=3001
+Environment=HOSTNAME=127.0.0.1
+Environment=NODE_ENV=production
+
+# app.js é o mesmo wrapper já usado no cPanel: confere se
+# .next/standalone/server.js existe e falha alto/claro se o build não rodou.
+ExecStart=/usr/bin/node app.js
+
+Restart=on-failure
+RestartSec=3
+# Evita loop de restart infinito se o build estiver quebrado/faltando.
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# ---- logs (systemd/journald já captura stdout/stderr; espelha em arquivo) ----
+StandardOutput=append:/var/log/imesul/vendas.log
+StandardError=append:/var/log/imesul/vendas-error.log
+
+# ---- hardening (ver 12-seguranca.md) ----
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/imesul
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+# false porque o V8/Node precisa de JIT (mmap RWX); manter true quebraria o Node.
+
+# ---- limites de recurso (VPS de 1 vCPU / 2 GB RAM, dividida com o institucional) ----
+MemoryMax=768M
+TasksMax=256
+CPUWeight=100
+
+[Install]
+WantedBy=multi-user.target
