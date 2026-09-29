@@ -10,12 +10,22 @@ let pool = null;
 export const isDatabaseConfigured = () => Boolean(process.env.DATABASE_URL);
 
 // A maioria dos provedores gerenciados (Neon, Supabase, RDS, etc.) exige TLS e usa
-// certificados que nao estao na CA padrao do Node; rejectUnauthorized:false e o ajuste
-// padrao aceito nesse cenario a partir de ambiente serverless. Postgres local sem TLS
-// (desenvolvimento) desliga SSL explicitamente.
+// certificados que nao estao na CA padrao do Node. Postgres local sem TLS (desenvolvimento)
+// desliga SSL explicitamente.
+//
+// Validacao de certificado (hardening desta fase): se DATABASE_CA_CERT estiver configurada (PEM
+// do certificado CA do Supabase - painel do projeto, Settings > Database > SSL Configuration >
+// Download certificate), valida de verdade (rejectUnauthorized:true) contra ele - fecha o MITM
+// que rejectUnauthorized:false sempre permitiu. Sem essa variavel configurada, mantem o
+// comportamento anterior (aceita qualquer certificado) para nao quebrar a conexao existente -
+// configurar DATABASE_CA_CERT e opcional, nao bloqueia o deploy atual.
 const getSslConfig = () => {
   const url = process.env.DATABASE_URL || "";
   if (/sslmode=disable/i.test(url) || /(^|@)(localhost|127\.0\.0\.1)/i.test(url)) return false;
+
+  const caCert = process.env.DATABASE_CA_CERT || "";
+  if (caCert) return { rejectUnauthorized: true, ca: caCert };
+
   return { rejectUnauthorized: false };
 };
 

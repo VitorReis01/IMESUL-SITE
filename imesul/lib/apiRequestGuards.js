@@ -12,19 +12,23 @@
 // readJsonBodyWithLimit espelha de proposito imesul-vendas/Backend.js/requestGuards.js para os
 // dois ficarem faceis de comparar lado a lado.
 
+// Deploy real: VPS HostGator + Nginx local (ver HOSTGATOR-MIGRACAO/04-nginx-institucional.conf) -
+// mesma topologia de imesul-vendas/Backend.js/requestGuards.js#getRequestIp: um único hop
+// confiável (Nginx), que sempre SOBRESCREVE x-real-ip ($remote_addr) e ANEXA (nunca sobrescreve)
+// x-forwarded-for ($proxy_add_x_forwarded_for). x-real-ip é a fonte primária porque um cliente não
+// consegue forjá-lo; o fallback usa o ÚLTIMO valor de x-forwarded-for (hop mais próximo do
+// servidor), nunca o primeiro (que é sempre o que o cliente mandou). Headers do Vercel/Cloudflare
+// removidos - não são mais o alvo de deploy deste projeto.
 export const getRequestIp = (request) => {
-  const forwardedFor = request.headers.get("x-forwarded-for") || "";
-  const first = forwardedFor.split(",")[0]?.trim();
-  if (first) return first;
-
   const realIp = request.headers.get("x-real-ip");
   if (realIp) return realIp;
 
-  const cfConnectingIp = request.headers.get("cf-connecting-ip");
-  if (cfConnectingIp) return cfConnectingIp;
+  const forwardedFor = request.headers.get("x-forwarded-for") || "";
+  const parts = forwardedFor.split(",").map((part) => part.trim()).filter(Boolean);
+  const last = parts[parts.length - 1];
+  if (last) return last;
 
-  const vercelForwardedFor = (request.headers.get("x-vercel-forwarded-for") || "").split(",")[0]?.trim();
-  return vercelForwardedFor || "não identificado";
+  return "não identificado";
 };
 
 const buckets = new Map();

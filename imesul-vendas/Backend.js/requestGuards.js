@@ -12,33 +12,38 @@ import { NextResponse } from "next/server";
 
 export const getFirstForwardedIp = (value = "") => value.split(",")[0]?.trim() || "";
 
-// Ordem de confianca revisada (hardening desta fase) - confirmada contra a documentacao oficial
-// da Vercel (vercel.com/docs/headers/request-headers, seções x-forwarded-for/x-vercel-forwarded-for/
-// x-real-ip), não só por comentário antigo:
+const getLastForwardedIp = (value = "") => {
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts[parts.length - 1] || "";
+};
+
+// Ordem de confianca revisada para o deploy real (VPS HostGator + Nginx, ver
+// HOSTGATOR-MIGRACAO/03-nginx-vendas.conf) - a Vercel não é mais o alvo de produção deste
+// projeto, então headers específicos dela (x-vercel-forwarded-for) nunca chegam mais e foram
+// removidos da cadeia.
 //
-// - x-forwarded-for: a Vercel SOBRESCREVE esse header na própria borda e "não repassa IPs
-//   externos" (texto oficial) - em um deploy padrão (sem Trusted Proxy, recurso só de Enterprise),
-//   não é possível um cliente forjar o valor que a função recebe.
-// - x-vercel-forwarded-for: documentado pela própria Vercel como "idêntico a x-forwarded-for",
-//   porém MAIS resistente quando existe um proxy própio na FRENTE da Vercel (ex.: CDN/WAF externo)
-//   que poderia reescrever x-forwarded-for de novo depois da borda da Vercel já ter definido o
-//   valor correto - por isso vem primeiro aqui, mesmo sem essa topologia confirmada hoje.
-// - x-real-ip: também documentado como "idêntico a x-forwarded-for" (mesma confiança).
-// - cf-connecting-ip / fastly-client-ip FORAM REMOVIDOS da cadeia: não são headers que a Vercel
-//   define ou sobrescreve (não aparecem na documentação oficial de headers da Vercel), e este
-//   projeto não está confirmado atrás de Cloudflare nem Fastly (nenhuma configuração de CDN/WAF
-//   externo encontrada no repositório) - em um deploy direto na Vercel, um cliente pode simplesmente
-//   enviar esses dois headers com qualquer valor e a função os recebe sem alteração. Mantê-los
-//   como fallback, à frente de um header realmente controlado pela Vercel, permitiria spoofing de
-//   IP em qualquer rota que use getRequestIp() para rate limit (ex.: multiplicar a cota
-//   fingindo vir de outro IP a cada requisição). Se este projeto algum dia ficar atrás de
-//   Cloudflare/Fastly de verdade, o cabeçalho correto a confiar nesse cenário precisa ser
-//   revalidado explicitamente, não reintroduzido "por via das dúvidas".
-// - request.ip e a string fixa de fallback fecham a cadeia, como antes.
+// A topologia real tem UM único hop confiável: o Nginx local (Node só escuta em 127.0.0.1,
+// nunca exposto - ver 05-imesul-vendas.service e 12-seguranca.md#12.1). Esse Nginx define, para
+// TODA requisição, sem exceção:
+//   proxy_set_header X-Real-IP $remote_addr;              -> SOBRESCREVE sempre, nunca repassa
+//                                                             o valor que o cliente enviou
+//   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; -> ANEXA $remote_addr ao que
+//                                                             já veio do cliente (não sobrescreve)
+//
+// Por isso:
+// - x-real-ip é a fonte primária: só o Nginx pode defini-lo, um cliente não consegue forjá-lo.
+// - x-forwarded-for, quando usado como fallback, precisa do ÚLTIMO valor da lista (o hop mais
+//   próximo do servidor, escrito pelo nosso Nginx) - o PRIMEIRO valor é sempre o que o cliente
+//   mandou e pode ser forjado livremente (getFirstForwardedIp fica exportado só para uso onde a
+//   ordem de fato importa saber qual é o cliente original, nunca para decidir em quem confiar).
+// - Sem Cloudflare/Fastly/CDN externo confirmado na frente deste Nginx - se isso mudar, essa
+//   cadeia precisa ser revalidada (um proxy adicional na frente adicionaria mais um hop).
 export const getRequestIp = (request) =>
-  getFirstForwardedIp(request.headers.get("x-vercel-forwarded-for") || "") ||
-  getFirstForwardedIp(request.headers.get("x-forwarded-for") || "") ||
   request.headers.get("x-real-ip") ||
+  getLastForwardedIp(request.headers.get("x-forwarded-for") || "") ||
   request.ip ||
   "não identificado";
 
