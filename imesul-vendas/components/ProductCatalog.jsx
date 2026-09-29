@@ -71,6 +71,7 @@ export default function ProductCatalog({
   highlightedProductId,
   recommendedProjectTitle,
   recommendedCategoryIds = [],
+  onClearRecommendation,
   onSelectCategory,
   onSelectProduct,
   onBackToCategories,
@@ -85,6 +86,10 @@ export default function ProductCatalog({
     (category) => category.id === selectedCategoryId
   );
   const hasRecommendations = recommendedCategoryIds.length > 0;
+  // So mostra as categorias compativeis com a aplicacao escolhida - nunca lista material fora do catalogo real.
+  const visibleMaterialCards = hasRecommendations
+    ? materialShowcaseCards.filter((card) => recommendedCategoryIds.includes(card.categoryId))
+    : materialShowcaseCards;
 
   return (
     <div className="mt-12 lg:mt-14">
@@ -96,15 +101,26 @@ export default function ProductCatalog({
               {recommendedProjectTitle}
             </span>
           </p>
-          <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[11px] uppercase leading-5 tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            Selecione uma categoria para ver os produtos.
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-white/[0.12] bg-white/[0.07] px-4 py-2.5 font-mono text-[11px] uppercase leading-5 tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              Selecione uma categoria para ver os produtos.
+            </span>
+            {onClearRecommendation && (
+              <button
+                type="button"
+                onClick={onClearRecommendation}
+                className="rounded-full border border-white/[0.14] bg-transparent px-4 py-2.5 font-mono text-[11px] uppercase leading-5 tracking-[0.12em] text-imesul-steel-light/80 transition-colors hover:border-white/[0.3] hover:text-white"
+              >
+                Ver todos os materiais
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {!selectedCategory && (
       <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {materialShowcaseCards.map((card) => {
+        {visibleMaterialCards.map((card) => {
           const category = catalogCategories.find((item) => item.id === card.categoryId);
           if (!category) return null;
 

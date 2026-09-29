@@ -102,3 +102,52 @@ describe("lib/cart.js", () => {
     expect(item.customerPhone).toBeUndefined();
   });
 });
+
+describe("quantidade do carrinho (texto do formulário)", () => {
+  it("parseQuantityText preserva unidades e metragem decimal", async () => {
+    const { parseQuantityText } = await importCartFresh();
+    expect(parseQuantityText("5 unidades")).toEqual({ quantity: 5, unit: "unidade" });
+    expect(parseQuantityText("12 unidades")).toEqual({ quantity: 12, unit: "unidade" });
+    expect(parseQuantityText("1 unidade")).toEqual({ quantity: 1, unit: "unidade" });
+    expect(parseQuantityText("100 unidades")).toEqual({ quantity: 100, unit: "unidade" });
+    expect(parseQuantityText("25,5 m")).toEqual({ quantity: 25.5, unit: "m" });
+    expect(parseQuantityText("0,5 m")).toEqual({ quantity: 0.5, unit: "m" });
+    expect(parseQuantityText("40 m")).toEqual({ quantity: 40, unit: "m" });
+    expect(parseQuantityText("3")).toEqual({ quantity: 3, unit: "unidade" });
+  });
+
+  it("parseQuantityText cai em 1 unidade quando vazio/inválido/zero", async () => {
+    const { parseQuantityText } = await importCartFresh();
+    for (const value of ["", "Não informado", "Outro", "0 unidades", "0 m", undefined, null]) {
+      expect(parseQuantityText(value)).toEqual({ quantity: 1, unit: "unidade" });
+    }
+  });
+
+  it("guarda quantidade e unidade no item e formata para exibição", async () => {
+    const { addCartItem, getCartItems, parseQuantityText, formatCartQuantity } = await importCartFresh();
+    addCartItem({ categoryId: "telhas", productId: "t40", ...parseQuantityText("25,5 m") });
+    addCartItem({ categoryId: "tubos", productId: "q", ...parseQuantityText("5 unidades") });
+    const [telha, tubo] = getCartItems();
+    expect(telha.quantity).toBe(25.5);
+    expect(telha.unit).toBe("m");
+    expect(formatCartQuantity(telha)).toBe("25,5 m");
+    expect(tubo.quantity).toBe(5);
+    expect(formatCartQuantity(tubo)).toBe("5 unidades");
+    expect(formatCartQuantity({ quantity: 1 })).toBe("1 unidade");
+  });
+
+  it("stepCartQuantity anda 1 em unidades e 0,5 em metragem, nunca abaixo do passo", async () => {
+    const { stepCartQuantity } = await importCartFresh();
+    expect(stepCartQuantity({ quantity: 5, unit: "unidade" }, 1)).toBe(6);
+    expect(stepCartQuantity({ quantity: 1, unit: "unidade" }, -1)).toBe(1);
+    expect(stepCartQuantity({ quantity: 25.5, unit: "m" }, 1)).toBe(26);
+    expect(stepCartQuantity({ quantity: 25.55, unit: "m" }, 1)).toBe(26.05);
+    expect(stepCartQuantity({ quantity: 0.5, unit: "m" }, -1)).toBe(0.5);
+    expect(stepCartQuantity({ quantity: 7 }, 1)).toBe(8);
+  });
+
+  it("getCartItemCount conta item em metragem como 1 linha", async () => {
+    const { getCartItemCount } = await importCartFresh();
+    expect(getCartItemCount([{ quantity: 5, unit: "unidade" }, { quantity: 25.5, unit: "m" }, { quantity: 2 }])).toBe(8);
+  });
+});

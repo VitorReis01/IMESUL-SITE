@@ -15,10 +15,12 @@ import {
 } from "../lib/guidedQuoteFlow";
 import {
   clearCartItems,
+  formatCartQuantity,
   getCartRawSnapshot,
   getServerCartSnapshot,
   parseCartRaw,
   removeCartItem,
+  stepCartQuantity,
   subscribeToCart,
   subscribeToCartOpen,
   updateCartItemQuantity,
@@ -54,7 +56,7 @@ const buildCartMessage = (items) => {
     return [
       `${index + 1}. ${item.productName}${item.categoryName ? ` (${item.categoryName})` : ""}`,
       technical ? `   ${technical}` : "",
-      `   Quantidade: ${item.quantity}`,
+      `   Quantidade: ${formatCartQuantity(item)}`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -234,16 +236,16 @@ export default function CartWidget() {
                       <div className="mt-3 flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => updateCartItemQuantity(item.key, Math.max(1, Number(item.quantity || 1) - 1))}
+                          onClick={() => updateCartItemQuantity(item.key, stepCartQuantity(item, -1))}
                           aria-label="Diminuir quantidade"
                           className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/[0.14] text-white transition-colors hover:border-imesul-red/50"
                         >
                           <Minus size={14} aria-hidden="true" />
                         </button>
-                        <span className="min-w-8 text-center font-condensed text-sm font-bold text-white">{item.quantity}</span>
+                        <span className="min-w-8 text-center font-condensed text-sm font-bold text-white">{formatCartQuantity(item)}</span>
                         <button
                           type="button"
-                          onClick={() => updateCartItemQuantity(item.key, Number(item.quantity || 1) + 1)}
+                          onClick={() => updateCartItemQuantity(item.key, stepCartQuantity(item, 1))}
                           aria-label="Aumentar quantidade"
                           className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/[0.14] text-white transition-colors hover:border-imesul-red/50"
                         >

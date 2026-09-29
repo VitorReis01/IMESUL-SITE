@@ -21,7 +21,7 @@ import { openWhatsAppWithLead } from "../lib/leadWhatsApp";
 import { LEAD_FLOW_TYPES } from "../lib/leadFlow";
 import { getCommercialRegionByCity } from "../lib/commercialRegions";
 import { getStoredUnit, setStoredUnit, subscribeToUnitPreference } from "../lib/unitPreference";
-import { addCartItem } from "../lib/cart";
+import { addCartItem, parseQuantityText } from "../lib/cart";
 import ProductOptionSelector, { findSelectedVariation, formatOptionValue } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
 
@@ -86,9 +86,132 @@ function isHalfMeterLength(value) {
   return Math.abs(Math.round(number * 2) - number * 2) < 1e-9;
 }
 
-function formatCustomLength(value) {
+function formatCustomLength(value, maximumFractionDigits = 1) {
   const number = Number(normalizeDecimal(value));
-  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(number)} m`;
+  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits }).format(number)} m`;
+}
+
+// Telhas sao vendidas por metragem: aceita qualquer decimal positivo (ate 2 casas).
+function isPositiveDecimal(value) {
+  const normalized = normalizeDecimal(value);
+  return /^\d+(\.\d+)?$/.test(normalized) && Number(normalized) > 0;
+}
+
+// Campo digitavel do "Outro" na quantidade. "unit" = materiais comuns (inteiro), "meter" = telhas
+// (metragem), "half-meter" = tela eletrossoldada (multiplos de 0,5 m, tem opcao propria no select).
+const customQuantityModes = {
+  unit: {
+    label: "Informe a quantidade desejada",
+    placeholder: "Ex.: 12",
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+    allowed: /^[0-9]*$/,
+    blockedKeys: ["e", "E", "+", "-", ".", ",", "/"],
+    isValid: isPositiveInteger,
+    format: formatCustomQuantity,
+    error: "Use apenas números inteiros maiores que zero.",
+    disabledReason: "Informe a quantidade desejada (número inteiro maior que zero).",
+  },
+  meter: {
+    label: "Informe a metragem desejada",
+    placeholder: "Ex.: 25,5",
+    inputMode: "decimal",
+    pattern: "[0-9]*[.,]?[0-9]{0,2}",
+    allowed: /^[0-9]*[.,]?[0-9]{0,2}$/,
+    blockedKeys: ["e", "E", "+", "-"],
+    isValid: isPositiveDecimal,
+    format: (value) => formatCustomLength(value, 2),
+    error: "Use metros maiores que zero, com até 2 casas decimais (ex.: 25 / 25,5).",
+    disabledReason: "Informe a metragem desejada, em metros (ex.: 25 / 25,5).",
+  },
+  "half-meter": {
+    label: "Digitar comprimento (m)",
+    placeholder: "Ex.: 2,5",
+    inputMode: "decimal",
+    pattern: "[0-9]*[.,]?[0-9]*",
+    allowed: /^[0-9]*[.,]?[0-9]*$/,
+    blockedKeys: ["e", "E", "+", "-"],
+    isValid: isHalfMeterLength,
+    format: formatCustomLength,
+    error: "Use metros em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5).",
+    disabledReason: "Digite um comprimento válido em metros, em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5).",
+  },
+};
+
+// Troca a opcao "Outro" do select por um valor sentinela que abre o campo digitavel.
+const withCustomQuantityOption = (options) =>
+  options.map((option) => (option === "Outro" ? { value: customQuantityValue, label: "Outro" } : option));
+
+// Estado do campo "Outro": o valor digitado (ja formatado) vira form.quantity, entao resumo, carrinho e
+// mensagem do WhatsApp mostram a quantidade real. Enquanto vazio/invalido, form.quantity fica "" e o
+// envio segue bloqueado (isLocationReady). Voltar a uma opcao normal limpa e esconde o campo.
+function useCustomQuantity(setForm, mode) {
+  const config = customQuantityModes[mode];
+  const [customQuantity, setCustomQuantity] = useState("");
+  const [isCustomQuantity, setIsCustomQuantity] = useState(false);
+  const invalid = isCustomQuantity && !config.isValid(customQuantity);
+
+  const onSelect = (event) => {
+    const quantity = event.target.value;
+    const customSelected = quantity === customQuantityValue;
+    setIsCustomQuantity(customSelected);
+    setForm((current) => ({ ...current, quantity: customSelected ? "" : quantity }));
+    if (!customSelected) setCustomQuantity("");
+  };
+  const onChange = (event) => {
+    const value = event.target.value;
+    if (value && !config.allowed.test(value)) return;
+    setCustomQuantity(value);
+    setForm((current) => ({ ...current, quantity: config.isValid(value) ? config.format(value) : "" }));
+  };
+  const onKeyDown = (event) => {
+    if (config.blockedKeys.includes(event.key)) event.preventDefault();
+  };
+  const onPaste = (event) => {
+    if (!config.isValid(event.clipboardData.getData("text"))) event.preventDefault();
+  };
+
+  return {
+    config,
+    customQuantity,
+    isCustomQuantity,
+    invalid,
+    selectValue: isCustomQuantity ? customQuantityValue : null,
+    onSelect,
+    onChange,
+    onKeyDown,
+    onPaste,
+  };
+}
+
+function CustomQuantityField({ custom, showRangeHint = false }) {
+  const { config, customQuantity, invalid } = custom;
+  const showError = invalid && customQuantity !== "";
+  return (
+    <div className="mt-5 max-w-sm">
+      <Field label={config.label} required>
+        <input
+          type="text"
+          inputMode={config.inputMode}
+          pattern={config.pattern}
+          value={customQuantity}
+          onChange={custom.onChange}
+          onKeyDown={custom.onKeyDown}
+          onPaste={custom.onPaste}
+          placeholder={config.placeholder}
+          aria-invalid={showError}
+          required
+          className={inputClassName}
+        />
+      </Field>
+      {showRangeHint && !showError && (
+        <p className="mt-2 text-sm leading-6 text-imesul-steel-light/60">
+          Aceita meio metro (ex.: 0,5 / 1,5 / 2,5).
+        </p>
+      )}
+      {showError && <p className="mt-2 text-sm leading-6 text-[#f0c776]">{config.error}</p>}
+    </div>
+  );
 }
 
 
@@ -296,6 +419,9 @@ function AddToCartButton({ category, product, form, quantity, disabledReason = "
   const addToCart = () => {
     if (disabled) return;
 
+    // "5 unidades" -> 5 unidade; "25,5 m" -> 25.5 m (nunca Number(texto), que virava NaN -> 1).
+    const parsedQuantity = parseQuantityText(quantity);
+
     addCartItem({
       categoryId: category?.id || "",
       categoryName: category?.name || "",
@@ -305,7 +431,8 @@ function AddToCartButton({ category, product, form, quantity, disabledReason = "
       thickness: form?.thickness ? formatOptionValue(form.thickness, "thickness") : "",
       length: form?.length ? formatOptionValue(form.length, "length") : "",
       details: form?.details || "",
-      quantity: Number(quantity) || 1,
+      quantity: parsedQuantity.quantity,
+      unit: parsedQuantity.unit,
     });
 
     trackLocalEvent({
@@ -317,7 +444,7 @@ function AddToCartButton({ category, product, form, quantity, disabledReason = "
     trackEvent("add_to_cart", {
       product_name: product.name,
       category: category?.name || "",
-      quantity: Number(quantity) || 1,
+      quantity: parsedQuantity.quantity,
     });
 
     setAdded(true);
@@ -367,6 +494,7 @@ const resolveCityRegion = (form) => (form.state === "MS" ? getCommercialRegionBy
 export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" }) {
   const [subtype, setSubtype] = useState("");
   const [form, setForm] = useState(projectInitialForm);
+  const customQuantity = useCustomQuantity(setForm, "unit");
   // Fallback quando a cidade nao resolve regiao (nao preenchida ainda, "Outra", ou fora de MS) -
   // preferencia ja capturada de ?unidade= ou de uma escolha manual anterior (ver
   // lib/unitPreference.js), mesmo comportamento que existia antes desta fase.
@@ -398,9 +526,11 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
     : "";
   const disabledReason = !subtype
     ? "Selecione uma opção para continuar."
-    : !isLocationReady(form)
-      ? "Complete os dados para enviar a solicitação."
-      : "";
+    : customQuantity.invalid
+      ? customQuantity.config.disabledReason
+      : !isLocationReady(form)
+        ? "Complete os dados para enviar a solicitação."
+        : "";
 
   return (
     <section
@@ -469,7 +599,14 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
                 onSelect={(urgency) => setForm((current) => ({ ...current, urgency }))}
               />
               <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
-                <SelectField label="Quantidade" value={form.quantity} onChange={updateField("quantity")} options={quantityOptions} placeholder="Selecione" required />
+                <SelectField
+                  label="Quantidade"
+                  value={customQuantity.selectValue ?? form.quantity}
+                  onChange={customQuantity.onSelect}
+                  options={withCustomQuantityOption(quantityOptions)}
+                  placeholder="Selecione"
+                  required
+                />
                 <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={msCities} placeholder="Selecione" required />
                 <Field label="Estado" required>
                   <div className={`${inputClassName} flex items-center text-imesul-steel-light/85`}>
@@ -477,6 +614,7 @@ export function ProjectQuoteFlow({ project, isLoggedIn = false, originUnit = "" 
                   </div>
                 </Field>
               </div>
+              {customQuantity.isCustomQuantity && <CustomQuantityField custom={customQuantity} />}
               <Field label="Observações">
                 <textarea
                   value={form.notes}
@@ -549,8 +687,6 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
       ? { ...materialInitialForm, measure: product.measure || "" }
       : materialInitialForm
   );
-  const [customQuantity, setCustomQuantity] = useState("");
-  const [isCustomQuantity, setIsCustomQuantity] = useState(false);
   const category = getCatalogCategory(product.categoryId);
   // Mesma resolucao territorial do fluxo por projeto (ver ProjectQuoteFlow acima) - estado fixo em
   // "MS" (regra definitiva de negocio), entao sempre resolve regiao a partir da cidade escolhida.
@@ -566,14 +702,13 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos" || product.id === "discos-corte" || product.id === "trincos" || product.id === "puxadores" || product.id === "eletrodo" || product.id === "fixador-de-porta-de-piso" || product.id === "kit-n-2-rold-4" || product.id === "kit-n-3-rold-5";
   // Tela eletrossoldada segue o fluxo estruturado (malha/fio/altura), mas e vendida por metro, nao por unidade.
   const isTelaEletrossoldada = product.id === "tela-eletrossoldada";
+  const isTelha = product.categoryId === "telhas-metalicas";
+  const customQuantity = useCustomQuantity(setForm, isTelaEletrossoldada ? "half-meter" : isTelha ? "meter" : "unit");
+  // Tela nao tem "Outro" (ja oferece "Digitar comprimento"); os demais usam o proprio "Outro".
   const materialQuantityOptions = isTelaEletrossoldada
     ? [...telaComprimentoOptions, { value: customQuantityValue, label: "Digitar comprimento" }]
-    : usesSimplifiedModelQuote
-      ? [...quantityOptions, { value: customQuantityValue, label: "Digitar quantidade" }]
-      : quantityOptions;
+    : withCustomQuantityOption(quantityOptions);
   const quantityFieldLabel = isTelaEletrossoldada ? "Comprimento desejado" : "Quantidade";
-  const customQuantityInvalid = (usesSimplifiedModelQuote || isTelaEletrossoldada) && isCustomQuantity
-    && (isTelaEletrossoldada ? !isHalfMeterLength(customQuantity) : !isPositiveInteger(customQuantity));
   // A variacao exata fornece peso (ou altura, para a tela) e confirma que a combinacao existe no catalogo.
   const selectedVariation = findSelectedVariation(product, form, { withLength: isTelaEletrossoldada });
 
@@ -587,53 +722,6 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
-  const updateQuantity = (event) => {
-    const quantity = event.target.value;
-    const customSelected = quantity === customQuantityValue;
-
-    setIsCustomQuantity(customSelected);
-    setForm((current) => ({ ...current, quantity: customSelected ? "" : quantity }));
-
-    if (!customSelected) {
-      setCustomQuantity("");
-    }
-  };
-  const updateCustomQuantity = (event) => {
-    const value = event.target.value;
-
-    if (isTelaEletrossoldada) {
-      if (value && !/^[0-9]*[.,]?[0-9]*$/.test(value)) return;
-      setCustomQuantity(value);
-      setForm((current) => ({
-        ...current,
-        quantity: isHalfMeterLength(value) ? formatCustomLength(value) : "",
-      }));
-      return;
-    }
-
-    if (value && !isPositiveInteger(value)) return;
-
-    setCustomQuantity(value);
-    setForm((current) => ({
-      ...current,
-      quantity: isPositiveInteger(value) ? formatCustomQuantity(value) : "",
-    }));
-  };
-  const blockInvalidQuantityInput = (event) => {
-    const blockedKeys = isTelaEletrossoldada
-      ? ["e", "E", "+", "-"]
-      : ["e", "E", "+", "-", ".", ",", "/"];
-    if (blockedKeys.includes(event.key)) {
-      event.preventDefault();
-    }
-  };
-  const blockInvalidQuantityPaste = (event) => {
-    const pastedValue = event.clipboardData.getData("text");
-    const valid = isTelaEletrossoldada ? isHalfMeterLength(pastedValue) : isPositiveInteger(pastedValue);
-    if (!valid) {
-      event.preventDefault();
-    }
-  };
   const message = buildProductMessage({
     category,
     product,
@@ -645,10 +733,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
   // Produtos estruturados exigem combinacao valida; os demais aceitam detalhes livres.
   const disabledReason = product.hasStructuredOptions && !selectedVariation
     ? "Selecione uma opção disponível para continuar."
-    : customQuantityInvalid
-      ? (isTelaEletrossoldada
-          ? "Digite um comprimento válido em metros, em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5)."
-          : "Digite uma quantidade inteira maior que zero.")
+    : customQuantity.invalid
+      ? customQuantity.config.disabledReason
     : !isLocationReady(form)
         ? "Complete os dados para enviar a solicitação."
         : "";
@@ -676,11 +762,6 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
               Opções do catálogo
             </h3>
           </div>
-          {product.hasStructuredOptions && (
-            <p className="mt-2 text-sm leading-relaxed text-imesul-steel/70">
-              {`Opções disponíveis no catálogo IMESUL 2024, página ${product.specifications.paginaFonte}.`}
-            </p>
-          )}
 
           {!usesSimplifiedModelQuote && (
             <div className="mt-8">
@@ -697,8 +778,8 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
           <div className={`${usesSimplifiedModelQuote ? "mt-6 sm:mt-8" : "mt-7 border-t border-white/[0.08] pt-6 sm:mt-9 sm:pt-8"} grid gap-4 sm:grid-cols-3 sm:gap-5`}>
             <SelectField
               label={quantityFieldLabel}
-              value={isCustomQuantity ? customQuantityValue : form.quantity}
-              onChange={updateQuantity}
+              value={customQuantity.selectValue ?? form.quantity}
+              onChange={customQuantity.onSelect}
               options={materialQuantityOptions}
               placeholder="Selecione"
               required
@@ -710,36 +791,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
             </Field>
             <SelectField label="Cidade" value={form.city} onChange={updateField("city")} options={msCities} placeholder="Selecione" required />
           </div>
-          {(usesSimplifiedModelQuote || isTelaEletrossoldada) && isCustomQuantity && (
-            <div className="mt-5 max-w-sm">
-              <Field label={isTelaEletrossoldada ? "Digitar comprimento (m)" : "Digitar quantidade"} required>
-                <input
-                  type="text"
-                  inputMode={isTelaEletrossoldada ? "decimal" : "numeric"}
-                  pattern={isTelaEletrossoldada ? "[0-9]*[.,]?[0-9]*" : "[0-9]*"}
-                  value={customQuantity}
-                  onChange={updateCustomQuantity}
-                  onKeyDown={blockInvalidQuantityInput}
-                  onPaste={blockInvalidQuantityPaste}
-                  placeholder={isTelaEletrossoldada ? "Ex.: 2,5" : "Ex.: 12"}
-                  aria-invalid={customQuantityInvalid}
-                  className={inputClassName}
-                />
-              </Field>
-              {isTelaEletrossoldada && !customQuantityInvalid && (
-                <p className="mt-2 text-sm leading-6 text-imesul-steel-light/60">
-                  Aceita meio metro (ex.: 0,5 / 1,5 / 2,5).
-                </p>
-              )}
-              {customQuantityInvalid && (
-                <p className="mt-2 text-sm leading-6 text-[#f0c776]">
-                  {isTelaEletrossoldada
-                    ? "Use metros em múltiplos de 0,5 (ex.: 0,5 / 1 / 1,5)."
-                    : "Use apenas números inteiros maiores que zero."}
-                </p>
-              )}
-            </div>
-          )}
+          {customQuantity.isCustomQuantity && <CustomQuantityField custom={customQuantity} showRangeHint={isTelaEletrossoldada} />}
           <div className="mt-5">
             <Field label="Observações">
               <textarea
