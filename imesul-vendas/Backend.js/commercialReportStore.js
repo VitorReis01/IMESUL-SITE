@@ -22,7 +22,7 @@ const leadReturnsCte = `
   fabricio_seller AS (
     SELECT id
     FROM sales_sellers
-    WHERE name ILIKE 'Fabrício%' OR name ILIKE 'Fabricio%'
+    WHERE name ILIKE 'Fabr%'
     ORDER BY id ASC
     LIMIT 1
   ),
@@ -376,7 +376,7 @@ const buildFeedbackJobMetrics = async () => {
 // só chamada (o painel faz UMA requisição, não uma por seção). byFlow já inclui WHATSAPP_IMEBOT
 // automaticamente (agrupamento genérico por flow_type, sem allowlist de valores específicos).
 export const buildCommercialReport = async () => {
-  const [general, bySeller, byFlow, bySite, byUnit, byPage, byCompany, returns, cart, handoff, feedback, feedbackJobs] = await Promise.all([
+  const [general, bySeller, byFlow, bySite, byUnit, byPage, byCompany, returns] = await Promise.all([
     buildGeneral(),
     buildBySeller(),
     buildGroupedByColumn("flow_type"),
@@ -385,11 +385,7 @@ export const buildCommercialReport = async () => {
     buildGroupedByColumn("page_path", 15),
     buildByCompany(),
     buildReturnsReport(),
-    buildCartMetrics(),
-    buildHandoffMetrics(),
-    buildFeedbackMetrics(),
-    buildFeedbackJobMetrics(),
   ]);
 
-  return { general, bySeller, byFlow, bySite, byUnit, byPage, byCompany, returns, cart, handoff, feedback, feedbackJobs };
+  return { general, bySeller, byFlow, bySite, byUnit, byPage, byCompany, returns };
 };
