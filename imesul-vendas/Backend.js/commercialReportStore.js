@@ -19,6 +19,18 @@ const round2 = (value) => Math.round((Number(value) || 0) * 100) / 100;
 // CTE reaproveitada em várias consultas: total já devolvido por lead. LEFT JOIN (não INNER) para
 // nunca excluir leads sem nenhuma devolução (returns_total fica 0 via COALESCE no lugar de uso).
 const leadReturnsCte = `
+  fabricio_seller AS (
+    SELECT id
+    FROM sales_sellers
+    WHERE name ILIKE 'Fabrício%' OR name ILIKE 'Fabricio%'
+    ORDER BY id ASC
+    LIMIT 1
+  ),
+  filtered_sales_leads AS (
+    SELECT sl.*
+    FROM filtered_sales_leads sl
+    JOIN fabricio_seller fs ON fs.id = sl.seller_id
+  ),
   lead_returns AS (
     SELECT lead_id, SUM(amount)::numeric AS returns_total
     FROM sales_returns
@@ -36,7 +48,7 @@ const buildGeneral = async () => {
        COUNT(*) FILTER (WHERE sl.status = 'NAO_VENDEU')::int AS nao_vendidos,
        COALESCE(SUM(sl.sale_amount) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS venda_bruta,
        COALESCE(SUM(lr.returns_total) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS devolucoes
-     FROM sales_leads sl
+     FROM filtered_sales_leads sl
      LEFT JOIN lead_returns lr ON lr.lead_id = sl.id`
   );
 
@@ -72,8 +84,9 @@ const buildBySeller = async () => {
        COALESCE(SUM(sl.sale_amount) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS venda_bruta,
        COALESCE(SUM(lr.returns_total) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS devolucoes
      FROM sales_sellers ss
-     LEFT JOIN sales_leads sl ON sl.seller_id = ss.id
+     LEFT JOIN filtered_sales_leads sl ON sl.seller_id = ss.id
      LEFT JOIN lead_returns lr ON lr.lead_id = sl.id
+     WHERE ss.id IN (SELECT id FROM fabricio_seller)
      GROUP BY ss.id, ss.name, ss.unit
      ORDER BY recebidos DESC, ss.name ASC`
   );
@@ -115,7 +128,7 @@ const buildGroupedByColumn = async (column, limit = null) => {
        COUNT(*) FILTER (WHERE sl.status = 'VENDEU')::int AS vendidos,
        COALESCE(SUM(sl.sale_amount) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS venda_bruta,
        COALESCE(SUM(lr.returns_total) FILTER (WHERE sl.status = 'VENDEU'), 0)::numeric AS devolucoes
-     FROM sales_leads sl
+     FROM filtered_sales_leads sl
      LEFT JOIN lead_returns lr ON lr.lead_id = sl.id
      GROUP BY sl.${column}
      ORDER BY total DESC
@@ -147,7 +160,7 @@ const buildByCompany = async () => {
     `WITH ${leadReturnsCte}
      SELECT sl.buyer_cnpj, sl.buyer_name, sl.customer_name, ss.name AS seller_name,
             sl.sale_amount, COALESCE(lr.returns_total, 0)::numeric AS returns_total
-       FROM sales_leads sl
+       FROM filtered_sales_leads sl
        LEFT JOIN sales_sellers ss ON ss.id = sl.seller_id
        LEFT JOIN lead_returns lr ON lr.lead_id = sl.id
       WHERE sl.buyer_type = 'COMPANY' AND sl.buyer_cnpj IS NOT NULL AND sl.status = 'VENDEU'`
@@ -180,7 +193,7 @@ const buildReturnsReport = async () => {
        COUNT(*) FILTER (WHERE sl.status = 'VENDEU' AND COALESCE(lr.returns_total, 0) >= sl.sale_amount AND sl.sale_amount > 0)::int AS devolucao_total,
        COUNT(*) FILTER (WHERE sl.status = 'VENDEU')::int AS total_vendas,
        COALESCE(SUM(lr.returns_total), 0)::numeric AS total_devolvido
-     FROM sales_leads sl
+     FROM filtered_sales_leads sl
      LEFT JOIN lead_returns lr ON lr.lead_id = sl.id`
   );
 
