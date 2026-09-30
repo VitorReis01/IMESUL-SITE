@@ -158,14 +158,17 @@ export async function GET(request) {
   }
 
   const checkedAt = new Date().toISOString();
-  const salesBaseUrl = new URL(request.url).origin;
+  // O proprio app de vendas e verificado pela interface local. Fazer o servidor consultar
+  // seu dominio publico pode gerar falso negativo por DNS/TLS/hairpin mesmo quando o app esta
+  // saudavel. A disponibilidade publica continua coberta pelo Nginx/health externo operacional.
+  const salesInternalBaseUrl = `http://127.0.0.1:${process.env.PORT || "3001"}`;
   const institutionalBaseUrl = normalizeBaseUrl(
     process.env.NEXT_PUBLIC_INSTITUTIONAL_URL || process.env.NEXT_PUBLIC_INSTITUTIONAL_SITE_URL
   );
 
   const [institutional, sales, database, security] = await Promise.all([
     checkHttpHealth(institutionalBaseUrl ? `${institutionalBaseUrl}/api/health` : ""),
-    checkHttpHealth(`${salesBaseUrl}/api/health`),
+    checkHttpHealth(`${salesInternalBaseUrl}/api/health`),
     checkDatabase(),
     getSecuritySnapshot().catch(() => ({
       suspiciousEvents24h: null,
