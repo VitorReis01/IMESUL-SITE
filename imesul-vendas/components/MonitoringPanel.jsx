@@ -1,20 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, Clock3, Database, RefreshCw, Server, ShieldCheck } from "lucide-react";
+import { Activity, AlertTriangle, Clock3, RefreshCw, Server, ShieldCheck } from "lucide-react";
 
 const statusStyles = {
   online: "border-[#22c55e]/35 bg-[#22c55e]/10 text-[#86efac]",
   degraded: "border-[#f59e0b]/35 bg-[#f59e0b]/10 text-[#fcd34d]",
   offline: "border-[#ef4444]/35 bg-[#ef4444]/10 text-[#fca5a5]",
-  disabled: "border-white/[0.14] bg-white/[0.055] text-imesul-steel-light/70",
   checking: "border-[#38bdf8]/35 bg-[#38bdf8]/10 text-[#7dd3fc]",
   pending: "border-white/[0.14] bg-white/[0.035] text-imesul-steel-light/62",
 };
 
 const statusEndpoint = "/api/admin/monitoring/status";
-
-const serviceOrder = ["institutional", "sales", "api", "database", "rateLimiter", "imebot", "monitoring"];
+const serviceOrder = ["institutional", "sales", "api", "database", "rateLimiter"];
 
 const fallbackServices = {
   institutional: { name: "Site Institucional", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
@@ -22,20 +20,14 @@ const fallbackServices = {
   api: { name: "API", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   database: { name: "Banco de Dados", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
   rateLimiter: { name: "Rate Limiter", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
-  imebot: { name: "IMEbot", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
-  monitoring: { name: "Monitoramento Externo", status: "checking", latencyMs: null, lastCheck: null, lastFailure: null },
 };
 
 const statusLabels = {
   online: "Online",
   degraded: "Degradado",
   offline: "Offline",
-  disabled: "Desativado",
   checking: "Verificando",
   pending: "Pendente",
-  normal: "Normal",
-  throttled: "Throttled",
-  paused: "Paused",
 };
 
 const formatDateTime = (value) =>
@@ -50,16 +42,13 @@ const formatDateTime = (value) =>
     : "-";
 
 const formatLatency = (value) => (typeof value === "number" ? `${value} ms` : "-");
+const formatMetric = (value) => (typeof value === "number" ? value.toLocaleString("pt-BR") : "-");
 
 const getStatusSummary = (services) => {
   const list = serviceOrder.map((key) => services[key]).filter(Boolean);
-  const offline = list.filter((service) => service.status === "offline").length;
-  const degraded = list.filter((service) => service.status === "degraded").length;
-  const checking = list.filter((service) => service.status === "checking").length;
-
-  if (offline) return "offline";
-  if (degraded) return "degraded";
-  if (checking) return "checking";
+  if (list.some((service) => service.status === "offline")) return "offline";
+  if (list.some((service) => service.status === "degraded")) return "degraded";
+  if (list.some((service) => service.status === "checking")) return "checking";
   return "online";
 };
 
@@ -67,6 +56,7 @@ const getAverageLatency = (services) => {
   const values = serviceOrder
     .map((key) => services[key]?.latencyMs)
     .filter((value) => typeof value === "number");
+
   if (!values.length) return "-";
   return `${Math.round(values.reduce((total, value) => total + value, 0) / values.length)} ms`;
 };
@@ -79,11 +69,12 @@ function StatusPill({ status }) {
   );
 }
 
-function MetricBlock({ label, value }) {
+function MetricBlock({ label, value, hint }) {
   return (
     <div className="rounded-[8px] border border-white/[0.09] bg-white/[0.035] p-4">
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-imesul-steel-light/55">{label}</p>
       <strong className="mt-2 block font-display text-3xl leading-none text-white">{value}</strong>
+      {hint ? <p className="mt-2 text-xs leading-5 text-imesul-steel-light/55">{hint}</p> : null}
     </div>
   );
 }
@@ -107,11 +98,12 @@ export default function MonitoringPanel() {
     checkedAt: null,
     services: fallbackServices,
     incidents: [],
-    externalMonitoring: {
-      connected: false,
-      message: "Monitoramento externo ainda não conectado",
+    security: {
+      suspiciousEvents24h: null,
+      suspiciousVisitors24h: null,
+      suspiciousEvents1h: null,
+      activeRateLimitCounters24h: null,
     },
-    imebotProtection: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -120,6 +112,7 @@ export default function MonitoringPanel() {
   const servicesList = serviceOrder.map((key) => services[key]);
   const summaryStatus = getStatusSummary(services);
   const openIncidents = status.incidents?.length || 0;
+  const security = status.security || {};
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -141,6 +134,7 @@ export default function MonitoringPanel() {
   useEffect(() => {
     const firstLoad = window.setTimeout(refresh, 0);
     const interval = window.setInterval(refresh, 30_000);
+
     return () => {
       window.clearTimeout(firstLoad);
       window.clearInterval(interval);
@@ -153,11 +147,12 @@ export default function MonitoringPanel() {
         <div className="mb-5 flex flex-col gap-4 rounded-[10px] border border-white/[0.1] bg-white/[0.035] p-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-imesul-red">Monitoramento</p>
-            <h3 className="mt-2 font-display text-4xl leading-none text-white">Saúde dos serviços</h3>
+            <h3 className="mt-2 font-display text-4xl leading-none text-white">Saúde e segurança do site</h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-imesul-steel-light/68">
-              {status.externalMonitoring?.message || "Monitoramento externo ainda não conectado"}
+              Verificação automática dos dois sites, API, banco, rate limiter e sinais suspeitos registrados no analytics.
             </p>
           </div>
+
           <button
             type="button"
             onClick={refresh}
@@ -199,19 +194,41 @@ export default function MonitoringPanel() {
             <div className="grid gap-2">
               {servicesList.map((service) => (
                 <div key={service.name} className="grid gap-3 rounded-[8px] border border-white/[0.08] bg-white/[0.025] p-3 text-sm text-imesul-steel-light/72 sm:grid-cols-[1.2fr_0.8fr_0.8fr_0.9fr_1fr] sm:items-center">
-                  <div>
-                    <p className="font-semibold text-white">{service.name}</p>
-                  </div>
+                  <p className="font-semibold text-white">{service.name}</p>
                   <StatusPill status={service.status} />
                   <span>Latência: {formatLatency(service.latencyMs)}</span>
-                  <span>Última verificação: {formatDateTime(service.lastCheck)}</span>
-                  <span>Última falha: {service.lastFailure || "-"}</span>
+                  <span>Verificado: {formatDateTime(service.lastCheck)}</span>
+                  <span>Falha: {service.lastFailure || "Nenhuma"}</span>
                 </div>
               ))}
             </div>
           </Section>
 
           <div className="grid gap-4">
+            <Section title="Segurança" icon={ShieldCheck}>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <MetricBlock
+                  label="Eventos suspeitos · 24h"
+                  value={formatMetric(security.suspiciousEvents24h)}
+                  hint="Eventos classificados pelo backend como suspeitos."
+                />
+                <MetricBlock
+                  label="Visitantes suspeitos · 24h"
+                  value={formatMetric(security.suspiciousVisitors24h)}
+                  hint="Visitantes únicos com ao menos um evento suspeito."
+                />
+                <MetricBlock
+                  label="Eventos suspeitos · 1h"
+                  value={formatMetric(security.suspiciousEvents1h)}
+                />
+                <MetricBlock
+                  label="Contadores de rate limit · 24h"
+                  value={formatMetric(security.activeRateLimitCounters24h)}
+                  hint="Chaves de limitação utilizadas nas últimas 24 horas."
+                />
+              </div>
+            </Section>
+
             <Section title="Incidentes recentes" icon={AlertTriangle}>
               {status.incidents?.length ? (
                 <div className="grid gap-2">
@@ -231,35 +248,6 @@ export default function MonitoringPanel() {
                   Nenhum incidente ativo nas verificações internas.
                 </div>
               )}
-            </Section>
-
-            <Section title="Segurança" icon={ShieldCheck}>
-              <div className="grid gap-2 text-sm text-imesul-steel-light/70">
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2"><span>Tentativas bloqueadas</span><strong className="text-white">-</strong></div>
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2"><span>Rate limit</span><strong className="text-white">-</strong></div>
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2"><span>Alertas recentes</span><strong className="text-white">-</strong></div>
-              </div>
-            </Section>
-
-            <Section title="IMEbot" icon={Database}>
-              <div className="flex items-center justify-between gap-3 rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2.5">
-                <span className="text-sm font-semibold text-white">IMEbot</span>
-                <StatusPill status={services.imebot.status} />
-              </div>
-              <div className="mt-3 grid gap-2 text-sm text-imesul-steel-light/70">
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
-                  <span>Proteção de custo</span>
-                  <strong className="text-white">{statusLabels[status.imebotProtection?.status] || "-"}</strong>
-                </div>
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
-                  <span>Modo</span>
-                  <strong className="text-white">{status.imebotProtection?.mode === "volume_quota" ? "Quota por volume" : "-"}</strong>
-                </div>
-                <div className="flex justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.025] px-3 py-2">
-                  <span>Budget financeiro</span>
-                  <strong className="text-white">{status.imebotProtection?.config?.costModelConfigured ? "Configurado" : "Pendente"}</strong>
-                </div>
-              </div>
             </Section>
           </div>
         </div>
