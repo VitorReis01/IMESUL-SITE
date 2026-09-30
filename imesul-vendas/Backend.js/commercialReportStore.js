@@ -28,7 +28,7 @@ const leadReturnsCte = `
   ),
   filtered_sales_leads AS (
     SELECT sl.*
-    FROM filtered_sales_leads sl
+    FROM sales_leads sl
     JOIN fabricio_seller fs ON fs.id = sl.seller_id
   ),
   lead_returns AS (
