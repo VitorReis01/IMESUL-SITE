@@ -24,6 +24,7 @@ import { getStoredUnit, setStoredUnit, subscribeToUnitPreference } from "../lib/
 import { addCartItem, parseQuantityText } from "../lib/cart";
 import ProductOptionSelector, { findSelectedVariation, formatOptionValue } from "./ProductOptionSelector";
 import ProductSummary from "./ProductSummary";
+import MascotAssistant from "./MascotAssistant";
 
 const customQuantityValue = "__custom_quantity__";
 
@@ -844,6 +845,10 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
             />
           </div>
         </ProductSummary>
+
+        {/* position: fixed real via portal (ver MascotAssistant.jsx) - não é filho do grid nem
+            do card, só está aqui na árvore para existir/desmontar junto com esta página. */}
+        <MascotAssistant pagePath="material-quote-flow" />
       </div>
     </section>
   );

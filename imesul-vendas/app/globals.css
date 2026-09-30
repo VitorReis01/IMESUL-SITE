@@ -110,6 +110,23 @@ body.reveal-motion-ready [data-scroll-reveal].is-visible,
   animation: mascotBalloonFloat 5.2s ease-in-out infinite;
 }
 
+/* Nudge horizontal leve no botao de WhatsApp do assistente do orcamento guiado - so chama
+   atencao para o CTA, nao move o conjunto inteiro. */
+@keyframes mascotCtaNudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.mascot-cta-nudge {
+  animation: mascotCtaNudge 1.8s ease-in-out infinite;
+}
+
 /* Realce discreto para hover de cards, mantendo a leitura e o tom industrial. */
 .premium-soft-sheen::after {
   content: "";
@@ -246,6 +263,10 @@ body.reveal-motion-ready [data-scroll-reveal].is-visible,
   }
 
   .mascot-balloon {
+    animation: none;
+  }
+
+  .mascot-cta-nudge {
     animation: none;
   }
 
