@@ -8,8 +8,9 @@
 // número humano correto da unidade (ver lib/unitPreference.js getCommercialUnitConfig) - nunca
 // no número genérico (que vai virar o IMEbot) quando a unidade já é conhecida.
 //
-// Mesmo padrão de popup+fallback usado no site de vendas (lib/leadWhatsApp.js): abre uma aba em
-// branco de forma SÍNCRONA dentro do clique, preenche a URL depois que o lead responde.
+// Quando a unidade já é conhecida, pré-abre uma aba de forma síncrona e a preenche após o lead.
+// Quando a unidade ainda precisa ser escolhida, NÃO abre about:blank antes do modal; depois da
+// escolha navega a própria aba para o WhatsApp, evitando popup bloqueado/aba branca no mobile.
 import { whatsapp } from "../data/products";
 import { createLead } from "./leadClient";
 import { COMMERCIAL_UNITS, getCommercialUnitConfig, getStoredUnit, setStoredUnit } from "./unitPreference";
