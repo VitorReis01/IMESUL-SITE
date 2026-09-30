@@ -13,6 +13,7 @@ import Image from "next/image";
 import { officialUnits, officialSocialLinks, whatsapp } from "../data/products";
 import PremiumGlowButton from "./PremiumGlowButton";
 import { openCommercialWhatsApp } from "../lib/commercialContact";
+import { trackMapsClick } from "../lib/trackEvent";
 
 // Rotulo curto so para o botao seletor; o nome completo continua vindo de officialUnits.
 const SHORT_LABELS = {
@@ -21,22 +22,23 @@ const SHORT_LABELS = {
   "campo-grande": "Campo Grande",
 };
 
-// O numero de WhatsApp cadastrado hoje no projeto e o mesmo telefone da unidade Campo Grande.
-// Nao existe WhatsApp proprio para as unidades de Dourados no codigo atual, entao elas nao
-// recebem esse botao — evita inventar um canal que a empresa nao confirmou.
-const WHATSAPP_DIGITS = whatsapp.number.replace(/\D/g, "");
+// O WhatsApp cadastrado hoje no projeto (Fabrício, vendedor ativo) so atende Campo Grande. Nao
+// existe WhatsApp proprio para as unidades de Dourados no codigo atual, entao elas nao recebem
+// esse botao — evita inventar um canal que a empresa nao confirmou. Antes de 2026-09-29 essa
+// checagem comparava o telefone fixo da unidade com whatsapp.number (coincidência: os dois eram
+// o mesmo número) - quebrou quando o WhatsApp passou a ser o celular do Fabrício, diferente do
+// fixo institucional "(67) 3312-5600". Corrigido para checar a unidade diretamente.
 const WHATSAPP_HREF = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsapp.message)}`;
 
 const UNITS = officialUnits.map((unit) => {
   const social = unit.id.startsWith("dourados") ? officialSocialLinks.dourados : officialSocialLinks.campoGrande;
-  const unitDigits = unit.phoneHref.replace(/\D/g, "");
 
   return {
     ...unit,
     shortLabel: SHORT_LABELS[unit.id] || unit.name,
     facebook: social?.facebook || null,
     instagram: social?.instagram || null,
-    whatsappHref: unitDigits === WHATSAPP_DIGITS ? WHATSAPP_HREF : null,
+    whatsappHref: unit.id === "campo-grande" ? WHATSAPP_HREF : null,
   };
 });
 
@@ -49,7 +51,7 @@ function buildChannels(unit) {
   const channelUnit = unit.id.startsWith("dourados") ? "dourados" : "campo-grande";
 
   return [
-    { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon /> },
+    { key: "maps", href: unit.mapsHref, label: "Ver no Google Maps", icon: <MapsIcon />, mapsUnitId: unit.id },
     { key: "phone", href: unit.phoneHref, label: `Ligar para ${unit.phone}`, icon: <PhoneIcon /> },
     unit.whatsappHref && {
       key: "whatsapp",
@@ -117,12 +119,14 @@ const CHANNEL_STYLE = {
   facebook: { bg: "bg-[#1877F2]", glowVariant: "facebook" },
 };
 
-function IconLink({ channelKey, href, label, icon, unit }) {
+function IconLink({ channelKey, href, label, icon, unit, mapsUnitId }) {
   const isExternal = href.startsWith("http");
   const style = CHANNEL_STYLE[channelKey];
 
   // WhatsApp intercepta o clique normal para criar o lead (DIRECT_CONTACT) antes de abrir - a
-  // unidade já é conhecida pelo card (unit), então nunca abre o modal de escolha.
+  // unidade já é conhecida pelo card (unit), então nunca abre o modal de escolha. Maps nunca
+  // intercepta o clique (continua abrindo o Google Maps normalmente) - so registra o evento GA4
+  // antes, sem preventDefault, sem PageView adicional.
   const handleClick =
     channelKey === "whatsapp"
       ? (event) => {
@@ -132,7 +136,9 @@ function IconLink({ channelKey, href, label, icon, unit }) {
           event.preventDefault();
           openCommercialWhatsApp({ pagePath: `links-${unit}`, unit });
         }
-      : undefined;
+      : channelKey === "maps"
+        ? () => trackMapsClick(mapsUnitId, "official_links")
+        : undefined;
 
   return (
     <PremiumGlowButton
@@ -255,7 +261,7 @@ function DouradosCard() {
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           {channels.map((channel) => (
-            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} />
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} mapsUnitId={channel.mapsUnitId} />
           ))}
         </div>
       </div>
@@ -287,7 +293,7 @@ function CampoGrandeCard() {
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           {channels.map((channel) => (
-            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} />
+            <IconLink key={channel.key} channelKey={channel.key} href={channel.href} label={channel.label} icon={channel.icon} unit={channel.unit} mapsUnitId={channel.mapsUnitId} />
           ))}
         </div>
       </div>

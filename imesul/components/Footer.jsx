@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { navLinks, officialUnits } from "../data/products";
 import { setStoredUnit } from "../lib/unitPreference";
 import { navigateWithConsent, requestOpenPrivacyPreferences } from "../lib/consent";
+import { trackMapsClick } from "../lib/trackEvent";
 
 const socialLinks = [
   {
@@ -125,6 +126,7 @@ export default function Footer() {
                     href={unit.mapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackMapsClick(unit.id, "footer")}
                     className="mt-1.5 block max-w-[420px] text-sm leading-6 text-slate-700 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color] hover:text-imesul-red hover:decoration-imesul-red/60"
                   >
                     {unit.address}

@@ -21,6 +21,12 @@ import { trackEvent } from "./trackEvent";
 const createWhatsAppUrl = (message, number = whatsapp.number) =>
   `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 
+// Todo CTA deste site institucional e' DIRECT_CONTACT (nao existe orcamento guiado aqui) - o
+// texto exibido ao cliente no WhatsApp e' sempre este, fixo, independente do "message"
+// recebido em args (que continua indo para createLead como quoteSummary, so nao vai mais para
+// o texto do WhatsApp).
+const DIRECT_CONTACT_WHATSAPP_MESSAGE = "Olá, vim do site e gostaria de fazer um orçamento!";
+
 const readCurrentUtm = () => {
   if (typeof window === "undefined") return {};
   const params = new URLSearchParams(window.location.search);
@@ -57,7 +63,7 @@ export const openCommercialWhatsApp = async (args) => {
   // Calculado DEPOIS da unidade resolvida, para usar o numero humano oficial de Dourados quando
   // aplicavel - sem unidade conhecida (nunca deveria acontecer aqui, mas por seguranca), cai no
   // numero generico ja existente (whatsapp.number).
-  const fallbackUrl = createWhatsAppUrl(message, getCommercialUnitConfig(resolvedUnit)?.phone);
+  const fallbackUrl = createWhatsAppUrl(DIRECT_CONTACT_WHATSAPP_MESSAGE, getCommercialUnitConfig(resolvedUnit)?.phone);
 
   try {
     const lead = await createLead({
@@ -75,7 +81,9 @@ export const openCommercialWhatsApp = async (args) => {
 
     if (lead.ok && lead.seller?.whatsapp) {
       trackEvent("generate_lead", { unit: resolvedUnit });
-      const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
+      // Sem "Lead IMESUL: <codigo>" no texto - o codigo continua no lead (banco/analytics/admin
+      // do site de vendas), so nao aparece mais pro cliente.
+      const finalUrl = createWhatsAppUrl(DIRECT_CONTACT_WHATSAPP_MESSAGE, lead.seller.whatsapp);
       if (popup && !popup.closed) popup.location.href = finalUrl;
       else window.open(finalUrl, "_blank", "noopener,noreferrer");
       return;

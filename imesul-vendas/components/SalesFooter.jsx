@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { navigateWithConsent, requestOpenPrivacyPreferences } from "../lib/consent";
 import { getInstitutionalSiteUrl } from "../lib/siteUrl";
+import { trackMapsClick } from "../lib/trackEvent";
 
 const institutionalUrl = getInstitutionalSiteUrl();
 
@@ -25,8 +26,11 @@ const navigationLinks = [
 // mapsHref corrigido em 2026-08-25: os dois links de Dourados estavam trocados entre si (cada
 // endereço abria a localização da outra unidade) - confirmado resolvendo os links curtos do
 // Google Maps. Ver mesma correção em imesul/data/products.js (fonte irmã dos mesmos dados).
+// id: mesmo formato usado em imesul/data/products.js#officialUnits (fonte irmã) - usado só para
+// o parâmetro "unit" do evento GA4 maps_click (lib/trackEvent.js#trackMapsClick).
 const units = [
   {
+    id: "dourados-matriz",
     name: "Dourados — Centro",
     address: "Rua Pedro Rigotti, 248 – Jd. São Pedro, Dourados/MS",
     phone: "(67) 3427-5700",
@@ -34,6 +38,7 @@ const units = [
     mapsHref: "https://maps.app.goo.gl/mQS2dtnM3ZWVFUnP7",
   },
   {
+    id: "dourados-fabrica",
     name: "Dourados — Loja de Fábrica",
     address: "Av. Marcelino Pires, 10.155 – Dourados/MS",
     phone: "(67) 3411-5700",
@@ -41,6 +46,7 @@ const units = [
     mapsHref: "https://maps.app.goo.gl/vse5FAdajRYdK2HA9",
   },
   {
+    id: "campo-grande",
     name: "Campo Grande",
     address: "Av. Cel. Antonino, 1692 – Vila Lucinda, Campo Grande/MS",
     phone: "(67) 3312-5600",
@@ -187,7 +193,7 @@ export default function SalesFooter() {
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-1">
               {units.map((unit) => (
-                <div key={unit.name}>
+                <div key={unit.id}>
                   <p className="font-condensed text-base font-semibold uppercase tracking-[0.12em] text-slate-900">
                     {unit.name}
                   </p>
@@ -195,6 +201,7 @@ export default function SalesFooter() {
                     href={unit.mapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackMapsClick(unit.id, "sales_footer")}
                     className="mt-1 block max-w-[420px] py-1 text-sm leading-6 text-slate-700 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color] hover:text-imesul-red hover:decoration-imesul-red/60 sm:mt-1.5"
                   >
                     {unit.address}

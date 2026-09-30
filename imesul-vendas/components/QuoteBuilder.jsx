@@ -700,6 +700,14 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
     if (cityRegion) setStoredUnit(cityRegion);
   }, [cityRegion]);
   const usesSimplifiedModelQuote = product.id === "roldanas" || product.id === "fechos" || product.id === "guias" || product.id === "dobradicas" || product.id === "fechaduras" || product.id === "parafusos" || product.id === "discos-corte" || product.id === "trincos" || product.id === "puxadores" || product.id === "eletrodo" || product.id === "fixador-de-porta-de-piso" || product.id === "kit-n-2-rold-4" || product.id === "kit-n-3-rold-5";
+  // Categoria "Tintas" (tintas-solventes-consumiveis): sem medida/espessura/comprimento/
+  // caracteristicas adicionais - so quantidade, estado, cidade e observacoes fazem sentido para
+  // latas de tinta prontas (sem tabela tecnica de variacoes). Alem de pular o seletor (como
+  // usesSimplifiedModelQuote acima), esconde tambem o cabecalho "Opcoes do catalogo" por inteiro -
+  // as outras categorias com formulario simplificado continuam mostrando esse cabecalho.
+  const isPaintCategory = product.categoryId === "tintas-solventes-consumiveis";
+  const skipStructuredOptions = usesSimplifiedModelQuote || isPaintCategory;
+  const hideTechnicalRows = usesSimplifiedModelQuote || isPaintCategory;
   // Tela eletrossoldada segue o fluxo estruturado (malha/fio/altura), mas e vendida por metro, nao por unidade.
   const isTelaEletrossoldada = product.id === "tela-eletrossoldada";
   const isTelha = product.categoryId === "telhas-metalicas";
@@ -726,7 +734,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
     category,
     product,
     form,
-    hideTechnicalRows: usesSimplifiedModelQuote,
+    hideTechnicalRows,
     labels: isTelaEletrossoldada ? telaMessageLabels : undefined,
     showLength: isTelaEletrossoldada,
   });
@@ -749,21 +757,25 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
         title={product.name}
         description={product.hasStructuredOptions
           ? "Selecione as medidas disponíveis e envie sua solicitação para atendimento."
-          : "Informe as características desejadas e solicite atendimento comercial pelo WhatsApp."}
+          : isPaintCategory
+            ? "Informe quantidade e localidade para solicitar atendimento comercial pelo WhatsApp."
+            : "Informe as características desejadas e solicite atendimento comercial pelo WhatsApp."}
         steps={["Categoria", "Produto", "Opções", "Resumo"]}
         activeStep={3}
       />
 
       <div className="mt-8 grid gap-6 border-t border-white/[0.08] pt-7 sm:mt-12 sm:gap-8 sm:pt-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
         <div className="rounded-[8px] border border-white/[0.08] bg-black/[0.08] p-4 sm:p-7">
-          <div className="flex items-center gap-3">
-            <Ruler size={18} className="text-imesul-red" aria-hidden="true" />
-            <h3 className="font-condensed text-lg font-semibold uppercase tracking-[0.1em] text-white">
-              Opções do catálogo
-            </h3>
-          </div>
+          {!isPaintCategory && (
+            <div className="flex items-center gap-3">
+              <Ruler size={18} className="text-imesul-red" aria-hidden="true" />
+              <h3 className="font-condensed text-lg font-semibold uppercase tracking-[0.1em] text-white">
+                Opções do catálogo
+              </h3>
+            </div>
+          )}
 
-          {!usesSimplifiedModelQuote && (
+          {!skipStructuredOptions && (
             <div className="mt-8">
               <ProductOptionSelector
                 product={product}
@@ -775,7 +787,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
             </div>
           )}
 
-          <div className={`${usesSimplifiedModelQuote ? "mt-6 sm:mt-8" : "mt-7 border-t border-white/[0.08] pt-6 sm:mt-9 sm:pt-8"} grid gap-4 sm:grid-cols-3 sm:gap-5`}>
+          <div className={`${isPaintCategory ? "" : skipStructuredOptions ? "mt-6 sm:mt-8" : "mt-7 border-t border-white/[0.08] pt-6 sm:mt-9 sm:pt-8"} grid gap-4 sm:grid-cols-3 sm:gap-5`}>
             <SelectField
               label={quantityFieldLabel}
               value={customQuantity.selectValue ?? form.quantity}
@@ -809,7 +821,7 @@ export function MaterialQuoteFlow({ product, isLoggedIn = false, onVariationImag
           category={category}
           product={product}
           form={form}
-          hideTechnicalRows={usesSimplifiedModelQuote}
+          hideTechnicalRows={hideTechnicalRows}
           labels={isTelaEletrossoldada ? telaSummaryLabels : undefined}
           showLength={isTelaEletrossoldada}
         >

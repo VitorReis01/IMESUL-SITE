@@ -1,11 +1,11 @@
-// Garante um destino comercial valido quando a variavel publica nao foi configurada. Este numero
-// vai se tornar o IMEbot (assistente interno, nunca fala com cliente - ver relatorio desta
-// fase). Continua sendo usado aqui SO como ultimo recurso quando a criacao do lead falha por
-// completo (banco fora do ar) ou para fluxos sem unidade/Dourados, que preservam o
-// comportamento comercial atual. Para leads de Campo Grande criados com sucesso mas sem
-// vendedor no rodizio, lib/leadWhatsApp.js NUNCA usa este fallback - ver
-// lib/commercialContactAlert.js.
-const fallbackPhone = "556733125600";
+// Garante um destino comercial valido quando a variavel publica nao foi configurada. Numero do
+// Fabrício (unico vendedor ativo de Campo Grande no Supabase, confirmado pelo usuario em
+// 2026-09-29 - substituiu 556733125600, que nunca mais deve ser destino de CTA de WhatsApp).
+// Continua sendo usado aqui SO como ultimo recurso quando a criacao do lead falha por completo
+// (banco fora do ar) ou para fluxos sem unidade/Dourados, que preservam o comportamento
+// comercial atual. Para leads de Campo Grande criados com sucesso mas sem vendedor no rodizio,
+// lib/leadWhatsApp.js NUNCA usa este fallback - ver lib/commercialContactAlert.js.
+const fallbackPhone = "5567998848110";
 
 // Normaliza campos opcionais antes de inseri-los na mensagem.
 function valueOrFallback(value) {

@@ -19,6 +19,8 @@ const EVENT_MAP = {
   view_cart: { ga4: "view_cart", meta: "ViewCart", metaCustom: true },
   begin_checkout: { ga4: "begin_checkout", meta: "InitiateCheckout" },
   generate_lead: { ga4: "generate_lead", meta: "Lead" },
+  // So GA4 (sem correspondente Meta de proposito - ver trackMapsClick abaixo).
+  maps_click: { ga4: "maps_click" },
 };
 
 // Defesa em profundidade contra PII (nome/telefone/e-mail/mensagem) - nenhum chamador deveria
@@ -55,7 +57,7 @@ export const trackEvent = (eventName, params = {}) => {
   }
 
   try {
-    if (typeof window.fbq === "function") {
+    if (mapping.meta && typeof window.fbq === "function") {
       if (mapping.metaCustom) {
         window.fbq("trackCustom", mapping.meta, cleanParams);
       } else {
@@ -65,4 +67,16 @@ export const trackEvent = (eventName, params = {}) => {
   } catch {
     // Idem.
   }
+};
+
+// Clique num link "Ver no Google Maps" (rodape/central de links). unitId no formato do catalogo
+// de unidades ("dourados-matriz", "dourados-fabrica", "campo-grande") - convertido aqui para o
+// formato de parametro GA4 (snake_case). linkOrigin identifica de onde veio o clique
+// (official_links, footer, sales_footer, ...) para diferenciar a origem no relatorio.
+export const trackMapsClick = (unitId, linkOrigin) => {
+  trackEvent("maps_click", {
+    unit: String(unitId || "").replace(/-/g, "_"),
+    link_origin: linkOrigin,
+    destination: "google_maps",
+  });
 };

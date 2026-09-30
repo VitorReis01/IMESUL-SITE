@@ -216,8 +216,12 @@ export const navLinks = [
   { label: "LINKS", href: "/links" },
 ];
 
-// Mensagem curta usada apenas pelo CTA institucional, sem dados de formulario.
+// Mensagem curta usada apenas pelo CTA institucional, sem dados de formulario. Numero do
+// Fabricio (unico vendedor ativo de Campo Grande no Supabase, confirmado pelo usuario em
+// 2026-09-29 - substituiu 556733125600, que nunca mais deve ser destino de WhatsApp comercial;
+// so o telefone fixo institucional "(67) 3312-5600" continua exibido normalmente, sem relacao
+// com este numero de WhatsApp).
 export const whatsapp = {
-  number: "556733125600",
-  message: "Olá! Quero falar com a IMESUL para orçar.",
+  number: "5567998848110",
+  message: "Olá! Gostaria de fazer um orçamento.",
 };

@@ -33,6 +33,22 @@ import { notifyCommercialContactBlocked } from "./commercialContactAlert";
 import { trackEvent } from "./trackEvent";
 import { openDouradosWhatsApp } from "./douradosDispatch";
 
+// Mensagem fixa para qualquer CTA de contato direto com vendedor (DIRECT_CONTACT) - regra de
+// negocio explicita: o texto exibido ao cliente no WhatsApp e sempre este, independente do
+// "message" que cada chamador (CartWidget/ProjectSelector/SalesGuidanceSection) passa para
+// createLead como quoteSummary (esse continua indo para o backend normalmente, so nao vai mais
+// para o texto do WhatsApp). Fluxos de orcamento (GUIDED_QUOTE/CART) continuam usando a mensagem
+// completa com os dados preenchidos - ver resolveOutgoingWhatsAppMessage abaixo. So se aplica a
+// Campo Grande (e a qualquer unidade sem automacao propria) - Dourados sai desta funcao antes
+// (ver desvio para openDouradosWhatsApp logo abaixo) e nunca usa este texto. Atualizada em
+// 2026-09-29 (mensagem padrao definida pelo usuario para a troca de vendedor de Campo Grande).
+const DIRECT_CONTACT_WHATSAPP_MESSAGE = "Olá! Gostaria de fazer um orçamento.";
+
+// Mensagem que realmente vai para o texto do WhatsApp (nunca inclui "Lead"/codigo - o codigo
+// continua existindo no lead criado, banco, analytics e admin, so nao aparece pro cliente).
+const resolveOutgoingWhatsAppMessage = (flowType, message) =>
+  flowType === LEAD_FLOW_TYPES.DIRECT_CONTACT ? DIRECT_CONTACT_WHATSAPP_MESSAGE : message;
+
 // GUIDED_QUOTE/CART ja passaram por um formulario de orcamento antes deste clique - contam como
 // inicio de checkout. DIRECT_CONTACT (e qualquer flow futuro) e um contato generico via WhatsApp.
 const isCheckoutFlow = (flowType) =>
@@ -193,7 +209,8 @@ export const openWhatsAppWithLead = async (args) => {
   // (fonte unica em lib/leadFlow.js getCommercialUnitConfig) - nunca cai no numero generico
   // (que e' o mesmo do futuro IMEbot) quando a unidade Dourados ja e conhecida. Sem unidade
   // conhecida, mantem o comportamento generico ja existente (NEXT_PUBLIC_WHATSAPP_NUMBER).
-  const fallbackUrl = createWhatsAppUrl(message, getCommercialUnitConfig(unit)?.phone);
+  const outgoingMessage = resolveOutgoingWhatsAppMessage(flowType, message);
+  const fallbackUrl = createWhatsAppUrl(outgoingMessage, getCommercialUnitConfig(unit)?.phone);
   const popup = typeof window !== "undefined" ? window.open("", "_blank") : null;
 
   trackEvent(isCheckoutFlow(flowType) ? "begin_checkout" : "whatsapp_click", { section: pagePath, unit });
@@ -225,15 +242,19 @@ export const openWhatsAppWithLead = async (args) => {
 
       if (lead.ok && lead.seller?.whatsapp) {
         trackEvent("generate_lead", { unit });
-        const finalUrl = createWhatsAppUrl(`${message}\n\nLead IMESUL: ${lead.leadCode}`, lead.seller.whatsapp);
+        // Sem "Lead IMESUL: <codigo>" no texto - o codigo continua no lead (banco/analytics/admin),
+        // so nao aparece mais pro cliente. DIRECT_CONTACT usa a mensagem fixa (ver
+        // resolveOutgoingWhatsAppMessage); GUIDED_QUOTE/CART mandam a mensagem completa normal.
+        const finalUrl = createWhatsAppUrl(outgoingMessage, lead.seller.whatsapp);
         if (popup && !popup.closed) popup.location.href = finalUrl;
         else window.open(finalUrl, "_blank", "noopener,noreferrer");
         return;
       }
 
       // Lead criado, mas sem vendedor - se for Campo Grande, o rodizio deveria ter encontrado
-      // Felipe/Bruniely; nao encontrar significa "nenhum vendedor ativo agora", nao "unidade sem
-      // automacao" (Dourados). Nesse caso especifico, nunca abre o WhatsApp padrao.
+      // Fabricio (unico vendedor ativo hoje); nao encontrar significa "nenhum vendedor ativo
+      // agora", nao "unidade sem automacao" (Dourados). Nesse caso especifico, nunca abre o
+      // WhatsApp padrao.
       if (lead.ok && unit === COMMERCIAL_UNITS.CAMPO_GRANDE) {
         trackEvent("generate_lead", { unit });
         if (popup && !popup.closed) popup.close();
