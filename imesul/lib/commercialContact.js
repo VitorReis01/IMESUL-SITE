@@ -50,9 +50,15 @@ const readCurrentUtm = () => {
 // getCommercialUnitConfig) - NUNCA cai no numero generico (o mesmo do futuro IMEbot).
 export const openCommercialWhatsApp = async (args) => {
   const { pagePath, message = whatsapp.message, unit = null } = args;
-  const popup = typeof window !== "undefined" ? window.open("", "_blank") : null;
 
+  // No mobile, abrir uma aba em branco ANTES de pedir a unidade coloca o about:blank em primeiro
+  // plano e esconde o modal que ficou na aba original. Por isso só pré-abrimos a aba quando a
+  // unidade já era conhecida no instante do clique. Se o modal for necessário, o WhatsApp será
+  // aberto na própria aba depois da escolha — navegação top-level não sofre com popup blocker.
   let resolvedUnit = unit || getStoredUnit();
+  const popup =
+    resolvedUnit && typeof window !== "undefined" ? window.open("", "_blank") : null;
+
   if (!resolvedUnit) {
     resolvedUnit = await requestUnitChoice();
     setStoredUnit(resolvedUnit);
@@ -64,6 +70,17 @@ export const openCommercialWhatsApp = async (args) => {
   // aplicavel - sem unidade conhecida (nunca deveria acontecer aqui, mas por seguranca), cai no
   // numero generico ja existente (whatsapp.number).
   const fallbackUrl = createWhatsAppUrl(DIRECT_CONTACT_WHATSAPP_MESSAGE, getCommercialUnitConfig(resolvedUnit)?.phone);
+
+  const openResolvedUrl = (url) => {
+    if (popup && !popup.closed) {
+      popup.location.href = url;
+      return;
+    }
+
+    // Quando houve modal, não existe popup pré-aberto. Usar a mesma aba é intencional:
+    // window.open executado depois dos awaits costuma ser bloqueado no Chrome mobile.
+    if (typeof window !== "undefined") window.location.assign(url);
+  };
 
   try {
     const lead = await createLead({
@@ -84,8 +101,7 @@ export const openCommercialWhatsApp = async (args) => {
       // Sem "Lead IMESUL: <codigo>" no texto - o codigo continua no lead (banco/analytics/admin
       // do site de vendas), so nao aparece mais pro cliente.
       const finalUrl = createWhatsAppUrl(DIRECT_CONTACT_WHATSAPP_MESSAGE, lead.seller.whatsapp);
-      if (popup && !popup.closed) popup.location.href = finalUrl;
-      else window.open(finalUrl, "_blank", "noopener,noreferrer");
+      openResolvedUrl(finalUrl);
       return;
     }
 
@@ -96,10 +112,8 @@ export const openCommercialWhatsApp = async (args) => {
       return;
     }
 
-    if (popup && !popup.closed) popup.location.href = fallbackUrl;
-    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+    openResolvedUrl(fallbackUrl);
   } catch {
-    if (popup && !popup.closed) popup.location.href = fallbackUrl;
-    else window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+    openResolvedUrl(fallbackUrl);
   }
 };
