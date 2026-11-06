@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 // Define as origens permitidas para scripts, fontes, imagens e conexoes da aplicacao.
